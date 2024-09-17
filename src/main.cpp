@@ -26,30 +26,35 @@ int main() {
     GLuint vaoId;
     my_gl::initVertexArrayObject(&vaoId);
 
-    constexpr std::size_t bufferSize{ 12 };
+    constexpr std::size_t bufferSize{ 24 };
     constexpr float vertexPositions[bufferSize] = {
         0.25f, 0.25f, 0.0f, 1.0f,
         0.25f, -0.25f, 0.0f, 1.0f,
         -0.25f, -0.25f, 0.0f, 1.0f,
+        // colors
+        1.0f, 0.0f, 0.0f, 1.0f,
+        0.0f, 1.0f, 0.0f, 1.0f,
+        0.0f, 0.0f, 1.0f, 1.0f,
     };
 
     GLuint positionBufferId;
     my_gl::initVertexBuffer(&positionBufferId, vertexPositions, bufferSize, GL_STATIC_DRAW);
 
-    GLuint program{ my_gl::createProgram("../shaders/vertShader.vert", "../shaders/fragShader.frag") };
+    GLuint program{ my_gl::createProgram("../shaders/vertShader.vert", "../shaders/fragShaderColorVarying.frag") };
     glUseProgram(program);
 
     GLint positionAttribLocation{ glGetAttribLocation(program, "position") };
+    GLint colorAttribLocaiton{ glGetAttribLocation(program, "color") };
 
     GLint offsetUniformLocation{ glGetUniformLocation(program, "u_offset") };
     float offsetUniformValue[]{ 0.0f, 0.0f };
     float offsetVelocity[]{ 0.01f, 0.025f };
 
-    GLint colorOneUniformLocation{ glGetUniformLocation(program, "u_colorOne") };
-    const float colorOneUniformValue[4]{ 0.0f, 1.0f, 0.0f, 1.0f };
-    GLint colorTwoUniformLocation{ glGetUniformLocation(program, "u_colorTwo") };
-    const float colorTwoUniformValue[4]{ 0.0f, 0.0f, 1.0f, 1.0f };
-    GLint windowHeightUniformLocation{ glGetUniformLocation(program, "u_windowHeight") };
+    //GLint colorOneUniformLocation{ glGetUniformLocation(program, "u_colorOne") };
+    //const float colorOneUniformValue[4]{ 0.0f, 1.0f, 0.0f, 1.0f };
+    //GLint colorTwoUniformLocation{ glGetUniformLocation(program, "u_colorTwo") };
+    //const float colorTwoUniformValue[4]{ 0.0f, 0.0f, 1.0f, 1.0f };
+    //GLint windowHeightUniformLocation{ glGetUniformLocation(program, "u_windowHeight") };
 
     glViewport(0, 0, window_ptr.get()->width(), window_ptr.get()->height());
     glfwSwapInterval(1);
@@ -61,14 +66,16 @@ int main() {
 
         glUseProgram(program);
 
-        glUniform4fv(colorOneUniformLocation, 1, colorOneUniformValue);
-        glUniform4fv(colorTwoUniformLocation, 1, colorTwoUniformValue);
-        glUniform1f(windowHeightUniformLocation, window_ptr.get()->height());
+        //glUniform4fv(colorOneUniformLocation, 1, colorOneUniformValue);
+        //glUniform4fv(colorTwoUniformLocation, 1, colorTwoUniformValue);
+        //glUniform1f(windowHeightUniformLocation, window_ptr.get()->height());
         glUniform2fv(offsetUniformLocation, 1, offsetUniformValue);
 
         glBindBuffer(GL_ARRAY_BUFFER, positionBufferId);
         glEnableVertexAttribArray(positionAttribLocation);
+        glEnableVertexAttribArray(colorAttribLocaiton);
         glVertexAttribPointer(positionAttribLocation, 4, GL_FLOAT, GL_FALSE, 0, 0);
+        glVertexAttribPointer(colorAttribLocaiton, 4, GL_FLOAT, GL_FALSE, 0, reinterpret_cast<void*>(48));
 
         glDrawArrays(GL_TRIANGLES, 0, 3);
 
