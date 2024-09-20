@@ -10,7 +10,7 @@ const vec4 colorTwo = vec4(0.0f, 1.0f, 0.0f, 1.0f);
 
 void main() {
     float currTime = mod(u_elapsedTime, u_loopDuration);
-    float lerpValue = currTime / u_loopDuration;
+    float lerpValue = sin(currTime);
 
     outColor = mix(colorOne, colorTwo, lerpValue);
 }
