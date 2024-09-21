@@ -3,11 +3,18 @@
 layout (location = 0) in vec4 position;
 layout (location = 1) in vec4 color;
 
-uniform vec2 u_offset;
+uniform float u_elapsedTime;
+uniform float u_loopDuration;
 
-smooth out vec4 vertexColor;
+const float PI = 3.141592f;
 
 void main(){
-    gl_Position = position + vec4(u_offset, 0.0f, 1.0f);
-    vertexColor = color;
+    float scale = PI * 2 / u_loopDuration;
+    float currTime = mod(u_elapsedTime, u_loopDuration);
+    vec2 offset = vec2(
+        cos(scale * currTime) * 1.25f,
+        sin(scale * currTime) * 1.25f
+    );
+
+    gl_Position = position + vec4(offset, 0.0f, 1.0f);
 }
