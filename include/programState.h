@@ -3,6 +3,7 @@
 #include <unordered_map>
 #include <array>
 
+
 namespace my_gl {
     template<std::size_t ArrSize>
     struct UniformData {

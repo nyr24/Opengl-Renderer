@@ -14,7 +14,8 @@ template const my_gl::UniformData<4>* my_gl::ProgramState::getUniform(const char
 template bool my_gl::ProgramState::useUniform<1>(const char*) const;
 template bool my_gl::ProgramState::useUniform<2>(const char*) const;
 template bool my_gl::ProgramState::useUniform<3>(const char*) const;
-template bool my_gl::ProgramState::useUniform<4>(const char*) const;
+template bool my_gl::ProgramState::useUniform<4>(const char*) const; 
+
 
 my_gl::ProgramState::ProgramState(const char* vertexShaderFilePath, const char* fragmentShaderFilePath) 
     : m_id{ my_gl::createProgram(vertexShaderFilePath, fragmentShaderFilePath) }
@@ -34,7 +35,7 @@ void my_gl::ProgramState::setUniform(const char* name, const std::array<float, A
     static_assert((ArrSize >= 1 && ArrSize <= 4) && "Invalid uniform arr size");
 
     my_gl::UniformData<ArrSize> uniformData{
-        .locaiton = glGetUniformLocation(m_id, name),
+        .location = glGetUniformLocation(m_id, name),
         .name = name,
         .value = value,
     };
