@@ -64,13 +64,11 @@ int main() {
         glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
-        program.use();
-
         glUniform1f(elapsedTimeUniformLocation, static_cast<float>(glfwGetTime()));
 
         glBindBuffer(GL_ARRAY_BUFFER, positionBufferId);
-        glEnableVertexAttribArray(positionAttrib->location);
-        glVertexAttribPointer(positionAttrib->location, 4, GL_FLOAT, GL_FALSE, 0, 0);
+        glEnableVertexAttribArray(positionAttribLocation);
+        glVertexAttribPointer(positionAttribLocation, 4, GL_FLOAT, GL_FALSE, 0, 0);
 
         glDrawArrays(GL_TRIANGLES, 0, 3);
 

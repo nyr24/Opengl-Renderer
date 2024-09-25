@@ -1,7 +1,7 @@
 #version 330
 
 layout (location = 0) in vec4 position;
-layout (location = 1) in vec4 color;
+//layout (location = 1) in vec4 color;
 
 uniform float u_elapsedTime;
 uniform float u_loopDuration;
