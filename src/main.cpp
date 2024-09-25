@@ -5,7 +5,6 @@
 #include <memory>
 #include "utils.h"
 #include "window.h"
-#include "programState.h"
 
 
 // Is called whenever a key is pressed/released via GLFW
