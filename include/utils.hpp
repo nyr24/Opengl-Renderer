@@ -3,7 +3,7 @@
 #include <GLFW/glfw3.h>
 #include <string_view>
 #include <memory>
-#include "window.h"
+#include "window.hpp"
 
 
 namespace my_gl {

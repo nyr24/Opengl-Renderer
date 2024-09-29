@@ -3,9 +3,10 @@
 #include <iostream>
 #include <array>
 #include <memory>
-#include "utils.h"
-#include "window.h"
-
+#include "utils.hpp"
+#include "window.hpp"
+#include "mat.hpp"
+#include "vec.hpp"
 
 // Is called whenever a key is pressed/released via GLFW
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mode)
@@ -22,6 +23,13 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 
 
 int main() {
+    gl_math::Vec3 v1{ 18.0f, 18.0f, 0.0f };
+    gl_math::Vec3 v2{ 1.0f, 1.0f, 0.0f };
+
+    std::cout << "dot is: " << v1.dot(v2) << '\n';
+    std::cout << "cross is: " << v1.cross(v2) << '\n';
+
+/* 
     std::unique_ptr<my_gl::Window> window_ptr{ my_gl::init() };
     glfwSetKeyCallback(window_ptr.get()->ptr_raw(), key_callback);
 
@@ -78,7 +86,7 @@ int main() {
 
         glfwSwapBuffers(window_ptr.get()->ptr_raw());
         glfwPollEvents();
-    }
+    } */
 
     return 0;
 }

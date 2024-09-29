@@ -2,7 +2,7 @@
 #include <fstream>
 #include <sstream>
 #include <vector>
-#include "utils.h"
+#include "utils.hpp"
 
 std::unique_ptr<my_gl::Window> my_gl::init() {
     std::cout << "Starting GLFW context, OpenGL 3.3" << std::endl;

@@ -1,5 +1,5 @@
 #include <iostream>
-#include "window.h"
+#include "window.hpp"
 
 my_gl::Window::Window(int width, int height, const char* name, GLFWmonitor* monitor, GLFWwindow* share) 
     : m_window{ glfwCreateWindow(width, height, name, monitor, share) }
