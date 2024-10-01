@@ -4,20 +4,18 @@
 #include <vector>
 #include "utils.hpp"
 
-std::unique_ptr<my_gl::Window> my_gl::init() {
-    std::cout << "Starting GLFW context, OpenGL 3.3" << std::endl;
+void my_gl::init(my_gl::Window* window_ptr_out) {
+    std::cout << "Starting GLFW context, OpenGL 3.3\n";
 
     my_gl::initGLFW();
 
-    auto window{ std::make_unique<my_gl::Window>(700, 500, "my_window", nullptr, nullptr) };
+    *window_ptr_out = my_gl::Window{ 700, 500, "my_window", nullptr, nullptr };
 
     my_gl::initGLEW();
 
     // error handling
 	glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
 	glDebugMessageCallback(my_gl::GLDebugMessageCallback, NULL);
-
-    return window;
 }
 
 void my_gl::initGLFW() {

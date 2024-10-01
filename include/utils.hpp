@@ -2,12 +2,11 @@
 #include <GLEW/glew.h>
 #include <GLFW/glfw3.h>
 #include <string_view>
-#include <memory>
 #include "window.hpp"
 
 
 namespace my_gl {
-    std::unique_ptr<my_gl::Window> init();
+    void init(my_gl::Window* window_ptr_out);
 
     void initGLFW();
     void initGLEW();
