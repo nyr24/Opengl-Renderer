@@ -108,6 +108,53 @@ namespace my_gl_math {
 
             return rotationMatrix;
         }
+        
+    // symmetric
+        static Matrix44 perspective(float fovYdeg, float aspect, float zFar, float zNear) {
+            const float fovYRad{ fovYdeg * my_gl_math::Global::DEG_TO_RAD };
+            const float topToNear{ tanf(fovYRad / 2) };
+            const float top{ topToNear * zNear };
+            const float right{ top * aspect };
+
+            Matrix44 res;
+
+            res.at(0, 0) = zNear / right;
+            res.at(1, 1) = zNear / top;
+            res.at(2, 2) = (-(zFar + zNear)) / (zFar - zNear);
+            res.at(2, 3) = (-2.0f * zFar * zNear) / (zFar - zNear);
+            res.at(3, 2) = -1.0f; 
+
+            return res;
+        }
+
+        static Matrix44 perspective(float right, float left, float top, float bottom, float zNear, float zFar) {
+            Matrix44 res;
+
+            res.at(0, 0) = (2.0f * zNear) / (right - left);
+            res.at(0, 2) = (right + left) / (right - left);
+            res.at(1, 1) = (2.0f * zNear) / (top - bottom);
+            res.at(1, 2) = (top + bottom) / (top - bottom);
+            res.at(2, 2) = (-(zFar + zNear)) / (zFar - zNear);
+            res.at(2, 3) = (-2.0f * zFar * zNear) / (zFar - zNear);
+            res.at(3, 2) = -1.0f;  
+
+            return res;
+        }
+
+
+        Matrix44& transpose() {
+            for (int i = 1; i < ROW_COUNT; ++i) {
+                at(i, 0) = at(0, i);
+            }
+
+            for (int i = 2; i < ROW_COUNT; ++i) {
+                at(i, 1) = at(1, i);
+            }
+
+            at(3, 2) = at(2, 3); 
+            
+            return *this;
+        }
 
     // operations
         friend Matrix44<T> operator*(const Matrix44<T>& lhs, const Matrix44<T>& rhs) {
