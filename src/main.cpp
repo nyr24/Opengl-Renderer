@@ -21,10 +21,18 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
     }
 }
 
+struct RotationData {
+    float angle = 0.0f;
+    float delta = 0.01f;
+};
+
+struct TranslationData {
+    float val = 0.0f;
+    float delta = 0.01f;
+};
 
 int main() {
-    my_gl::Window* window_ptr{ nullptr };
-    my_gl::init(window_ptr);
+    std::unique_ptr<my_gl::Window> window_ptr{ my_gl::init() };
     glfwSetKeyCallback(window_ptr->ptr_raw(), key_callback);
 
     GLuint vaoId;
@@ -57,6 +65,11 @@ int main() {
     glViewport(0, 0, window_ptr->width(), window_ptr->height());
     glfwSwapInterval(1);
 
+    RotationData rotationData;
+    TranslationData translationData;
+
+    constexpr float objectHeight{ 0.65f };
+
     while (!glfwWindowShouldClose(window_ptr->ptr_raw()))
     {
         glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
@@ -64,23 +77,26 @@ int main() {
 
         glUseProgram(program);
 
-        my_gl_math::Vec3<float> scaleVec{ 2.5f, 2.5f, 2.5f, 2.5f };
-        my_gl_math::Matrix44<float> scalingMatrix{ my_gl_math::Matrix44<float>::scaling(scaleVec) };
+    // scale
+        //my_gl_math::Vec3<float> scaleVec{ 2.5f, 2.5f, 2.5f, 2.5f };
+        //my_gl_math::Matrix44<float> scalingMatrix{ my_gl_math::Matrix44<float>::scaling(scaleVec) };
 
-        float currTime{ static_cast<float>(glfwGetTime()) };
-        float timeFrom0toLoopDur{ fmodf(currTime, loopDuration) };
-        float timeFrom0to1{ timeFrom0toLoopDur / loopDuration };
-        float timeFrom_1to1{ timeFrom0to1 * 2 - 1 };
+        //float currTime{ static_cast<float>(glfwGetTime()) };
+        //float timeFrom0toLoopDur{ fmodf(currTime, loopDuration) };
+        //float timeFrom0to1{ timeFrom0toLoopDur / loopDuration };
+        //float timeFrom_1to1{ timeFrom0to1 * 2 - 1 };
 
+    // rotation
         my_gl_math::Matrix44<float> rotationMatrix{ my_gl_math::Matrix44<float>::rotation(
-            -90.0f, 
+            rotationData.angle, 
             my_gl_math::Global::z
         )};
 
-        my_gl_math::Vec3<float> translateVec{ 0.0f, 0.4f, 0.0f };
+    // translation
+        my_gl_math::Vec3<float> translateVec{ 0.0f, translationData.val, 0.0f };
         my_gl_math::Matrix44<float> translateMatrix{ my_gl_math::Matrix44<float>::translation(translateVec) };
 
-        my_gl_math::Matrix44<float> localMatrix{ rotationMatrix * translateMatrix };
+        my_gl_math::Matrix44<float> localMatrix{ rotationMatrix  /* * translateMatrix */ };
 
         glUniformMatrix4fv(localMatrixUniformLoc, 1, GL_TRUE, localMatrix.data());
 
@@ -90,8 +106,22 @@ int main() {
 
         glDrawArrays(GL_TRIANGLES, 0, 3);
 
+        rotationData.angle += rotationData.delta;
+        if (rotationData.angle > 360.0f || rotationData.angle < 0.0f) {
+            rotationData.delta *= -1.0f;
+        }
+
+        translationData.val += translationData.delta;
+        if ((translationData.val > (1.0f - 0.4f)) || (translationData.val < (-1.0f + 0.25f))) {
+            translationData.delta *= -1;
+        }
+
+        printf("translation: %f\n", translationData.val);
+        printf("rotation: %f\n", rotationData.angle);
+
         glfwSwapBuffers(window_ptr->ptr_raw());
         glfwPollEvents();
     }
+
     return 0;
 }
