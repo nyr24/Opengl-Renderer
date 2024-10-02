@@ -10,7 +10,8 @@ namespace my_gl_math {
     template<typename T, int rows, int cols>
     class MatrixBase {
     public:
-        MatrixBase() = default;
+        MatrixBase(): _data{ 0 } {};
+
         explicit MatrixBase(T val) {
             _data.fill(val);
         }
@@ -88,20 +89,20 @@ namespace my_gl_math {
             switch (axis) {
             case Global::AXIS::x:
                 rotationMatrix.at(1, 1) = angleCos;
-                rotationMatrix.at(2, 1) = angleSin;
                 rotationMatrix.at(1, 2) = -angleSin;
+                rotationMatrix.at(2, 1) = angleSin;
                 rotationMatrix.at(2, 2) = angleCos;
                 break;
             case Global::AXIS::y:
                 rotationMatrix.at(0, 0) = angleCos;
-                rotationMatrix.at(2, 0) = -angleSin;
                 rotationMatrix.at(0, 2) = angleSin;
+                rotationMatrix.at(2, 0) = -angleSin;
                 rotationMatrix.at(2, 2) = angleCos;
                 break;
             case Global::AXIS::z:
                 rotationMatrix.at(0, 0) = angleCos;
-                rotationMatrix.at(1, 0) = angleSin;
                 rotationMatrix.at(0, 1) = -angleSin;
+                rotationMatrix.at(1, 0) = angleSin;
                 rotationMatrix.at(1, 1) = angleCos;
                 break;
             }
@@ -111,7 +112,7 @@ namespace my_gl_math {
         
     // symmetric
         static Matrix44 perspective(float fovYdeg, float aspect, float zFar, float zNear) {
-            const float fovYRad{ fovYdeg * my_gl_math::Global::DEG_TO_RAD };
+            const float fovYRad{ my_gl_math::Global::degToRad(fovYdeg) };
             const float topToNear{ tanf(fovYRad / 2) };
             const float top{ topToNear * zNear };
             const float right{ top * aspect };
@@ -144,14 +145,14 @@ namespace my_gl_math {
 
         Matrix44& transpose() {
             for (int i = 1; i < ROW_COUNT; ++i) {
-                at(i, 0) = at(0, i);
+                this->at(i, 0) = this->at(0, i);
             }
 
             for (int i = 2; i < ROW_COUNT; ++i) {
-                at(i, 1) = at(1, i);
+                this->at(i, 1) = this->at(1, i);
             }
 
-            at(3, 2) = at(2, 3); 
+            this->at(3, 2) = this->at(2, 3); 
             
             return *this;
         }

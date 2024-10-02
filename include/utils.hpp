@@ -3,10 +3,11 @@
 #include <GLFW/glfw3.h>
 #include <string_view>
 #include "window.hpp"
+#include <memory>
 
 
 namespace my_gl {
-    void init(my_gl::Window* window_ptr_out);
+    std::unique_ptr<my_gl::Window> init();
 
     void initGLFW();
     void initGLEW();

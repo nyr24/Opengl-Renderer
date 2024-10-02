@@ -7,12 +7,12 @@ namespace my_gl_math {
     
         template<typename T>
         static constexpr T degToRad(T deg) {
-            return deg * Global::DEG_TO_RAD;
+            return deg * static_cast<T>(Global::DEG_TO_RAD);
         }
 
         template<typename T>
         constexpr T radToDeg(T rad) {
-            return rad * Global::RAD_TO_DEG;
+            return rad * static_cast<T>(Global::RAD_TO_DEG);
         }
 
         enum AXIS {
