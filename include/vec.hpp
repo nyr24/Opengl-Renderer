@@ -3,7 +3,7 @@
 #include <array>
 #include <initializer_list>
 
-namespace gl_math {
+namespace my_gl_math {
     template<typename T, int size>
     class Vec {
     public:
@@ -67,12 +67,8 @@ namespace gl_math {
     template<typename T = float>
     class Vec4 : public Vec<T, 4> {
     public:
-        Vec4()
-            : Vec<T, 4>{}
-        {}
-        Vec4(std::initializer_list<T> list)
-            : Vec<T, 4>{ list }
-        {}
+        using Vec<T, 4>::Vec;
+        using Vec<T, 4>::operator=;
 
         constexpr T x() const { return this->_data[0]; }
         constexpr T y() const { return this->_data[1]; }
