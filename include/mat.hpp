@@ -142,17 +142,58 @@ namespace my_gl_math {
             return res;
         }
 
+    // non-static
+        void scale(const Vec3<T>& scalingVec) {
+            this->at(0, 0) = scalingVec.x();
+            this->at(1, 1) = scalingVec.y();
+            this->at(2, 2) = scalingVec.z();
+        }
 
+        void translate(const Vec3<T>& translationVec) {
+            this->at(0, 3) = translationVec.x();
+            this->at(1, 3) = translationVec.y();
+            this->at(2, 3) = translationVec.z();
+        }
+
+        void rotate(float angleDeg, Global::AXIS axis) {
+            const float angleRad{ angleDeg * Global::degToRad(angleDeg) };
+            const float angleSin{ sinf(angleDeg) };
+            const float angleCos{ cosf(angleDeg) };
+
+            switch (axis) {
+            case Global::AXIS::x:
+                this->at(1, 1) = angleCos;
+                this->at(1, 2) = -angleSin;
+                this->at(2, 1) = angleSin;
+                this->at(2, 2) = angleCos;
+                break;
+            case Global::AXIS::y:
+                this->at(0, 0) = angleCos;
+                this->at(0, 2) = angleSin;
+                this->at(2, 0) = -angleSin;
+                this->at(2, 2) = angleCos;
+                break;
+            case Global::AXIS::z:
+                this->at(0, 0) = angleCos;
+                this->at(0, 1) = -angleSin;
+                this->at(1, 0) = angleSin;
+                this->at(1, 1) = angleCos;
+                break;
+            }
+        }
+
+
+    // need to be tested
         Matrix44& transpose() {
             for (int i = 1; i < ROW_COUNT; ++i) {
-                this->at(i, 0) = this->at(0, i);
+                std::swap(this->at(i, 0), this->at(0, i));
             }
 
             for (int i = 2; i < ROW_COUNT; ++i) {
-                this->at(i, 1) = this->at(1, i);
+                std::swap(this->at(i, 1), this->at(1, i));
             }
-
-            this->at(3, 2) = this->at(2, 3); 
+            
+            std::swap(this->at(3, 2), this->at(2, 3));
             
             return *this;
         }
@@ -176,9 +217,21 @@ namespace my_gl_math {
 
         friend Vec4<T> operator*(const Matrix44<T>& m, const Vec4<T>& v) {
             Vec4<T> res;
+            
+            for (int r{ 0 }; r < m.ROW_COUNT; ++r) {
+                for (int c{ 0 }; c < v.size(); ++c) {
+                    res[r] += m.at(r, c) * v[c];
+                }
+            }
+
+            return res;
+        }
+        
+        friend Vec3<T> operator*(const Matrix44<T>& m, const Vec3<T>& v) {
+            Vec3<T> res;
 
             for (int r{ 0 }; r < m.ROW_COUNT; ++r) {
-                for (int c{ 0 }; c < m.COL_COUNT; ++c) {
+                for (int c{ 0 }; c < v.size(); ++c) {
                     res[r] += m.at(r, c) * v[c];
                 }
             }

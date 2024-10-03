@@ -7,8 +7,8 @@ namespace my_gl_math {
     template<typename T, int size>
     class Vec {
     public:
-        Vec(): _data{ 0 } {}; 
-        Vec(T xx): _data{ xx } {};
+        Vec() = default;
+        explicit Vec(T xx) { _data.fill(xx); }
         Vec(std::initializer_list<T> list) {
             std::copy(list.begin(), list.end(), _data.begin());
         }
@@ -17,7 +17,6 @@ namespace my_gl_math {
         Vec(Vec<T, size>&& src) = default;
         Vec<T, size>& operator=(const Vec<T, size>& src) = default;
         Vec<T, size>& operator=(Vec<T, size>&& src) = default;
-
 
         T length() const {
             int res = 0;
@@ -48,7 +47,6 @@ namespace my_gl_math {
         }
 
     // utility
-    public:
         T getSize() const { return _data.size(); }
 
         void print() const {
@@ -58,8 +56,12 @@ namespace my_gl_math {
             std::cout << '\n';
         }
 
+        bool is_eq(const Vec<T, size>& rhs) {
+            return _data == rhs._data;
+        }
+
     protected:
-        std::array<T, size> _data;
+        std::array<T, size> _data{};
     };
 
 
@@ -85,36 +87,47 @@ namespace my_gl_math {
             };     
         }
 
+        // operators
         T& operator[](int i) {
+            assert((i >= 0 && i < this->getSize()) && "invalid indexing");
             return this->_data[i];
         }
 
         const T& operator[](int i) const {
+            assert((i >= 0 && i < this->getSize()) && "invalid indexing");
             return this->_data[i];
         }
 
-        friend Vec4<T> operator+(const Vec4<T> lhs, const Vec4<T>& rhs) {
+        Vec4<T> operator+(const Vec4<T>& rhs) {
             Vec4<T> res;
 
-            for (int i = 0; i < lhs.size(); ++i) {
-                res[i] = lhs[i] + rhs[i];
+            for (int i = 0; i < this->getSize(); ++i) {
+                res[i] = this->_data[i] + rhs[i];
             }
 
             return res;
         }
 
-        friend Vec4<T> operator-(const Vec4<T>& lhs, const Vec4<T>& rhs) {
+        Vec4<T> operator-(const Vec4<T>& rhs) {
             Vec4<T> res;
 
-            for (int i = 0; i < lhs.size(); ++i) {
-                res[i] = lhs[i] - rhs[i];
+            for (int i = 0; i < this->getSize(); ++i) {
+                res[i] = this->_data[i] - rhs[i];
             }
 
             return res;
         }
 
-        friend std::ostream& operator<<(std::ostream& out, const Vec4<T>& vec4) {
-            for (const T el : vec4._data) {
+        Vec4<T>& operator*(T rhs) {
+            for (const T& el : this->_data) {
+                el *= rhs;
+            }
+
+            return *this;
+        }
+
+        friend std::ostream& operator<<(std::ostream& out, const Vec4<T>& vec) {
+            for (const T el : vec._data) {
                 out << el << ' ';
             }
             out << '\n';
@@ -127,12 +140,8 @@ namespace my_gl_math {
     template<typename T>
     class Vec3 : public Vec<T, 3> {
     public:
-        Vec3()
-            : Vec<T, 3>{}
-        {}
-        Vec3(std::initializer_list<T> list)
-            : Vec<T, 3>{ list }
-        {}
+        using Vec<T, 3>::Vec;
+        using Vec<T, 3>::operator=;
 
         constexpr T x() const { return this->_data[0]; }
         constexpr T y() const { return this->_data[1]; }
@@ -147,36 +156,56 @@ namespace my_gl_math {
             };     
         }
 
+    // operators
         T& operator[](int i) {
+            assert((i >= 0 && i < this->getSize()) && "invalid indexing");
             return this->_data[i];
         }
 
         const T& operator[](int i) const {
+            assert((i >= 0 && i < this->getSize()) && "invalid indexing");
             return this->_data[i];
         }
 
-        friend Vec3<T> operator+(const Vec3<T> lhs, const Vec3<T>& rhs) {
+        Vec3<T> operator+(const Vec3<T>& rhs) {
             Vec3<T> res;
 
-            for (int i = 0; i < lhs.size(); ++i) {
-                res[i] = lhs[i] + rhs[i];
+            for (int i = 0; i < this->getSize(); ++i) {
+                res[i] = this->_data[i] + rhs[i];
             }
 
             return res;
         }
 
-        friend Vec3<T> operator-(const Vec3<T>& lhs, const Vec3<T>& rhs) {
+        Vec3<T> operator-(const Vec3<T>& rhs) {
             Vec3<T> res;
 
-            for (int i = 0; i < lhs.size(); ++i) {
-                res[i] = lhs[i] - rhs[i];
+            for (int i = 0; i < this->getSize(); ++i) {
+                res[i] = this->_data[i] - rhs[i];
             }
 
             return res;
         }
 
-        friend std::ostream& operator<<(std::ostream& out, const Vec3<T>& vec3) {
-            for (const T el : vec3._data) {
+    // operations with primitives
+
+        Vec3<T> operator*(T rhs) const {
+            Vec3<T> res;
+            res *= rhs;
+
+            return *this;
+        }
+
+        Vec3<T>& operator*=(T rhs) {
+            for (T& el : this->_data) {
+                el *= rhs;
+            }
+
+            return *this;
+        }
+
+        friend std::ostream& operator<<(std::ostream& out, const Vec3<T>& vec) {
+            for (const T el : vec._data) {
                 out << el << ' ';
             }
             out << '\n';

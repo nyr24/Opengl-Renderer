@@ -18,7 +18,7 @@ namespace my_gl_math {
         enum AXIS {
             x,
             y,
-            z
+            z,
         };
 
     private:
