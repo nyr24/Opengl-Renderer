@@ -1,6 +1,19 @@
 #version 330
 
 layout (location = 0) in vec4 position;
+
+uniform mat4 u_local_mat;
+
+void main() {
+    gl_Position = u_local_mat * position;
+}
+
+
+/* 
+
+    #version 330
+
+layout (location = 0) in vec4 position;
 //layout (location = 1) in vec4 color;
 
 uniform float u_elapsedTime;
@@ -18,3 +31,4 @@ void main(){
 
     gl_Position = position + vec4(offset, 0.0f, 1.0f);
 }
+ */

@@ -1,5 +1,21 @@
 #version 330
 
+out vec4 outputColor;
+
+uniform float u_window_height;
+
+const vec4 colorOne = vec4(0.0f, 0.0f, 1.0f, 1.0f);
+const vec4 colorTwo = vec4(0.0f, 1.0f, 0.0f, 1.0f);
+
+void main() {
+    outputColor = mix(colorOne, colorTwo, gl_FragCoord / u_window_height);
+}
+
+/* 
+
+
+    #version 330
+
 out vec4 outColor;
 
 uniform float u_elapsedTime;
@@ -14,3 +30,4 @@ void main() {
 
     outColor = mix(colorOne, colorTwo, lerpValue);
 }
+ */
