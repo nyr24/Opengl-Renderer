@@ -7,7 +7,7 @@
 
 
 namespace my_gl {
-    std::unique_ptr<my_gl::Window> init();
+    my_gl::Window init();
 
     void initGLFW();
     void initGLEW();

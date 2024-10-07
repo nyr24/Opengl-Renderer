@@ -7,19 +7,22 @@
 #include "global.hpp"
 
 namespace my_gl_math {
-    template<typename T, int rows, int cols>
+    template<typename T, int ROWS, int COLS>
     class MatrixBase {
     public:
-        MatrixBase(): _data{ 0 } {};
-
+        MatrixBase() = default;
         explicit MatrixBase(T val) {
             _data.fill(val);
         }
+        MatrixBase(const MatrixBase<T, ROWS, COLS>& rhs) = default;
+        MatrixBase& operator=(const MatrixBase<T, ROWS, COLS>& rhs) = default;
+        MatrixBase(MatrixBase<T, ROWS, COLS>&& rhs) = default;
+        MatrixBase& operator=(MatrixBase<T, ROWS, COLS>&& rhs) = default;
 
         const T& at(int row, int col) const {
-            const int index{ row * cols + col };
-            assert((index >= 0 && index < (rows * cols)) && "invalid indexing");
-            return _data[row * cols + col];
+            const int index{ row * COLS + col };
+            assert((index >= 0 && index < (ROWS * COLS)) && "invalid indexing");
+            return _data[row * COLS + col];
         }
 
         T& at(int row, int col) {
@@ -27,8 +30,8 @@ namespace my_gl_math {
         }
 
         void print() const {
-            for (int i = 0; i < rows; ++i) {
-                for (int j = 0; j < cols; ++j) {
+            for (int i = 0; i < ROWS; ++i) {
+                for (int j = 0; j < COLS; ++j) {
                     std::cout << at(i, j) << ' ';
                 }
                 std::cout << '\n';
@@ -38,7 +41,7 @@ namespace my_gl_math {
         const T* data() const { return _data.data(); }
 
     private:
-        std::array<T, rows * cols> _data;
+        std::array<T, ROWS * COLS> _data{};
     };
 
 
@@ -80,26 +83,26 @@ namespace my_gl_math {
         }
 
         static Matrix44 rotation(float angleDeg, Global::AXIS axis) {
-            Matrix44 rotationMatrix = Matrix44::identity();
+            Matrix44 rotationMatrix{ Matrix44::identity() };
             
             const float angleRad{ angleDeg * Global::degToRad(angleDeg) };
             const float angleSin{ sinf(angleDeg) };
             const float angleCos{ cosf(angleDeg) };
 
             switch (axis) {
-            case Global::AXIS::x:
+            case Global::AXIS::X:
                 rotationMatrix.at(1, 1) = angleCos;
                 rotationMatrix.at(1, 2) = -angleSin;
                 rotationMatrix.at(2, 1) = angleSin;
                 rotationMatrix.at(2, 2) = angleCos;
                 break;
-            case Global::AXIS::y:
+            case Global::AXIS::Y:
                 rotationMatrix.at(0, 0) = angleCos;
                 rotationMatrix.at(0, 2) = angleSin;
                 rotationMatrix.at(2, 0) = -angleSin;
                 rotationMatrix.at(2, 2) = angleCos;
                 break;
-            case Global::AXIS::z:
+            case Global::AXIS::Z:
                 rotationMatrix.at(0, 0) = angleCos;
                 rotationMatrix.at(0, 1) = -angleSin;
                 rotationMatrix.at(1, 0) = angleSin;
@@ -108,6 +111,21 @@ namespace my_gl_math {
             }
 
             return rotationMatrix;
+        }
+
+        static Matrix44 rotation3d(const my_gl_math::Vec3<float>& anglesVec) {
+            std::array<Matrix44, 3> mat_arr;
+            std::array<my_gl_math::Global::AXIS, 3> axis_arr{
+                my_gl_math::Global::X,
+                my_gl_math::Global::Y,
+                my_gl_math::Global::Z,
+            };
+            
+            for (int i = 0; i < 3; ++i) {
+                mat_arr[i] = std::move(my_gl_math::Matrix44<float>::rotation(anglesVec[i], axis_arr[i]));
+            }
+
+            return Matrix44{ mat_arr[0] * mat_arr[1] * mat_arr[2] };
         }
         
     // symmetric
@@ -161,25 +179,40 @@ namespace my_gl_math {
             const float angleCos{ cosf(angleDeg) };
 
             switch (axis) {
-            case Global::AXIS::x:
+            case Global::AXIS::X:
                 this->at(1, 1) = angleCos;
                 this->at(1, 2) = -angleSin;
                 this->at(2, 1) = angleSin;
                 this->at(2, 2) = angleCos;
                 break;
-            case Global::AXIS::y:
+            case Global::AXIS::Y:
                 this->at(0, 0) = angleCos;
                 this->at(0, 2) = angleSin;
                 this->at(2, 0) = -angleSin;
                 this->at(2, 2) = angleCos;
                 break;
-            case Global::AXIS::z:
+            case Global::AXIS::Z:
                 this->at(0, 0) = angleCos;
                 this->at(0, 1) = -angleSin;
                 this->at(1, 0) = angleSin;
                 this->at(1, 1) = angleCos;
                 break;
             }
+        }
+
+        void rotate3d(const my_gl_math::Vec3<float>& rotationVec) {
+            std::array<Matrix44<float>, 3> mat_arr;
+            std::array<my_gl_math::Global::AXIS, 3> axis_arr{
+                my_gl_math::Global::X,
+                my_gl_math::Global::Y,
+                my_gl_math::Global::Z,
+            };
+
+            for (int i = 0; i < 3; ++i) {
+                mat_arr[i] = std::move(rotation(rotationVec[i], axis_arr[i]));
+            }
+
+            *this = std::move(mat_arr[0] * mat_arr[1] * mat_arr[2]);
         }
 
 
@@ -198,7 +231,7 @@ namespace my_gl_math {
             return *this;
         }
 
-    // operations
+    // operators
         friend Matrix44<T> operator*(const Matrix44<T>& lhs, const Matrix44<T>& rhs) {
             Matrix44<T> res;
             
@@ -239,7 +272,20 @@ namespace my_gl_math {
             return res;
         }
 
-    // constants
+        Matrix44<T>& operator*=(const Matrix44<T>& rhs) {
+            for (int r = 0; r < ROW_COUNT; ++r) {
+                for (int c = 0; c < COL_COUNT; ++c) {
+                    this->at(r, c) = 0;
+
+                    for (int k = 0; k < COL_COUNT; ++k) {
+                        this->at(r, c) += this->at(r, k) * rhs.at(k, c);
+                    }
+                }
+            }
+
+            return *this;
+        }
+
         static constexpr int ROW_COUNT = 4;
         static constexpr int COL_COUNT = 4;
     };
