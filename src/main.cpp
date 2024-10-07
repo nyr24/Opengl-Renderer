@@ -72,17 +72,26 @@ int main() {
         true
     };
 
-    my_gl::Rotation3d rotation_anim{
+    my_gl::Rotation3d rotation3d_anim{
         my_gl_math::Vec3<float>{ 0.0f, 0.0f, 0.0f },
         my_gl_math::Vec3<float>{ 0.0f, 0.0f, -5.0f },
         my_gl_math::Vec3<float>{ 0.0f, 0.0f, -0.01f },
         true
     };
 
+
     my_gl::Scaling scaling_anim {
         my_gl_math::Vec3<float>{ 1.0f, 1.0f, 1.0f },
         my_gl_math::Vec3<float>{ 1.5f, 1.5f, 1.0f },
         my_gl_math::Vec3<float>{ 0.01f, 0.01f, 0.0f },
+        true
+    };
+
+    my_gl::Rotation rotation_anim{
+        30.0f,
+        90.0f,
+        0.01f,
+        my_gl_math::Global::X,
         true
     };
 
@@ -96,9 +105,9 @@ int main() {
         const auto elapsed_time{ static_cast<float>(glfwGetTime()) };
         glUniform1f(unif_elapsed_time_loc, elapsed_time);
 
-        glUniformMatrix4fv(unif_trans_mat_loc, 1, GL_TRUE, translation_anim.update().data());
+        //glUniformMatrix4fv(unif_trans_mat_loc, 1, GL_TRUE, translation_anim.update().data());
         glUniformMatrix4fv(unif_rot_mat_loc, 1, GL_TRUE, rotation_anim.update().data());
-        glUniformMatrix4fv(unif_scale_mat_loc, 1, GL_TRUE, scaling_anim.update().data());
+        //glUniformMatrix4fv(unif_scale_mat_loc, 1, GL_TRUE, scaling_anim.update().data());
 
         glBindBuffer(GL_ARRAY_BUFFER, positionBufferId);
         glEnableVertexAttribArray(positionAttribLocation);

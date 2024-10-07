@@ -32,7 +32,7 @@ namespace my_gl_math {
             T vLength{ length() };
             if (vLength > 0) {
                 T invLength{ 1 / vLength };
-                _data *=  invLength;
+                _data *= invLength;
             }
             return *this;
         }
@@ -192,7 +192,7 @@ namespace my_gl_math {
         }
 
     protected:
-        std::valarray<T> _data;
+        std::valarray<T> _data{};
     };
 
 

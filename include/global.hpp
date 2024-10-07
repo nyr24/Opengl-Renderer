@@ -7,6 +7,7 @@ namespace my_gl_math {
     template<typename T> requires std::floating_point<T>
     class Vec3;
 
+    // static
     class Global {
     public:
         static constexpr double PI = 3.14159;
@@ -75,16 +76,6 @@ namespace my_gl_math {
                 return true;
             return std::abs(x - y) <= std::numeric_limits<T>::epsilon() * std::max(std::abs(x), std::abs(y));
         }
-        /*  cmp_float 2
-            template <std::floating_point T>
-            bool AreEqual(T x, T y, int precision = 2)
-            {
-            // Scale the machine epsilon to the magnitude of the given values and
-            // multiply by the required precision.
-            return fabs(x - y) <= numeric_limits<T>::epsilon() * fabs(x + y) * precision
-            || fabs(x - y) < numeric_limits<T>::min(); // The result is subnormal.
-            }
-        */
 
     private:
         static constexpr double DEG_TO_RAD = PI / 180;

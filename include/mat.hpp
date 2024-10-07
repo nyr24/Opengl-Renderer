@@ -85,7 +85,7 @@ namespace my_gl_math {
         static Matrix44 rotation(float angleDeg, Global::AXIS axis) {
             Matrix44 rotationMatrix{ Matrix44::identity() };
             
-            const float angleRad{ angleDeg * Global::degToRad(angleDeg) };
+            const float angleRad{ Global::degToRad(angleDeg) };
             const float angleSin{ sinf(angleDeg) };
             const float angleCos{ cosf(angleDeg) };
 
@@ -174,7 +174,7 @@ namespace my_gl_math {
         }
 
         void rotate(float angleDeg, Global::AXIS axis) {
-            const float angleRad{ angleDeg * Global::degToRad(angleDeg) };
+            const float angleRad{ Global::degToRad(angleDeg) };
             const float angleSin{ sinf(angleDeg) };
             const float angleCos{ cosf(angleDeg) };
 
