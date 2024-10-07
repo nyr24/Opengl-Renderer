@@ -2,33 +2,11 @@
 
 layout (location = 0) in vec4 position;
 
-uniform mat4 u_local_mat;
+uniform mat4 u_translation_mat;
+uniform mat4 u_rotation_mat;
+uniform mat4 u_scaling_mat;
 
 void main() {
-    gl_Position = u_local_mat * position;
+    mat4 local_mat = u_translation_mat * u_rotation_mat * u_scaling_mat;
+    gl_Position = local_mat * position;
 }
-
-
-/* 
-
-    #version 330
-
-layout (location = 0) in vec4 position;
-//layout (location = 1) in vec4 color;
-
-uniform float u_elapsedTime;
-uniform float u_loopDuration;
-
-const float PI = 3.141592f;
-
-void main(){
-    float scale = PI * 2 / u_loopDuration;
-    float currTime = mod(u_elapsedTime, u_loopDuration);
-    vec2 offset = vec2(
-        cos(scale * currTime) * 1.25f,
-        sin(scale * currTime) * 1.25f
-    );
-
-    gl_Position = position + vec4(offset, 0.0f, 1.0f);
-}
- */

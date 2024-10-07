@@ -1,33 +1,17 @@
 #version 330
 
-out vec4 outputColor;
+out vec4 output_color;
 
-uniform float u_window_height;
+uniform float u_elapsed_time;
+uniform float u_loop_duration;
 
-const vec4 colorOne = vec4(0.0f, 0.0f, 1.0f, 1.0f);
-const vec4 colorTwo = vec4(0.0f, 1.0f, 0.0f, 1.0f);
-
-void main() {
-    outputColor = mix(colorOne, colorTwo, gl_FragCoord / u_window_height);
-}
-
-/* 
-
-
-    #version 330
-
-out vec4 outColor;
-
-uniform float u_elapsedTime;
-uniform float u_loopDuration;
-
-const vec4 colorOne = vec4(0.0f, 0.0f, 1.0f, 1.0f);
-const vec4 colorTwo = vec4(0.0f, 1.0f, 0.0f, 1.0f);
+const vec4 color_one = vec4(0.0f, 0.0f, 1.0f, 1.0f);
+const vec4 color_two = vec4(0.0f, 1.0f, 0.0f, 1.0f);
 
 void main() {
-    float currTime = mod(u_elapsedTime, u_loopDuration);
-    float lerpValue = sin(currTime);
+    float from_0_to_loop_dur = mod(u_elapsed_time, u_loop_duration);
+    float from_0_to_1 = from_0_to_loop_dur / u_loop_duration;
+    float lerp_val = sin(from_0_to_1);
 
-    outColor = mix(colorOne, colorTwo, lerpValue);
+    output_color = mix(color_one, color_two, lerp_val);
 }
- */
