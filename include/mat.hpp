@@ -22,11 +22,13 @@ namespace my_gl_math {
         const T& at(int row, int col) const {
             const int index{ row * COLS + col };
             assert((index >= 0 && index < (ROWS * COLS)) && "invalid indexing");
-            return _data[row * COLS + col];
+            return _data[index];
         }
 
         T& at(int row, int col) {
-            return const_cast<T&>(std::as_const(*this).at(row, col));
+            const int index{ row * COLS + col };
+            assert((index >= 0 && index < (ROWS * COLS)) && "invalid indexing");
+            return _data[index];
         }
 
         void print() const {
@@ -36,6 +38,8 @@ namespace my_gl_math {
                 }
                 std::cout << '\n';
             }
+
+            std::cout << '\n';
         }
 
         const T* data() const { return _data.data(); }
@@ -51,8 +55,8 @@ namespace my_gl_math {
     public:
         using MatrixBase<T, 4 ,4>::MatrixBase;
 
-        static Matrix44 identity() {
-            Matrix44 res;
+        static Matrix44<T> identity() {
+            Matrix44<T> res;
 
             res.at(0, 0) = 1;
             res.at(1, 1) = 1;
@@ -62,59 +66,59 @@ namespace my_gl_math {
             return res;
         }
 
-        static Matrix44 scaling(const Vec3<T>& scalingVec) {
-            Matrix44 scalingMatrix{ Matrix44::identity() };
+        static Matrix44<T> scaling(const Vec3<T>& scaling_vec) {
+            Matrix44<T> scalingMatrix{ Matrix44<T>::identity() };
             
-            scalingMatrix.at(0, 0) = scalingVec.x();
-            scalingMatrix.at(1, 1) = scalingVec.y();
-            scalingMatrix.at(2, 2) = scalingVec.z();
+            scalingMatrix.at(0, 0) = scaling_vec.x();
+            scalingMatrix.at(1, 1) = scaling_vec.y();
+            scalingMatrix.at(2, 2) = scaling_vec.z();
 
             return scalingMatrix;
         }
 
-        static Matrix44 translation(const Vec3<T>& translationVec) {
-            Matrix44 translationMatrix{ Matrix44::identity() };
+        static Matrix44<T> translation(const Vec3<T>& translation_vec) {
+            Matrix44<T> translationMatrix{ Matrix44<T>::identity() };
 
-            translationMatrix.at(0, 3) = translationVec.x();
-            translationMatrix.at(1, 3) = translationVec.y();
-            translationMatrix.at(2, 3) = translationVec.z();
+            translationMatrix.at(0, 3) = translation_vec.x();
+            translationMatrix.at(1, 3) = translation_vec.y();
+            translationMatrix.at(2, 3) = translation_vec.z();
 
             return translationMatrix;
         }
 
-        static Matrix44 rotation(float angleDeg, Global::AXIS axis) {
-            Matrix44 rotationMatrix{ Matrix44::identity() };
+        static Matrix44<T> rotation(float angle_deg, Global::AXIS axis) {
+            Matrix44<T> rotation_matrix{ Matrix44<T>::identity() };
             
-            const float angleRad{ Global::degToRad(angleDeg) };
-            const float angleSin{ sinf(angleDeg) };
-            const float angleCos{ cosf(angleDeg) };
+            const float angle_rad{ Global::degToRad(angle_deg) };
+            const float angle_sin{ sinf(angle_deg) };
+            const float angle_cos{ cosf(angle_deg) };
 
             switch (axis) {
             case Global::AXIS::X:
-                rotationMatrix.at(1, 1) = angleCos;
-                rotationMatrix.at(1, 2) = -angleSin;
-                rotationMatrix.at(2, 1) = angleSin;
-                rotationMatrix.at(2, 2) = angleCos;
+                rotation_matrix.at(1, 1) = angle_cos;
+                rotation_matrix.at(1, 2) = -angle_sin;
+                rotation_matrix.at(2, 1) = angle_sin;
+                rotation_matrix.at(2, 2) = angle_cos;
                 break;
             case Global::AXIS::Y:
-                rotationMatrix.at(0, 0) = angleCos;
-                rotationMatrix.at(0, 2) = angleSin;
-                rotationMatrix.at(2, 0) = -angleSin;
-                rotationMatrix.at(2, 2) = angleCos;
+                rotation_matrix.at(0, 0) = angle_cos;
+                rotation_matrix.at(0, 2) = angle_sin;
+                rotation_matrix.at(2, 0) = -angle_sin;
+                rotation_matrix.at(2, 2) = angle_cos;
                 break;
             case Global::AXIS::Z:
-                rotationMatrix.at(0, 0) = angleCos;
-                rotationMatrix.at(0, 1) = -angleSin;
-                rotationMatrix.at(1, 0) = angleSin;
-                rotationMatrix.at(1, 1) = angleCos;
+                rotation_matrix.at(0, 0) = angle_cos;
+                rotation_matrix.at(0, 1) = -angle_sin;
+                rotation_matrix.at(1, 0) = angle_sin;
+                rotation_matrix.at(1, 1) = angle_cos;
                 break;
             }
 
-            return rotationMatrix;
+            return rotation_matrix;
         }
 
-        static Matrix44 rotation3d(const my_gl_math::Vec3<float>& anglesVec) {
-            std::array<Matrix44, 3> mat_arr;
+        static Matrix44<T> rotation3d(const my_gl_math::Vec3<float>& anglesVec) {
+            std::array<Matrix44<T>, 3> mat_arr;
             std::array<my_gl_math::Global::AXIS, 3> axis_arr{
                 my_gl_math::Global::X,
                 my_gl_math::Global::Y,
@@ -122,20 +126,20 @@ namespace my_gl_math {
             };
             
             for (int i = 0; i < 3; ++i) {
-                mat_arr[i] = std::move(my_gl_math::Matrix44<float>::rotation(anglesVec[i], axis_arr[i]));
+                mat_arr[i] = std::move(my_gl_math::Matrix44<T>::rotation(anglesVec[i], axis_arr[i]));
             }
 
-            return Matrix44{ mat_arr[0] * mat_arr[1] * mat_arr[2] };
+            return Matrix44<T>{ mat_arr[0] * mat_arr[1] * mat_arr[2] };
         }
         
     // symmetric
-        static Matrix44 perspective(float fovYdeg, float aspect, float zFar, float zNear) {
-            const float fovYRad{ my_gl_math::Global::degToRad(fovYdeg) };
-            const float topToNear{ tanf(fovYRad / 2) };
-            const float top{ topToNear * zNear };
+        static Matrix44<T> perspective_fov(float fov_y_deg, float aspect, float zNear, float zFar) {
+            const float fov_y_rad{ my_gl_math::Global::degToRad(fov_y_deg) };
+            const float top_to_near{ tanf(fov_y_rad / 2) };
+            const float top{ top_to_near * zNear };
             const float right{ top * aspect };
 
-            Matrix44 res;
+            Matrix44<T> res;
 
             res.at(0, 0) = zNear / right;
             res.at(1, 1) = zNear / top;
@@ -146,8 +150,8 @@ namespace my_gl_math {
             return res;
         }
 
-        static Matrix44 perspective(float right, float left, float top, float bottom, float zNear, float zFar) {
-            Matrix44 res;
+        static Matrix44<T> perspective(float right, float left, float top, float bottom, float zNear, float zFar) {
+            Matrix44<T> res;
 
             res.at(0, 0) = (2.0f * zNear) / (right - left);
             res.at(0, 2) = (right + left) / (right - left);
@@ -161,47 +165,47 @@ namespace my_gl_math {
         }
 
     // non-static
-        void scale(const Vec3<T>& scalingVec) {
-            this->at(0, 0) = scalingVec.x();
-            this->at(1, 1) = scalingVec.y();
-            this->at(2, 2) = scalingVec.z();
+        void scale(const Vec3<T>& scaling_vec) {
+            this->at(0, 0) = scaling_vec.x();
+            this->at(1, 1) = scaling_vec.y();
+            this->at(2, 2) = scaling_vec.z();
         }
 
-        void translate(const Vec3<T>& translationVec) {
-            this->at(0, 3) = translationVec.x();
-            this->at(1, 3) = translationVec.y();
-            this->at(2, 3) = translationVec.z();
+        void translate(const Vec3<T>& translation_vec) {
+            this->at(0, 3) = translation_vec.x();
+            this->at(1, 3) = translation_vec.y();
+            this->at(2, 3) = translation_vec.z();
         }
 
-        void rotate(float angleDeg, Global::AXIS axis) {
-            const float angleRad{ Global::degToRad(angleDeg) };
-            const float angleSin{ sinf(angleDeg) };
-            const float angleCos{ cosf(angleDeg) };
+        void rotate(float angle_deg, Global::AXIS axis) {
+            const float angle_rad{ Global::degToRad(angle_deg) };
+            const float angle_sin{ sinf(angle_deg) };
+            const float angle_cos{ cosf(angle_deg) };
 
             switch (axis) {
             case Global::AXIS::X:
-                this->at(1, 1) = angleCos;
-                this->at(1, 2) = -angleSin;
-                this->at(2, 1) = angleSin;
-                this->at(2, 2) = angleCos;
+                this->at(1, 1) = angle_cos;
+                this->at(1, 2) = -angle_sin;
+                this->at(2, 1) = angle_sin;
+                this->at(2, 2) = angle_cos;
                 break;
             case Global::AXIS::Y:
-                this->at(0, 0) = angleCos;
-                this->at(0, 2) = angleSin;
-                this->at(2, 0) = -angleSin;
-                this->at(2, 2) = angleCos;
+                this->at(0, 0) = angle_cos;
+                this->at(0, 2) = angle_sin;
+                this->at(2, 0) = -angle_sin;
+                this->at(2, 2) = angle_cos;
                 break;
             case Global::AXIS::Z:
-                this->at(0, 0) = angleCos;
-                this->at(0, 1) = -angleSin;
-                this->at(1, 0) = angleSin;
-                this->at(1, 1) = angleCos;
+                this->at(0, 0) = angle_cos;
+                this->at(0, 1) = -angle_sin;
+                this->at(1, 0) = angle_sin;
+                this->at(1, 1) = angle_cos;
                 break;
             }
         }
 
         void rotate3d(const my_gl_math::Vec3<float>& rotationVec) {
-            std::array<Matrix44<float>, 3> mat_arr;
+            std::array<Matrix44<T>, 3> mat_arr;
             std::array<my_gl_math::Global::AXIS, 3> axis_arr{
                 my_gl_math::Global::X,
                 my_gl_math::Global::Y,
@@ -217,16 +221,14 @@ namespace my_gl_math {
 
 
     // need to be tested
-        Matrix44& transpose() {
-            for (int i = 1; i < ROW_COUNT; ++i) {
-                std::swap(this->at(i, 0), this->at(0, i));
+        Matrix44<T>& transpose() {
+            for (int i = 0; i < ROW_COUNT; ++i) {
+                for (int j = i; j < COL_COUNT; ++j) {
+                    T temp{ this->at(i, j) };
+                    this->at(i, j) = this->at(j, i);
+                    this->at(j, i) = temp;
+                }
             }
-
-            for (int i = 2; i < ROW_COUNT; ++i) {
-                std::swap(this->at(i, 1), this->at(1, i));
-            }
-            
-            std::swap(this->at(3, 2), this->at(2, 3));
             
             return *this;
         }
@@ -262,9 +264,10 @@ namespace my_gl_math {
         
         friend Vec3<T> operator*(const Matrix44<T>& m, const Vec3<T>& v) {
             Vec3<T> res;
+            constexpr int vec_size{ res.size() };
 
-            for (int r{ 0 }; r < m.ROW_COUNT; ++r) {
-                for (int c{ 0 }; c < v.size(); ++c) {
+            for (int r{ 0 }; r < vec_size; ++r) {
+                for (int c{ 0 }; c < vec_size; ++c) {
                     res[r] += m.at(r, c) * v[c];
                 }
             }

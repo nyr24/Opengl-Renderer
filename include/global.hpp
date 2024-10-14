@@ -39,7 +39,7 @@ namespace my_gl_math {
         static constexpr Vec3<T> spher_to_cart(const Spherical_coords<T>& spher_coords) {
             Vec3<T> res;
             
-            T theta_rad{ degToRad(spher_coords.length) };
+            T theta_rad{ degToRad(spher_coords.theta_deg) };
             T phi_rad{ degToRad(spher_coords.phi_deg) };
             
             res[0] = spher_coords.length * std::sin(theta_rad) * std::cos(phi_rad);
@@ -53,8 +53,10 @@ namespace my_gl_math {
         static constexpr Spherical_coords<T> cart_to_spher(const Vec3<T>& cart_coords) {
             Spherical_coords spher_coords{ .length = cart_coords.length() };
 
-            spher_coords.theta_deg = std::acos(cart_coords[2]);
-            spher_coords.phi_deg = std::atan2(cart_coords[1], cart_coords[0]);
+            auto normalized_vec{ cart_coords.normalize_new() };
+
+            spher_coords.theta_deg = std::acos(normalized_vec[2]);
+            spher_coords.phi_deg = std::atan2(normalized_vec[1], normalized_vec[0]);
 
             return spher_coords;
         }

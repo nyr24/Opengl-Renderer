@@ -28,13 +28,19 @@ namespace my_gl_math {
             return std::sqrt(squared_data.sum());
         }
 
-        Vec<T, DERIVED_T, EL_COUNT>& normalize() {
+        Vec<T, DERIVED_T, EL_COUNT>& normalize_inplace() {
             T vLength{ length() };
             if (vLength > 0) {
                 T invLength{ 1 / vLength };
                 _data *= invLength;
             }
             return *this;
+        }
+
+        Vec<T, DERIVED_T, EL_COUNT> normalize_new() const {
+            auto res{ *this };
+            res.normalize_inplace();
+            return res;
         }
 
         T dot(const Vec<T, DERIVED_T, EL_COUNT>& rhs) const {
@@ -173,7 +179,7 @@ namespace my_gl_math {
         }
 
     // utility
-        constexpr T size() const { return EL_COUNT; }
+        constexpr int size() const { return EL_COUNT; }
 
         void print() const {
             for (const T el : _data) {

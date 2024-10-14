@@ -17,6 +17,17 @@ my_gl::Window my_gl::init() {
 	glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
 	glDebugMessageCallback(my_gl::GLDebugMessageCallback, NULL);
 
+    // culling
+    glEnable(GL_CULL_FACE);
+    glCullFace(GL_BACK);
+    glFrontFace(GL_CCW);
+
+    // depth test
+    glEnable(GL_DEPTH_TEST);
+    glDepthFunc(GL_LESS);
+    glDepthRange(0.0f, 1.0f);
+
+
     return window;
 }
 
@@ -50,6 +61,9 @@ void my_gl::initVertexBuffer(GLuint* bufferObjectId, const float vertexPositions
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
+void my_gl::initIndexBuffer(GLuint* bufferObjectId, const float vertexPositions[], size_t vertexCount, GLenum drawMode) {
+    // TO DO
+}
 
 void my_gl::initVertexArrayObject(GLuint* vaoId) {
     glGenVertexArrays(1, vaoId);
