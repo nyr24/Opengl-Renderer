@@ -57,7 +57,7 @@ namespace my_gl {
             : _axis{ axis }
             , _loop{ loop }
         {
-            static_assert(ANIM_TYPE == ROTATE);
+            static_assert(ANIM_TYPE == ANIMATION_KIND::ROTATE);
 
             switch (_axis) {
             case my_gl_math::Global::X:
