@@ -45,8 +45,8 @@ namespace my_gl {
             }
         }
 
-    // constructor for scalar (float/int/double) input
-    // useful in rotation around single axis
+        // constructor for scalar (float/int/double) input
+        // useful in rotation around single axis
         Animation(
             VAL_TYPE start_val,
             VAL_TYPE end_val, 
@@ -85,7 +85,7 @@ namespace my_gl {
         }
 
 
-        const my_gl_math::Matrix44<VAL_TYPE>& update() {
+        my_gl_math::Matrix44<VAL_TYPE>& update() {
             if (_is_ended) {
                 return _mat;
             }

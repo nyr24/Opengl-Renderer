@@ -2,7 +2,6 @@
 #include <GLFW/glfw3.h>
 #include <iostream>
 #include <array>
-#include <memory>
 #include "utils.hpp"
 #include "window.hpp"
 #include "mat.hpp"
@@ -27,85 +26,101 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 int main() {
     my_gl::Window window{ my_gl::init() };
 
-    my_gl::Program program{ my_gl::Program("../shaders/vertShader.vert", "../shaders/fragShader.frag") };
+    #define LEFT_TOP_NEAR       -.5f, .5f, .5f
+    #define LEFT_BOT_NEAR       -.5f, -.5f, .5f
+    #define LEFT_TOP_FAR        -.5f, .5f, -.5f
+    #define LEFT_BOT_FAR        -.5f, -.5f, -.5f
+    #define RIGHT_TOP_NEAR      .5f, .5f, .5f
+    #define RIGHT_BOT_NEAR      .5f, -.5f, .5f
+    #define RIGHT_TOP_FAR       .5f, .5f, -.5f
+    #define RIGHT_BOT_FAR       .5f, -.5f, -.5f
 
-    program.set_attrib("position");
-    program.set_uniform("u_local_mat");
-    program.set_uniform("u_proj_mat");
-    program.set_uniform("u_elapsed_time");
-    program.set_uniform("u_loop_duration");
+    // colors
+    #define RED     1.0f, 0.0f, 0.0f, 1.0f
+    #define GREEN   0.0f, 1.0f, 0.0f, 1.0f
+    #define BLUE    0.0f, 0.0f, 1.0f, 1.0f
+    #define ORANGE  1.0f, 0.5f, 0.1f, 1.0f
+    #define PURPLE  0.5f, 0.0f, 0.5f, 1.0f
+    #define YELLOW  1.0f, 1.0f, 0.0f, 1.0f
 
-    glfwSetKeyCallback(window.ptr_raw(), key_callback);
+    std::vector<float> vertices = {
+        // front
+        LEFT_TOP_NEAR, LEFT_BOT_NEAR, RIGHT_BOT_NEAR, RIGHT_TOP_NEAR,
+        // back
+        LEFT_TOP_FAR, LEFT_BOT_FAR, RIGHT_BOT_FAR, RIGHT_TOP_FAR,
+        // right
+        RIGHT_TOP_NEAR, RIGHT_BOT_NEAR, RIGHT_TOP_FAR, RIGHT_BOT_FAR,
+        // left
+        LEFT_TOP_NEAR, LEFT_BOT_NEAR, LEFT_TOP_FAR, LEFT_BOT_FAR,
+        // top
+        LEFT_TOP_NEAR, RIGHT_TOP_NEAR, LEFT_TOP_FAR, RIGHT_TOP_FAR,
+        // bottom
+        LEFT_BOT_NEAR, RIGHT_BOT_NEAR, LEFT_BOT_FAR, RIGHT_BOT_FAR,
 
-    GLuint vaoId;
-    my_gl::initVertexArrayObject(&vaoId);
+        // COLORS
 
-// vertices
-    #define LEFT_BOTTOM_NEAR     -1.0f, -1.0f, 1.0f, 1.0f 
-    #define LEFT_BOTTOM_FAR      -1.0f, -1.0f, -1.0f, 1.0f 
-    #define LEFT_TOP_NEAR        -1.0f, 1.0f, 1.0f, 1.0f 
-    #define LEFT_TOP_FAR         -1.0f, 1.0f, -1.0f, 1.0f 
-    #define RIGHT_BOTTOM_NEAR    1.0f, -1.0f, 1.0f, 1.0f 
-    #define RIGHT_BOTTOM_FAR     1.0f, -1.0f, -1.0f, 1.0f 
-    #define RIGHT_TOP_NEAR       1.0f, 1.0f, 1.0f, 1.0f
-    #define RIGHT_TOP_FAR        1.0f, 1.0f, -1.0f, 1.0f 
-
-// colors
-    #define COLOR_RED            0.9f, 0.15f, 0.0f, 1.0f 
-    #define COLOR_GREEN          0.0f, 0.9f, 0.05f, 1.0f 
-    #define COLOR_BLUE           0.0f, 0.05f, 0.9f, 1.0f 
-    #define COLOR_YELLOW         0.55f, 0.45f, 0.0f, 1.0f 
-    #define COLOR_ORANGE         0.8f, 0.35f, 0.0f, 1.0f 
-    #define COLOR_PURPLE         0.25f, 0.0f, 0.85f, 1.0f 
-    
-    constexpr std::size_t bufferSize{ sizeof(float) * 4 * 3 * 12 };
-
-    constexpr std::array<float, bufferSize> vertex_positions = {
-        // vertices
-        LEFT_BOTTOM_NEAR,
-        LEFT_TOP_NEAR,
-        LEFT_BOTTOM_FAR,
-        LEFT_TOP_FAR,
-        RIGHT_BOTTOM_NEAR,
-        RIGHT_TOP_NEAR,
-        RIGHT_BOTTOM_FAR,
-        RIGHT_TOP_FAR,
-
-        // colors
-        COLOR_RED,
-        COLOR_GREEN,
-        COLOR_BLUE,
-        COLOR_YELLOW,
-        COLOR_ORANGE,
-        COLOR_PURPLE
+        // front
+        GREEN, GREEN, GREEN, GREEN,
+        // back
+        YELLOW, YELLOW, YELLOW, YELLOW,
+        // right
+        BLUE, BLUE, BLUE, BLUE,
+        // left
+        RED, RED, RED, RED,
+        // top
+        ORANGE, ORANGE, ORANGE, ORANGE,
+        // bottom
+        PURPLE, PURPLE, PURPLE, PURPLE,
     };
 
-    constexpr std::array<unsigned int, 3 * 12> indeces = {
-        
+    std::vector<uint16_t> indices = {
+        0, 1, 2,        0, 2, 3,
+        4, 6, 5,        4, 7, 6,
+        8, 9, 10,       9, 11, 10,
+        12, 14, 13,     13, 14, 15,
+        16, 17, 18,     17, 19, 18,
+        20, 22, 21,     21, 22, 23
     };
 
-    GLuint positionBufferId;
-    my_gl::initVertexBuffer(&positionBufferId, vertex_positions.data(), vertex_positions.size(), GL_STATIC_DRAW);
+    std::vector<my_gl::Attribute> attributes = {
+        my_gl::Attribute{ .name = "position", .gl_type = GL_FLOAT, .count = 3, .byte_stride = 0, .byte_offset = 0 },
+        my_gl::Attribute{ .name = "color", .gl_type = GL_FLOAT, .count = 4, .byte_stride = 0, .byte_offset = sizeof(float) * 3 * 24 }
+    };
 
-    // constants
-    constexpr float loop_dur = 3.0f;
+    std::vector<my_gl::Uniform> uniforms = {
+        { .name = "u_local_mat" },
+        { .name = "u_proj_mat" }
+    };
 
-    // static uniforms
-    program.use();
-    glUniform1f(program.get_uniform_loc("u_loop_duration"), loop_dur);
-    program.un_use();
+    my_gl::Program program{ my_gl::Program(
+        "../shaders/vertShader.vert", 
+        "../shaders/fragShader.frag",
+        std::move(attributes),
+        std::move(uniforms),
+        std::move(vertices),
+        std::move(indices)
+    )};
 
     glViewport(0, 0, window.width(), window.height());
     glfwSwapInterval(1);
 
-    auto rotation_mat{ my_gl_math::Matrix44<float>::rotation3d(
-        my_gl_math::Vec3<float>{ 11.0f, 11.0f, 0.0f }
-    ) };
-    auto scale_mat{ my_gl_math::Matrix44<float>::scaling(
-        my_gl_math::Vec3<float>{ 0.6f, 0.6f, 1.0f }
-    ) };
+    auto rotation_anim{ my_gl::Rotation3d(
+        { 0.0f, 0.0f, 0.0f },
+        { 180.0f, 180.0f, 0.0f },
+        { 0.01f, 0.01f, 0.0f },
+        true
+    )};
 
-    auto local_mat{ scale_mat * rotation_mat };
+   /*  auto camera_translation_anim{ my_gl::Translation(
+        { 0.0f, 0.0f, -3.0f },
+        { 0.0f, 0.0f, -5.0f },
+        { 0.0f, 0.0f, -0.05f },
+        true
+    )}; */
+
+    auto projection_mat{ my_gl_math::Matrix44<float>::perspective_fov(
+        45.0f, window.width() / window.height(), 0.1f, 50.0f
+    )};
 
     while (!glfwWindowShouldClose(window.ptr_raw()))
     {
@@ -115,27 +130,25 @@ int main() {
 
         program.use();
 
-        const auto elapsed_time{ static_cast<float>(glfwGetTime()) };
-        glUniform1f(program.get_uniform_loc("u_elapsed_time"), elapsed_time);
+        program.bind_vao();
 
-        const float aspect = window.width() / window.height();
+        const auto& rotation_mat{ rotation_anim.update() };
+        auto translation_mat{ my_gl_math::Matrix44<float>::translation(
+            my_gl_math::Vec3<float>{ 0.0f, 0.0f, -3.0f }
+        )};
 
-        auto proj_mat{ 
-            my_gl_math::Matrix44<float>::perspective_fov(45.0f, aspect, 0.1f, 5.0f) 
-        };
+        my_gl_math::Matrix44<float> local_mat{ translation_mat * rotation_mat };
 
-        glUniformMatrix4fv(program.get_uniform_loc("u_local_mat"), 1, true, local_mat.data());
-        glUniformMatrix4fv(program.get_uniform_loc("u_proj_mat"), 1, true, proj_mat.data());
+        glUniformMatrix4fv(program.get_uniform("u_local_mat")->location, 1, true, local_mat.data());
+        glUniformMatrix4fv(program.get_uniform("u_proj_mat")->location, 1, true, projection_mat.data());
 
-        glBindBuffer(GL_ARRAY_BUFFER, positionBufferId);
-        glEnableVertexAttribArray(program.get_attrib_loc("position"));
-        glVertexAttribPointer(program.get_attrib_loc("position"), 4, GL_FLOAT, GL_FALSE, 0, 0);
-
-        glDrawArrays(GL_TRIANGLES, 0, 3 * 12);
-
+        glDrawElements(GL_TRIANGLES, program.get_vertex_count(), GL_UNSIGNED_SHORT, 0);
+    
         glfwSwapBuffers(window.ptr_raw());
-        glfwPollEvents();
+        glfwPollEvents(); 
     }
+
+    program.un_use();
 
     return 0;
 }

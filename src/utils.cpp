@@ -27,7 +27,6 @@ my_gl::Window my_gl::init() {
     glDepthFunc(GL_LESS);
     glDepthRange(0.0f, 1.0f);
 
-
     return window;
 }
 
@@ -52,24 +51,6 @@ void my_gl::initGLEW() {
         std::exit(EXIT_FAILURE);
     } 
 }
-
-void my_gl::initVertexBuffer(GLuint* bufferObjectId, const float vertexPositions[], size_t vertexCount, GLenum drawMode) {
-    glCreateBuffers(1, bufferObjectId);
-
-    glBindBuffer(GL_ARRAY_BUFFER, *bufferObjectId);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * vertexCount, vertexPositions, drawMode);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-}
-
-void my_gl::initIndexBuffer(GLuint* bufferObjectId, const float vertexPositions[], size_t vertexCount, GLenum drawMode) {
-    // TO DO
-}
-
-void my_gl::initVertexArrayObject(GLuint* vaoId) {
-    glGenVertexArrays(1, vaoId);
-    glBindVertexArray(*vaoId);
-}
-
 
 GLuint my_gl::createProgram(const char* vertexShaderFilePath, const char* fragmentShaderFilePath) {
     GLuint program{ glCreateProgram() };
@@ -249,6 +230,6 @@ void my_gl::GLDebugMessageCallback(GLenum source, GLenum type, GLuint id, GLenum
         break;
     }
 
-    printf("[Open gl error]%d: %s of %s severity, raised from %s: %s\n",
+    printf("[Open gl note]%d: %s of %s severity, raised from %s: %s\n",
         id, _type, _severity, _source, msg);
 } 
