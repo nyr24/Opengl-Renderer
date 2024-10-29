@@ -88,8 +88,7 @@ int main() {
     };
 
     std::vector<my_gl::Uniform> uniforms = {
-        { .name = "u_local_mat" },
-        { .name = "u_proj_mat" }
+        { .name = "u_mvp_mat" },
     };
 
     my_gl::Program program{ my_gl::Program(
@@ -111,15 +110,26 @@ int main() {
         true
     )};
 
-   /*  auto camera_translation_anim{ my_gl::Translation(
-        { 0.0f, 0.0f, -3.0f },
-        { 0.0f, 0.0f, -5.0f },
-        { 0.0f, 0.0f, -0.05f },
+    auto translation_anim1{ my_gl::Translation(
+        { 1.0f, 1.0f, -1.0f },
+        { -1.0f, -1.0f, -1.0f },
+        { -0.01f, -0.01f, 0.0f },
         true
-    )}; */
+    )};
+
+    auto translation_anim2{ my_gl::Translation(
+        { -1.0f, -1.0f, 1.0f },
+        { 1.0f, 1.0f, 1.0f },
+        { 0.01f, 0.01f, 0.0f },
+        true
+    )};
+
+    auto view_mat{ my_gl_math::Matrix44<float>::translation(
+        my_gl_math::Vec3<float>{ 0.0f, 0.0f, -4.0f }
+    )};
 
     auto projection_mat{ my_gl_math::Matrix44<float>::perspective_fov(
-        45.0f, window.width() / window.height(), 0.1f, 50.0f
+        65.0f, window.width() / window.height(), 0.1f, 50.0f
     )};
 
     while (!glfwWindowShouldClose(window.ptr_raw()))
@@ -133,16 +143,23 @@ int main() {
         program.bind_vao();
 
         const auto& rotation_mat{ rotation_anim.update() };
-        auto translation_mat{ my_gl_math::Matrix44<float>::translation(
-            my_gl_math::Vec3<float>{ 0.0f, 0.0f, -3.0f }
-        )};
 
-        my_gl_math::Matrix44<float> local_mat{ translation_mat * rotation_mat };
+        {
+            const auto& translation_mat1{ translation_anim1.update() };
+            auto local_mat{ translation_mat1 * rotation_mat };
+            my_gl_math::Matrix44<float> mvp_mat{ projection_mat * view_mat * local_mat };
+            glUniformMatrix4fv(program.get_uniform("u_mvp_mat")->location, 1, true, mvp_mat.data());
+            glDrawElements(GL_TRIANGLES, program.get_vertex_count(), GL_UNSIGNED_SHORT, 0);
+        }
 
-        glUniformMatrix4fv(program.get_uniform("u_local_mat")->location, 1, true, local_mat.data());
-        glUniformMatrix4fv(program.get_uniform("u_proj_mat")->location, 1, true, projection_mat.data());
 
-        glDrawElements(GL_TRIANGLES, program.get_vertex_count(), GL_UNSIGNED_SHORT, 0);
+        {
+            const auto& translation_mat2{ translation_anim2.update() };
+            auto local_mat{ translation_mat2 * rotation_mat };
+            my_gl_math::Matrix44<float> mvp_mat{ projection_mat * view_mat * local_mat };
+            glUniformMatrix4fv(program.get_uniform("u_mvp_mat")->location, 1, true, mvp_mat.data());
+            glDrawElements(GL_TRIANGLES, program.get_vertex_count(), GL_UNSIGNED_SHORT, 0);
+        }
     
         glfwSwapBuffers(window.ptr_raw());
         glfwPollEvents(); 

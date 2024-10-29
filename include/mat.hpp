@@ -7,7 +7,7 @@
 #include "global.hpp"
 
 namespace my_gl_math {
-    template<typename T, int ROWS, int COLS>
+    template<typename T, int ROWS, int COLS> requires std::floating_point<T>
     class MatrixBase {
     public:
         MatrixBase() = default;
@@ -50,7 +50,7 @@ namespace my_gl_math {
 
 
 // Matrix 4x4
-    template<typename T = float>
+    template<typename T = float> requires std::floating_point<T>
     class Matrix44 : public MatrixBase<T, 4, 4> {
     public:
         using MatrixBase<T, 4 ,4>::MatrixBase;
