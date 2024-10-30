@@ -3,7 +3,7 @@
 #include <vector>
 #include <GLEW/glew.h>
 #include <cstdint>
-#include "mat.hpp"
+#include "matrix.hpp"
 
 namespace my_gl {
     class VertexArray;

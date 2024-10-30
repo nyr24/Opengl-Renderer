@@ -1,6 +1,6 @@
 #pragma once
-#include "animation.hpp"
 #include <vector>
+#include "animation.hpp"
 
 namespace my_gl {
     constexpr inline float dasd = 123.0f;

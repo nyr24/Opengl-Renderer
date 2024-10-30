@@ -6,7 +6,7 @@
 #include <memory>
 
 namespace my_gl {
-    my_gl::Window init();
+    my_gl::Window init_window();
 
     void initGLFW();
     void initGLEW();

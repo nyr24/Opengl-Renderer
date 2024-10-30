@@ -1,9 +1,8 @@
 #pragma once
-#include "mat.hpp"
-#include "vec.hpp"
 #include <array>
 #include <concepts>
 #include <cassert>
+#include "matrix.hpp"
 
 namespace my_gl {
     enum ANIMATION_TYPE {

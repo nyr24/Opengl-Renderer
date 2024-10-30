@@ -4,7 +4,7 @@
 #include <vector>
 #include "utils.hpp"
 
-my_gl::Window my_gl::init() {
+my_gl::Window my_gl::init_window() {
     std::cout << "Starting GLFW context, OpenGL 3.3\n";
 
     my_gl::initGLFW();

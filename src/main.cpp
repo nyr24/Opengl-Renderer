@@ -4,9 +4,6 @@
 #include <array>
 #include "utils.hpp"
 #include "window.hpp"
-#include "mat.hpp"
-#include "vec.hpp"
-#include "animation.hpp"
 #include "renderer.hpp"
 #include "geometryObject.hpp"
 
@@ -25,7 +22,7 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 
 
 int main() {
-    my_gl::Window window{ my_gl::init() };
+    my_gl::Window window{ my_gl::init_window() };
 
     std::vector<my_gl::Attribute> attributes = {
         my_gl::Attribute{ .name = "position", .gl_type = GL_FLOAT, .count = 3, .byte_stride = 0, .byte_offset = 0 },

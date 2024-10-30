@@ -3,8 +3,8 @@
 #include <array>
 #include <initializer_list>
 #include <concepts>
-#include "global.hpp"
 #include <cstdint>
+#include "math.hpp"
 
 namespace my_gl_math {
     template<typename T, uint32_t N> requires std::floating_point<T>

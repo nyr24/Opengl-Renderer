@@ -4,7 +4,6 @@
 #include <iostream>
 #include <cassert>
 #include "vec.hpp"
-#include "global.hpp"
 
 namespace my_gl_math {
     template<typename T, int ROWS, int COLS> requires std::floating_point<T>
