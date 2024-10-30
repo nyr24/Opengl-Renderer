@@ -276,16 +276,8 @@ namespace my_gl_math {
         }
 
         Matrix44<T>& operator*=(const Matrix44<T>& rhs) {
-            for (int r = 0; r < ROW_COUNT; ++r) {
-                for (int c = 0; c < COL_COUNT; ++c) {
-                    this->at(r, c) = 0;
-
-                    for (int k = 0; k < COL_COUNT; ++k) {
-                        this->at(r, c) += this->at(r, k) * rhs.at(k, c);
-                    }
-                }
-            }
-
+            auto res = *this * rhs;
+            *this = res;
             return *this;
         }
 

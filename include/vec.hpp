@@ -4,6 +4,7 @@
 #include <initializer_list>
 #include <concepts>
 #include "global.hpp"
+#include <cstdint>
 
 namespace my_gl_math {
     template<typename T, uint32_t N> requires std::floating_point<T>

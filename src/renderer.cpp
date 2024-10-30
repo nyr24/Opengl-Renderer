@@ -1,27 +1,19 @@
 #include <iostream>
-#include "program.hpp"
+#include "renderer.hpp"
 #include "utils.hpp"
+#include "geometryObject.hpp"
 
 my_gl::Program::Program(
     const char*                         vertex_shader_path,
     const char*                         fragment_shader_path,
-    std::vector<my_gl::Attribute>&&     attribs,
-    // forwarded to VertexData
-    std::vector<float>&&                vbo_data,
-    std::vector<uint16_t>&&             ibo_data
+    std::vector<my_gl::Attribute>&&     attribs
 )
-    : _prog_id{ my_gl::createProgram(vertex_shader_path, fragment_shader_path) }
-    , _vertex_data{
-        std::move(vbo_data),
-        std::move(ibo_data)
-    }
+    : _program_id{ my_gl::createProgram(vertex_shader_path, fragment_shader_path) }
 {
     // set attributes
     for (my_gl::Attribute& attrib : attribs) {
         this->set_attrib(attrib);
     }
-
-    _vertex_data.init(this);
 }
 
 // uniforms provided
@@ -29,16 +21,9 @@ my_gl::Program::Program(
     const char*                         vertex_shader_path,
     const char*                         fragment_shader_path,
     std::vector<my_gl::Attribute>&&     attribs,
-    std::vector<my_gl::Uniform>&&       unifs,
-    // forwarded to VertexData
-    std::vector<float>&&                vbo_data,
-    std::vector<uint16_t>&&             ibo_data
+    std::vector<my_gl::Uniform>&&       unifs
 )
-    : _prog_id{ my_gl::createProgram(vertex_shader_path, fragment_shader_path) }
-    , _vertex_data{
-        std::move(vbo_data),
-        std::move(ibo_data)
-    }
+    : _program_id{ my_gl::createProgram(vertex_shader_path, fragment_shader_path) }
 {
     // set attributes
     for (my_gl::Attribute& attrib : attribs) {
@@ -48,12 +33,10 @@ my_gl::Program::Program(
     for (my_gl::Uniform& unif : unifs) {
         this->set_uniform(unif);
     }
-
-    _vertex_data.init(this);
 }
 
 my_gl::Program::~Program() {
-    glDeleteProgram(_prog_id);
+    glDeleteProgram(_program_id);
 }
 
 const my_gl::Attribute* const my_gl::Program::get_attrib(const char* attrib_name) const {
@@ -77,15 +60,15 @@ const my_gl::Uniform* const my_gl::Program::get_uniform(const char* unif_name) c
 }
 
 void my_gl::Program::set_attrib(my_gl::Attribute& attr) {
-    if (_prog_id == 0) {
+    if (_program_id == 0) {
         std::cerr << "program is not initialized, attribute: " << attr.name << " can't be set\n";
         return;
     }
 
-    GLint attr_loc{ glGetAttribLocation(_prog_id, attr.name) };
+    GLint attr_loc{ glGetAttribLocation(_program_id, attr.name) };
 
     if (attr_loc == -1) {
-        std::cerr << "attribute name: " << attr.name << " wasn't found for program: " << _prog_id << "\nnothing was set\n";
+        std::cerr << "attribute name: " << attr.name << " wasn't found for program: " << _program_id << "\nnothing was set\n";
         return;
     }
     
@@ -95,15 +78,15 @@ void my_gl::Program::set_attrib(my_gl::Attribute& attr) {
 }
 
 void my_gl::Program::set_uniform(my_gl::Uniform& unif) {
-    if (_prog_id == 0) {
+    if (_program_id == 0) {
         std::cerr << "program is not initialized, uniform: " << unif.name << " can't be set\n";
         return;
     }
 
-    GLint unif_loc{ glGetUniformLocation(_prog_id, unif.name) };
+    GLint unif_loc{ glGetUniformLocation(_program_id, unif.name) };
 
     if (unif_loc == -1) {
-        std::cerr << "uniform name: " << unif.name << " wasn't found for program: " << _prog_id << "\nnothing was set";
+        std::cerr << "uniform name: " << unif.name << " wasn't found for program: " << _program_id << "\nnothing was set";
         return;
     }
 
@@ -120,24 +103,16 @@ const std::unordered_map<const char*, my_gl::Uniform>& my_gl::Program::get_unifs
     return _unifs;
 } 
 
-// VertexData
-my_gl::VertexData::VertexData(
+// VertexArray
+my_gl::VertexArray::VertexArray(
     std::vector<float>&& vbo_data,
-    std::vector<uint16_t>&& ibo_data
+    std::vector<uint16_t>&& ibo_data,
+    const my_gl::Program& program
 )
     : _vbo_data{ std::move(vbo_data) }
     , _ibo_data{ std::move(ibo_data) }
-{}
-
-my_gl::VertexData::~VertexData() {
-    glDeleteVertexArrays(1, &_vao_id);
-    glDeleteBuffers(1, &_vbo_id);
-    glDeleteBuffers(1, &_ibo_id);
-}
-
-void my_gl::VertexData::init(const Program* program) {
-    _program = program;
-
+    , _program{ program }
+{
     // vao
     glCreateVertexArrays(1, &_vao_id);
     glBindVertexArray(_vao_id);
@@ -147,12 +122,12 @@ void my_gl::VertexData::init(const Program* program) {
     glBindBuffer(GL_ARRAY_BUFFER, _vbo_id);
     glBufferData(GL_ARRAY_BUFFER, sizeof(float) * _vbo_data.size(), _vbo_data.data(), GL_STATIC_DRAW);
 
-    // indeces
+    // indices
     glCreateBuffers(1, &_ibo_id);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _ibo_id);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(uint16_t) * _ibo_data.size(), _ibo_data.data(), GL_STATIC_DRAW);
 
-    const auto& attrs = _program->get_attrs();
+    const auto& attrs = _program.get_attrs();
 
     for (auto it = attrs.begin(); it != attrs.end(); ++it) {
         const my_gl::Attribute& attr_ref{ it->second };
@@ -167,4 +142,42 @@ void my_gl::VertexData::init(const Program* program) {
     glBindVertexArray(0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+}
+
+my_gl::VertexArray::~VertexArray() {
+    glDeleteVertexArrays(1, &_vao_id);
+    glDeleteBuffers(1, &_vbo_id);
+    glDeleteBuffers(1, &_ibo_id);
+}
+
+// Renderer
+my_gl::Renderer::Renderer(
+    std::vector<IGeometry_object*>&& objects,
+    my_gl_math::Matrix44<float>&&   proj_mat,
+    my_gl_math::Matrix44<float>&&   view_mat,
+    my_gl::Program& program,
+    my_gl::VertexArray& vertex_arr
+) 
+    : _objects{ std::move(objects) }
+    , _proj_mat{ std::move(proj_mat) }
+    , _view_mat{ std::move(view_mat) }
+    , _program{ program }
+    , _vertex_arr{ vertex_arr }
+{}
+
+void my_gl::Renderer::render() const {
+    for (int i = 0; i < _objects.size(); ++i) {
+        const auto local_mat{ _objects[i]->get_local_mat() };
+        my_gl_math::Matrix44<float> mvp_mat{ _proj_mat * _view_mat * local_mat };
+        // pizdec
+        int loc = glGetUniformLocation(_program.get_id(), "u_mvp_mat");
+        glUniformMatrix4fv(loc, 1, true, mvp_mat.data());
+        //glUniformMatrix4fv(_program.get_uniform("u_mvp_mat")->location, 1, true, mvp_mat.data());
+        glDrawElements(
+            GL_TRIANGLES, 
+            _objects[i]->get_vertices_count(), 
+            GL_UNSIGNED_SHORT, 
+            reinterpret_cast<const void*>(_objects[i]->get_buffer_byte_offset())
+        );
+    }
 }

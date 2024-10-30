@@ -2,9 +2,14 @@
 #include <unordered_map>
 #include <vector>
 #include <GLEW/glew.h>
+#include <cstdint>
+#include "mat.hpp"
 
 namespace my_gl {
+    class VertexArray;
     class Program;
+    class Renderer;
+    class IGeometry_object;
 
     struct Attribute {
         const char*     name;
@@ -20,15 +25,15 @@ namespace my_gl {
         int32_t             location{ -1 };
     };
 
-    class VertexData {
+    class VertexArray {
     public:
-        VertexData(
+        VertexArray(
             std::vector<float>&& vbo_data,
-            std::vector<uint16_t>&& ibo_data
+            std::vector<uint16_t>&& ibo_data,
+            const Program& program
         );
-        ~VertexData();
+        ~VertexArray();
 
-        void init(const Program* program);
         void bind() const { glBindVertexArray(_vao_id); }
         void un_bind() const { glBindVertexArray(0); }
         std::size_t get_ibo_size() const { return _ibo_data.size(); }
@@ -37,7 +42,7 @@ namespace my_gl {
     private:
         std::vector<float>          _vbo_data;
         std::vector<uint16_t>       _ibo_data;
-        const Program*              _program{ nullptr };
+        const Program&              _program;
         uint32_t                    _vao_id;
         uint32_t                    _vbo_id;
         uint32_t                    _ibo_id;
@@ -48,20 +53,14 @@ namespace my_gl {
         Program(
             const char*                     vertex_shader_path,
             const char*                     fragment_shader_path,
-            std::vector<Attribute>&&        attribs,
-            // forwarded to VertexData
-            std::vector<float>&&            vbo_data,
-            std::vector<uint16_t>&&         ibo_data
+            std::vector<Attribute>&&        attribs
         );
         // if also passing uniforms
         Program(
             const char*                     vertex_shader_path,
             const char*                     fragment_shader_path,
             std::vector<Attribute>&&        attribs,
-            std::vector<Uniform>&&          uniforms,
-            // forwarded to VertexData
-            std::vector<float>&&            vbo_data,
-            std::vector<uint16_t>&&         ibo_data
+            std::vector<Uniform>&&          uniforms
         );
         ~Program();
 
@@ -71,20 +70,35 @@ namespace my_gl {
         void  set_uniform(Uniform& unif);
         const std::unordered_map<const char*, Attribute>& get_attrs() const; 
         const std::unordered_map<const char*, Uniform>& get_unifs() const; 
-        void  use() const { glUseProgram(_prog_id); }
+        void  use() const { glUseProgram(_program_id); }
         void  un_use() const { glUseProgram(0); }
-        std::size_t get_vertex_count() const { return _vertex_data.get_ibo_size(); }
-        uint32_t& get_prog_id() { return _prog_id; }
-        const uint16_t* get_ibo_data() const { return _vertex_data.get_ibo_data(); }
-        void  bind_vao() const { _vertex_data.bind(); }
-        void  un_bind_vao() const { _vertex_data.un_bind(); }
+        uint32_t get_id() const { return _program_id; }
 
     private:
-        VertexData                                  _vertex_data;
         std::unordered_map<const char*, Attribute>  _attrs;
         std::unordered_map<const char*, Uniform>    _unifs;
-        uint32_t                                    _prog_id{ 0 };
-        
-        void init() { _vertex_data.init(this); }
+        uint32_t                                    _program_id{ 0 };
+    };
+
+    class Renderer {
+    public:
+        Renderer(
+            std::vector<IGeometry_object*>&& objects,
+            my_gl_math::Matrix44<float>&&   proj_mat,
+            my_gl_math::Matrix44<float>&&   view_mat,
+            my_gl::Program& program,
+            my_gl::VertexArray& vertex_array
+        );
+
+        void render() const;
+        void set_proj_mat(my_gl_math::Matrix44<float>&& proj_mat);
+        void set_view_mat(my_gl_math::Matrix44<float>&& view_mat);
+
+    private:
+        std::vector<IGeometry_object*>   _objects;
+        my_gl_math::Matrix44<float>     _proj_mat;
+        my_gl_math::Matrix44<float>     _view_mat;
+        my_gl::Program&                 _program;
+        my_gl::VertexArray&             _vertex_arr;
     };
 }

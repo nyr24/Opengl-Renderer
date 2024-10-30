@@ -7,7 +7,8 @@
 #include "mat.hpp"
 #include "vec.hpp"
 #include "animation.hpp"
-#include "program.hpp"
+#include "renderer.hpp"
+#include "geometryObject.hpp"
 
 // Is called whenever a key is pressed/released via GLFW
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mode)
@@ -25,6 +26,22 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 
 int main() {
     my_gl::Window window{ my_gl::init() };
+
+    std::vector<my_gl::Attribute> attributes = {
+        my_gl::Attribute{ .name = "position", .gl_type = GL_FLOAT, .count = 3, .byte_stride = 0, .byte_offset = 0 },
+        my_gl::Attribute{ .name = "color", .gl_type = GL_FLOAT, .count = 4, .byte_stride = 0, .byte_offset = sizeof(float) * 3 * 24 }
+    };
+
+    std::vector<my_gl::Uniform> uniforms = {
+        { .name = "u_mvp_mat" },
+    };
+
+    my_gl::Program program{ my_gl::Program(
+        "../shaders/vertShader.vert", 
+        "../shaders/fragShader.frag",
+        std::move(attributes),
+        std::move(uniforms)
+    )};
 
     #define LEFT_TOP_NEAR       -.5f, .5f, .5f
     #define LEFT_BOT_NEAR       -.5f, -.5f, .5f
@@ -82,55 +99,71 @@ int main() {
         20, 22, 21,     21, 22, 23
     };
 
-    std::vector<my_gl::Attribute> attributes = {
-        my_gl::Attribute{ .name = "position", .gl_type = GL_FLOAT, .count = 3, .byte_stride = 0, .byte_offset = 0 },
-        my_gl::Attribute{ .name = "color", .gl_type = GL_FLOAT, .count = 4, .byte_stride = 0, .byte_offset = sizeof(float) * 3 * 24 }
-    };
-
-    std::vector<my_gl::Uniform> uniforms = {
-        { .name = "u_mvp_mat" },
-    };
-
-    my_gl::Program program{ my_gl::Program(
-        "../shaders/vertShader.vert", 
-        "../shaders/fragShader.frag",
-        std::move(attributes),
-        std::move(uniforms),
+    my_gl::VertexArray vertex_arr{ my_gl::VertexArray(
         std::move(vertices),
-        std::move(indices)
+        std::move(indices),
+        program
     )};
 
     glViewport(0, 0, window.width(), window.height());
     glfwSwapInterval(1);
 
-    auto rotation_anim{ my_gl::Rotation3d(
-        { 0.0f, 0.0f, 0.0f },
-        { 180.0f, 180.0f, 0.0f },
-        { 0.01f, 0.01f, 0.0f },
-        true
-    )};
+    // geometry objects
+    std::vector<my_gl::Animation<float>> cube1_anims = {
+        {
+            my_gl::ROTATE3d,
+            { 0.0f, 0.0f, 0.0f },
+            { 180.0f, 180.0f, 0.0f },
+            { 0.01f, 0.01f, 0.0f },
+            true
+        },
+        {
+            my_gl::TRANSLATE,
+            { 1.0f, 1.0f, -2.0f },
+            { -1.0f, -1.0f, 2.0f },
+            { -0.01f, -0.01f, 0.01f },
+            true
+        },
+    };
 
-    auto translation_anim1{ my_gl::Translation(
-        { 1.0f, 1.0f, -1.0f },
-        { -1.0f, -1.0f, -1.0f },
-        { -0.01f, -0.01f, 0.0f },
-        true
-    )};
+    std::vector<my_gl::Animation<float>> cube2_anims = { 
+        {
+            my_gl::ROTATE3d,
+            { 0.0f, 0.0f, 0.0f },
+            { 180.0f, 180.0f, 0.0f },
+            { 0.01f, 0.01f, 0.0f },
+            true
+        },
+        {
+            my_gl::TRANSLATE,
+            { -1.0f, -1.0f, 2.0f },
+            { 1.0f, 1.0f, -2.0f },
+            { 0.01f, 0.01f, -0.01f },
+            true
+        },
+    };
 
-    auto translation_anim2{ my_gl::Translation(
-        { -1.0f, -1.0f, 1.0f },
-        { 1.0f, 1.0f, 1.0f },
-        { 0.01f, 0.01f, 0.0f },
-        true
-    )};
+    my_gl::Cube cube1{ std::move(cube1_anims), 36, 0 };
+    my_gl::Cube cube2{ std::move(cube2_anims), 36, 0 };
+
+    std::vector<my_gl::IGeometry_object*> objects{ &cube1, &cube2 };
 
     auto view_mat{ my_gl_math::Matrix44<float>::translation(
         my_gl_math::Vec3<float>{ 0.0f, 0.0f, -4.0f }
     )};
 
     auto projection_mat{ my_gl_math::Matrix44<float>::perspective_fov(
-        65.0f, window.width() / window.height(), 0.1f, 50.0f
+        45.0f, window.width() / window.height(), 0.1f, 50.0f
     )};
+
+    // renderer
+    my_gl::Renderer renderer{ 
+        std::move(objects),
+        std::move(projection_mat),
+        std::move(view_mat),
+        program,
+        vertex_arr
+    };
 
     while (!glfwWindowShouldClose(window.ptr_raw()))
     {
@@ -139,27 +172,8 @@ int main() {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         program.use();
-
-        program.bind_vao();
-
-        const auto& rotation_mat{ rotation_anim.update() };
-
-        {
-            const auto& translation_mat1{ translation_anim1.update() };
-            auto local_mat{ translation_mat1 * rotation_mat };
-            my_gl_math::Matrix44<float> mvp_mat{ projection_mat * view_mat * local_mat };
-            glUniformMatrix4fv(program.get_uniform("u_mvp_mat")->location, 1, true, mvp_mat.data());
-            glDrawElements(GL_TRIANGLES, program.get_vertex_count(), GL_UNSIGNED_SHORT, 0);
-        }
-
-
-        {
-            const auto& translation_mat2{ translation_anim2.update() };
-            auto local_mat{ translation_mat2 * rotation_mat };
-            my_gl_math::Matrix44<float> mvp_mat{ projection_mat * view_mat * local_mat };
-            glUniformMatrix4fv(program.get_uniform("u_mvp_mat")->location, 1, true, mvp_mat.data());
-            glDrawElements(GL_TRIANGLES, program.get_vertex_count(), GL_UNSIGNED_SHORT, 0);
-        }
+        vertex_arr.bind();
+        renderer.render();
     
         glfwSwapBuffers(window.ptr_raw());
         glfwPollEvents(); 

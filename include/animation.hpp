@@ -3,62 +3,62 @@
 #include "vec.hpp"
 #include <array>
 #include <concepts>
+#include <cassert>
 
 namespace my_gl {
-    enum ANIMATION_KIND {
+    enum ANIMATION_TYPE {
         TRANSLATE,
         ROTATE,
         ROTATE3d,
         SCALE
     };
 
-    template<typename T, typename U>
-    concept is_vec = std::floating_point<U> && std::same_as<T, my_gl_math::Vec3<U>>;
-
-    template<typename FIELD_TYPE, typename VAL_TYPE, ANIMATION_KIND ANIM_TYPE> requires is_vec<FIELD_TYPE, VAL_TYPE>
+    template<typename VAL_TYPE> requires std::floating_point<VAL_TYPE>
     class Animation {
     public:
         Animation(
-            FIELD_TYPE&& start_val,
-            FIELD_TYPE&& end_val, 
-            FIELD_TYPE&& delta_val,
+            ANIMATION_TYPE anim_type,
+            my_gl_math::Vec3<VAL_TYPE>&& start_val,
+            my_gl_math::Vec3<VAL_TYPE>&& end_val, 
+            my_gl_math::Vec3<VAL_TYPE>&& delta_val,
             bool loop
         ) 
-            : _start_val{ std::move(start_val) }
+            : _anim_type{ anim_type }
+            , _start_val{ std::move(start_val) }
             , _end_val{ std::move(end_val) }
             , _delta_val{ delta_val }
             , _curr_val{ _start_val }
             , _loop{ loop }
         {
-            static_assert(ANIM_TYPE != ANIMATION_KIND::ROTATE);
 
-            switch (ANIM_TYPE) {
-            case ANIMATION_KIND::TRANSLATE:
+            switch (anim_type) {
+            case ANIMATION_TYPE::TRANSLATE:
                 _mat = my_gl_math::Matrix44<VAL_TYPE>::translation(_curr_val);
                 break;
-            case ANIMATION_KIND::SCALE:
+            case ANIMATION_TYPE::SCALE:
                 _mat = my_gl_math::Matrix44<VAL_TYPE>::scaling(_curr_val);
                 break;
-            case ANIMATION_KIND::ROTATE3d:
+            case ANIMATION_TYPE::ROTATE3d:
                 _mat = my_gl_math::Matrix44<VAL_TYPE>::rotation3d(_curr_val);
+                break;
+            case ANIMATION_TYPE::ROTATE:
+                assert(true && "Can't use this ctor for rotate type animation"); 
                 break;
             }
         }
 
-        // constructor for scalar (float/int/double) input
-        // useful in rotation around single axis
+        // constructor for rotation around single axis
         Animation(
-            VAL_TYPE start_val,
-            VAL_TYPE end_val, 
-            VAL_TYPE delta_val,
+            VAL_TYPE                 start_val,
+            VAL_TYPE                 end_val, 
+            VAL_TYPE                 delta_val,
             my_gl_math::Global::AXIS axis,
             bool loop
         ) 
-            : _axis{ axis }
+            : _anim_type{ ANIMATION_TYPE::ROTATE }
+            , _axis{ axis }
             , _loop{ loop }
         {
-            static_assert(ANIM_TYPE == ANIMATION_KIND::ROTATE);
-
             switch (_axis) {
             case my_gl_math::Global::X:
                 _start_val[0] = start_val;
@@ -119,19 +119,21 @@ namespace my_gl {
             }
         }
     private:
-        my_gl_math::Matrix44<VAL_TYPE>  _mat;
-        FIELD_TYPE                      _start_val;
-        FIELD_TYPE                      _end_val;
-        FIELD_TYPE                      _delta_val;
-        FIELD_TYPE                      _curr_val;
+        my_gl_math::Matrix44<VAL_TYPE>      _mat;
+        my_gl_math::Vec3<VAL_TYPE>          _start_val;
+        my_gl_math::Vec3<VAL_TYPE>          _end_val;
+        my_gl_math::Vec3<VAL_TYPE>          _delta_val;
+        my_gl_math::Vec3<VAL_TYPE>          _curr_val;
+        ANIMATION_TYPE                      _anim_type;
         // only for rotation
-        my_gl_math::Global::AXIS        _axis{ my_gl_math::Global::Z };
-        bool                            _loop{ false };
-        bool                            _is_ended{ false };
-        // TODO: duration, bezier-curve
+        my_gl_math::Global::AXIS            _axis{ my_gl_math::Global::Z };
+        bool                                _loop{ false };
+        bool                                _is_ended{ false };
 
+
+        // TODO: duration, bezier-curve, interpolation instead of delta (maybe)
         void update_matrix() {
-            switch (ANIM_TYPE) {
+            switch (_anim_type) {
             case my_gl::TRANSLATE:
                 _mat.translate(_curr_val);
                 break;
@@ -152,9 +154,4 @@ namespace my_gl {
             }
         }
     };
-
-    using Translation = my_gl::Animation<my_gl_math::Vec3<float>, float, my_gl::TRANSLATE>;
-    using Rotation3d = my_gl::Animation<my_gl_math::Vec3<float>, float, my_gl::ROTATE3d>;
-    using Rotation = my_gl::Animation<my_gl_math::Vec3<float>, float, my_gl::ROTATE>;
-    using Scaling = my_gl::Animation<my_gl_math::Vec3<float>, float, my_gl::SCALE>;
 }
