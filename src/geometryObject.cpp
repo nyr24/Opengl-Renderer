@@ -47,3 +47,20 @@ const my_gl_math::Matrix44<float> my_gl::Cube::get_local_mat() const {
 
     return result_mat;
 }
+
+const my_gl_math::Matrix44<float> my_gl::Cube::get_local_mat(float curr_time) const {
+    auto result_mat{ my_gl_math::Matrix44<float>::identity() };
+    
+    if (_matrices.size() > 0) {
+        for (int i = 0; i < _matrices.size(); ++i) {
+            result_mat *= _matrices[i];
+        }
+    }
+    if (_animations.size() > 0) {
+        for (int i = 0; i < _animations.size(); ++i) {
+            result_mat *= const_cast<my_gl::Animation<float>&>(_animations[i]).update(curr_time);
+        }
+    }
+
+    return result_mat;
+}

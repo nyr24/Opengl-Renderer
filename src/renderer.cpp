@@ -181,3 +181,21 @@ void my_gl::Renderer::render() const {
         );
     }
 }
+
+
+void my_gl::Renderer::render(float curr_time) const {
+    for (int i = 0; i < _objects.size(); ++i) {
+        const auto local_mat{ _objects[i]->get_local_mat(curr_time) };
+        my_gl_math::Matrix44<float> mvp_mat{ _proj_mat * _view_mat * local_mat };
+        // pizdec
+        int loc = glGetUniformLocation(_program.get_id(), "u_mvp_mat");
+        glUniformMatrix4fv(loc, 1, true, mvp_mat.data());
+        //glUniformMatrix4fv(_program.get_uniform("u_mvp_mat")->location, 1, true, mvp_mat.data());
+        glDrawElements(
+            GL_TRIANGLES, 
+            _objects[i]->get_vertices_count(), 
+            GL_UNSIGNED_SHORT, 
+            reinterpret_cast<const void*>(_objects[i]->get_buffer_byte_offset())
+        );
+    }
+}

@@ -91,6 +91,7 @@ namespace my_gl {
         );
 
         void render() const;
+        void render(float curr_time) const;
         void set_proj_mat(my_gl_math::Matrix44<float>&& proj_mat);
         void set_view_mat(my_gl_math::Matrix44<float>&& view_mat);
 

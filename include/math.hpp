@@ -7,7 +7,6 @@ namespace my_gl_math {
     template<typename T> requires std::floating_point<T>
     class Vec3;
 
-    // static
     class Global {
     public:
         static constexpr double PI = 3.14159;
@@ -77,6 +76,11 @@ namespace my_gl_math {
             if (std::abs(x - y) <= std::numeric_limits<T>::epsilon())
                 return true;
             return std::abs(x - y) <= std::numeric_limits<T>::epsilon() * std::max(std::abs(x), std::abs(y));
+        }
+
+        template<typename T, std::floating_point N>
+        static T lerp(const T& start, const T& end, N coefficient) {
+            return (start * (1 - coefficient)) + (end * coefficient);
         }
 
     private:

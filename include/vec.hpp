@@ -8,18 +8,20 @@
 
 namespace my_gl_math {
     template<typename T, uint32_t N> requires std::floating_point<T>
-    class Vec {
+    class VecBase {
     public:
-        Vec(): _data(N) {}
-        explicit Vec(T val): _data(val, N) {}
-        Vec(std::initializer_list<T> init): _data{ init } {
+        VecBase(): _data(N) {}
+        explicit VecBase(T val): _data(val, N) {}
+        VecBase(std::initializer_list<T> init): _data{ init } {
             assert(init.size() == N && "invalid initializer list size for this type");
         }
 
-        Vec(const Vec<T, N>& src) = default;
-        Vec(Vec<T, N>&& src) = default;
-        Vec<T, N>& operator=(const Vec<T, N>& src) = default;
-        Vec<T, N>& operator=(Vec<T, N>&& src) = default;
+        // copy
+        VecBase(const VecBase<T, N>& src) = default;
+        VecBase<T, N>& operator=(const VecBase<T, N>& src) = default;
+        // move
+        VecBase(VecBase<T, N>&& src) = default;
+        VecBase<T, N>& operator=(VecBase<T, N>&& src) = default;
 
         T length() const {
             std::valarray<T> squared_data = _data.apply([](T el) {
@@ -29,7 +31,7 @@ namespace my_gl_math {
             return std::sqrt(squared_data.sum());
         }
 
-        Vec<T, N>& normalize_inplace() {
+        VecBase<T, N>& normalize_inplace() {
             T vLength{ length() };
             if (vLength > 0) {
                 T invLength{ 1 / vLength };
@@ -38,13 +40,13 @@ namespace my_gl_math {
             return *this;
         }
 
-        Vec<T, N> normalize_new() const {
+        VecBase<T, N> normalize_new() const {
             auto res{ *this };
             res.normalize_inplace();
             return res;
         }
 
-        T dot(const Vec<T, N>& rhs) const {
+        T dot(const VecBase<T, N>& rhs) const {
             std::valarray<T> res = _data * rhs._data;
             return res.sum();
         }
@@ -60,119 +62,119 @@ namespace my_gl_math {
             return _data[i];
         }
 
-        Vec<T, N> operator+(const Vec<T, N>& rhs) {
-            Vec<T, N> res;
+        VecBase<T, N> operator+(const VecBase<T, N>& rhs) const {
+            VecBase<T, N> res{ *this };
             res._data = _data + rhs._data;
             return res;
         }
 
-        Vec<T, N> operator-(const Vec<T, N>& rhs) {
-            Vec<T, N> res;
+        VecBase<T, N> operator-(const VecBase<T, N>& rhs) const {
+            VecBase<T, N> res{ *this };
             res._data = _data - rhs._data;
             return res;
         }
 
-        Vec<T, N> operator*(const Vec<T, N>& rhs) {
-            Vec<T, N> res;
+        VecBase<T, N> operator*(const VecBase<T, N>& rhs) const {
+            VecBase<T, N> res{ *this };
             res._data = _data * rhs._data;
             return res;
         }
 
-        Vec<T, N> operator/(const Vec<T, N>& rhs) {
-            Vec<T, N> res;
+        VecBase<T, N> operator/(const VecBase<T, N>& rhs) const {
+            VecBase<T, N> res{ *this };
             res._data = _data / rhs._data;
             return res;
         }
 
-        Vec<T, N> operator%(const Vec<T, N>& rhs) {
-            Vec<T, N> res;
+        VecBase<T, N> operator%(const VecBase<T, N>& rhs) const {
+            VecBase<T, N> res{ *this };
             res._data = _data % rhs._data;
             return res;
         }
 
-        Vec<T, N>& operator+=(const Vec<T, N>& rhs) {
+        VecBase<T, N>& operator+=(const VecBase<T, N>& rhs) {
             _data += rhs._data;
             return *this;
         }
 
-        Vec<T, N>& operator-=(const Vec<T, N>& rhs) {
+        VecBase<T, N>& operator-=(const VecBase<T, N>& rhs) {
             _data -= rhs._data;
             return *this;
         }
 
-        Vec<T, N>& operator*=(const Vec<T, N>& rhs) {
+        VecBase<T, N>& operator*=(const VecBase<T, N>& rhs) {
             _data *= rhs._data;
             return *this;
         }
 
-        Vec<T, N>& operator/=(const Vec<T, N>& rhs) {
+        VecBase<T, N>& operator/=(const VecBase<T, N>& rhs) {
             _data /= rhs._data;
             return *this;
         }
 
-        Vec<T, N>& operator%=(const Vec<T, N>& rhs) {
+        VecBase<T, N>& operator%=(const VecBase<T, N>& rhs) {
             _data %= rhs._data;
             return *this;
         }
 
     // operations with primitives
-        Vec<T, N> operator+(T val) {
-            Vec<T, N> res;
+        VecBase<T, N> operator+(T val) const {
+            VecBase<T, N> res{ *this };;
             res._data = _data + val;
             return res;
         }
 
-        Vec<T, N> operator-(T val) {
-            Vec<T, N> res;
+        VecBase<T, N> operator-(T val) const {
+            VecBase<T, N> res{ *this };
             res._data = _data - val;
             return res;
         }
 
-        Vec<T, N> operator*(T val) {
-            Vec<T, N> res;
+        VecBase<T, N> operator*(T val) const {
+            VecBase<T, N> res{ *this };
             res._data = _data * val;
             return res;
         }
 
-        Vec<T, N> operator/(T val) {
-            Vec<T, N> res;
+        VecBase<T, N> operator/(T val) const {
+            VecBase<T, N> res{ *this };
             res._data = _data / val;
             return res;
         }
 
-        Vec<T, N> operator%(T val) {
-            Vec<T, N> res;
+        VecBase<T, N> operator%(T val) const {
+            VecBase<T, N> res{ *this };
             res._data = _data % val;
             return res;
         }
 
-        Vec<T, N>& operator+=(T val) {
+        VecBase<T, N>& operator+=(T val) {
             _data += val;
             return *this;
         }
 
-        Vec<T, N>& operator-=(T val) {
+        VecBase<T, N>& operator-=(T val) {
             _data -= val;
             return *this;
         }
 
-        Vec<T, N>& operator*=(T val) {
+        VecBase<T, N>& operator*=(T val) {
             _data *= val;
             return *this;
         }
 
-        Vec<T, N>& operator/=(T val) {
+        VecBase<T, N>& operator/=(T val) {
             _data /= val;
             return *this;
         }
 
-        Vec<T, N>& operator%=(T val) {
+        VecBase<T, N>& operator%=(T val) {
             _data %= val;
             return *this;
         }
 
     // utility
-        friend std::ostream& operator<<(std::ostream& out, const Vec<T, N>& vec) {
+        friend std::ostream& operator<<(std::ostream& out, const VecBase<T, N>& vec) {
             for (const T el : vec._data) {
                 out << el << ' ';
             }
@@ -189,7 +191,7 @@ namespace my_gl_math {
             std::cout << '\n';
         }
 
-        bool cmp(const Vec<T, N>& rhs) {
+        bool cmp(const VecBase<T, N>& rhs) {
             for (int i = 0; i < N; ++i) {
 			    if (!my_gl_math::Global::cmp_float<T>(_data[i], rhs._data[i]))
 				    return false;
@@ -205,9 +207,13 @@ namespace my_gl_math {
 
 // Vec4
     template<typename T = float> requires std::floating_point<T>
-    class Vec4 : public Vec<T, 4> {
+    class Vec4 : public VecBase<T, 4> {
     public:
-        using Vec<T, 4>::Vec;
+        using VecBase<T, 4>::VecBase;
+        Vec4(const VecBase<T, 4>& base_ref)
+            : VecBase<T, 4>{ base_ref }
+        {}
+        
 
         constexpr T x() const { return this->_data[0]; }
         constexpr T y() const { return this->_data[1]; }
@@ -227,9 +233,12 @@ namespace my_gl_math {
 
 // Vec3
     template<typename T = float> requires std::floating_point<T>
-    class Vec3 : public Vec<T, 3> {
+    class Vec3 : public VecBase<T, 3> {
     public:
-        using Vec<T, 3>::Vec;
+        using VecBase<T, 3>::VecBase;
+        Vec3(const VecBase<T, 3>& base_ref)
+            : VecBase<T, 3>{ base_ref }
+        {}
 
         constexpr T x() const { return this->_data[0]; }
         constexpr T y() const { return this->_data[1]; }

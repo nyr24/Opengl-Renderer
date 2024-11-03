@@ -8,6 +8,7 @@ namespace my_gl {
     class IGeometry_object {
     public:
         virtual const my_gl_math::Matrix44<float> get_local_mat() const = 0;
+        virtual const my_gl_math::Matrix44<float> get_local_mat(float curr_time) const = 0;
         virtual constexpr std::size_t get_vertices_count() const = 0;
         virtual constexpr std::size_t get_buffer_byte_offset() const = 0;
 
@@ -46,6 +47,7 @@ namespace my_gl {
 
         // declared
         const my_gl_math::Matrix44<float> get_local_mat() const override;
+        const my_gl_math::Matrix44<float> get_local_mat(float curr_time) const override;
         
         // defined
         constexpr std::size_t get_vertices_count() const override { 

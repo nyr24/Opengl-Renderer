@@ -1,7 +1,6 @@
 #include <GLEW/glew.h>
 #include <GLFW/glfw3.h>
 #include <iostream>
-#include <array>
 #include "utils.hpp"
 #include "window.hpp"
 #include "renderer.hpp"
@@ -34,8 +33,8 @@ int main() {
     };
 
     my_gl::Program program{ my_gl::Program(
-        "../shaders/vertShader.vert", 
-        "../shaders/fragShader.frag",
+        "../../shaders/vertShader.vert", 
+        "../../shaders/fragShader.frag",
         std::move(attributes),
         std::move(uniforms)
     )};
@@ -109,6 +108,7 @@ int main() {
     std::vector<my_gl::Animation<float>> cube1_anims = {
         {
             my_gl::ROTATE3d,
+            5.0f,
             { 0.0f, 0.0f, 0.0f },
             { 180.0f, 180.0f, 0.0f },
             { 0.01f, 0.01f, 0.0f },
@@ -116,6 +116,7 @@ int main() {
         },
         {
             my_gl::TRANSLATE,
+            5.0f,
             { 1.0f, 1.0f, -2.0f },
             { -1.0f, -1.0f, 2.0f },
             { -0.01f, -0.01f, 0.01f },
@@ -126,6 +127,7 @@ int main() {
     std::vector<my_gl::Animation<float>> cube2_anims = { 
         {
             my_gl::ROTATE3d,
+            5.0f,
             { 0.0f, 0.0f, 0.0f },
             { 180.0f, 180.0f, 0.0f },
             { 0.01f, 0.01f, 0.0f },
@@ -133,6 +135,7 @@ int main() {
         },
         {
             my_gl::TRANSLATE,
+            5.0f,
             { -1.0f, -1.0f, 2.0f },
             { 1.0f, 1.0f, -2.0f },
             { 0.01f, 0.01f, -0.01f },
@@ -167,6 +170,8 @@ int main() {
         glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
         glClearDepth(1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+        //float curr_time{ static_cast<float>(glfwGetTime()) };
 
         program.use();
         vertex_arr.bind();

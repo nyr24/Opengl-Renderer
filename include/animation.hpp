@@ -2,6 +2,7 @@
 #include <array>
 #include <concepts>
 #include <cassert>
+#include <math.h>
 #include "matrix.hpp"
 
 namespace my_gl {
@@ -46,6 +47,40 @@ namespace my_gl {
             }
         }
 
+        // ctor with duration
+        Animation(
+            ANIMATION_TYPE anim_type,
+            float duration,
+            my_gl_math::Vec3<VAL_TYPE>&& start_val,
+            my_gl_math::Vec3<VAL_TYPE>&& end_val, 
+            my_gl_math::Vec3<VAL_TYPE>&& delta_val,
+            bool loop
+        ) 
+            : _anim_type{ anim_type }
+            , _start_val{ std::move(start_val) }
+            , _end_val{ std::move(end_val) }
+            , _delta_val{ delta_val }
+            , _curr_val{ _start_val }
+            , _duration{ duration }
+            , _loop{ loop }
+        {
+
+            switch (anim_type) {
+            case ANIMATION_TYPE::TRANSLATE:
+                _mat = my_gl_math::Matrix44<VAL_TYPE>::translation(_curr_val);
+                break;
+            case ANIMATION_TYPE::SCALE:
+                _mat = my_gl_math::Matrix44<VAL_TYPE>::scaling(_curr_val);
+                break;
+            case ANIMATION_TYPE::ROTATE3d:
+                _mat = my_gl_math::Matrix44<VAL_TYPE>::rotation3d(_curr_val);
+                break;
+            case ANIMATION_TYPE::ROTATE:
+                assert(true && "Can't use this ctor for rotate type animation"); 
+                break;
+            }
+        } 
+
         // constructor for rotation around single axis
         Animation(
             VAL_TYPE                 start_val,
@@ -83,7 +118,6 @@ namespace my_gl {
             }
         }
 
-
         my_gl_math::Matrix44<VAL_TYPE>& update() {
             if (_is_ended) {
                 return _mat;
@@ -117,12 +151,27 @@ namespace my_gl {
                 return _mat;
             }
         }
+
+        // based on curr time and duration
+        my_gl_math::Matrix44<VAL_TYPE>& update(float curr_time) {
+            if (!_loop && curr_time > _duration) {
+                return _mat;
+            }
+            
+            float val_for_lerp{ (fmod(curr_time, _duration)) / _duration };
+            _curr_val = my_gl_math::Global::lerp<my_gl_math::Vec3<VAL_TYPE>, VAL_TYPE>(_start_val, _end_val, val_for_lerp);
+            update_matrix();
+            return _mat;
+        }
+        
+
     private:
         my_gl_math::Matrix44<VAL_TYPE>      _mat;
         my_gl_math::Vec3<VAL_TYPE>          _start_val;
         my_gl_math::Vec3<VAL_TYPE>          _end_val;
         my_gl_math::Vec3<VAL_TYPE>          _delta_val;
         my_gl_math::Vec3<VAL_TYPE>          _curr_val;
+        float                               _duration;
         ANIMATION_TYPE                      _anim_type;
         // only for rotation
         my_gl_math::Global::AXIS            _axis{ my_gl_math::Global::Z };
