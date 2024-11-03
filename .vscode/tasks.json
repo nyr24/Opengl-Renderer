@@ -2,22 +2,51 @@
     "tasks": [
         {
             "type": "cppbuild",
-            "label": "Build all files clang",
-            "command": "C:/msys64/mingw64/bin/clang++.exe",
+            "label": "c++ all files clang debug",
+            "command": "C:/msys64/ucrt64/bin/clang++.exe",
             "args": [
                 "-fdiagnostics-color=always",
                 "-g",
                 "-DGLEW_STATIC",
                 "-std=c++20",
+                "-O1",
                 "${workspaceFolder}/src/*.cpp",
                 "-o",
-                "${workspaceFolder}/bin/app.exe",
+                "${workspaceFolder}/bin/debug/app.exe",
                 "-I${workspaceFolder}/include",
                 "-LC:/libraries_cpp/glfw-3.4.bin.WIN64/lib-mingw-w64",
                 "-LC:/libraries_cpp/glew-2.1.0/lib/Release/x64",
-                "-l:libglfw3.a",
-                "-l:libgdi32.a",
+                "-LC:/msys64/ucrt64/lib/",
                 "-lglew32s",
+                "-lglfw3",
+                "-lgdi32",
+                "-lopengl32"
+            ],
+            "options": {
+                "cwd": "${fileDirname}"
+            },
+            "group": "build"
+        },
+        {
+            "type": "cppbuild",
+            "label": "c++ all files clang release",
+            "command": "C:/msys64/ucrt64/bin/clang++.exe",
+            "args": [
+                "-fdiagnostics-color=always",
+                "-g",
+                "-DGLEW_STATIC",
+                "-DNDEBUG",
+                "-std=c++20",
+                "-O3",
+                "${workspaceFolder}/src/*.cpp",
+                "-o",
+                "${workspaceFolder}/bin/release/app.exe",
+                "-I${workspaceFolder}/include",
+                "-LC:/libraries_cpp/glfw-3.4.bin.WIN64/lib-mingw-w64",
+                "-LC:/libraries_cpp/glew-2.1.0/lib/Release/x64",
+                "-lglew32s",
+                "-lglfw3",
+                "-lgdi32",
                 "-lopengl32"
             ],
             "options": {
