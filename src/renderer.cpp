@@ -86,7 +86,7 @@ void my_gl::Program::set_uniform(my_gl::Uniform& unif) {
     GLint unif_loc{ glGetUniformLocation(_program_id, unif.name) };
 
     if (unif_loc == -1) {
-        std::cerr << "uniform name: " << unif.name << " wasn't found for program: " << _program_id << "\nnothing was set";
+        std::cerr << "uniform name: " << unif.name << " wasn't found for program: " << _program_id << "\nnothing was set\n";
         return;
     }
 
