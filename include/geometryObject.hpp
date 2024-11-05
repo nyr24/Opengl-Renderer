@@ -3,8 +3,6 @@
 #include "animation.hpp"
 
 namespace my_gl {
-    constexpr inline float dasd = 123.0f;
-
     class IGeometry_object {
     public:
         virtual const my_gl_math::Matrix44<float> get_local_mat() const = 0;
@@ -45,11 +43,9 @@ namespace my_gl {
         Cube& operator=(Cube&& rhs) = default;
         ~Cube() = default;
 
-        // declared
         const my_gl_math::Matrix44<float> get_local_mat() const override;
         const my_gl_math::Matrix44<float> get_local_mat(float curr_time) const override;
         
-        // defined
         constexpr std::size_t get_vertices_count() const override { 
             return _vertices_count;
         }

@@ -15,6 +15,10 @@ namespace my_gl_math {
         VecBase(std::initializer_list<T> init): _data{ init } {
             assert(init.size() == N && "invalid initializer list size for this type");
         }
+        VecBase(T* values): VecBase() {
+            assert(values + (N - 1) && "not enough values to initialize a vector");
+            memcpy(&_data[0], values, sizeof(T) * N);
+        }
 
         // copy
         VecBase(const VecBase<T, N>& src) = default;
@@ -200,7 +204,7 @@ namespace my_gl_math {
             return true;
         }
 
-    protected:
+        // public because can't access it any other way from derived classes while having it inside of the 'protected' label (wtf)
         std::valarray<T> _data{};
     };
 
@@ -209,11 +213,23 @@ namespace my_gl_math {
     template<typename T = float> requires std::floating_point<T>
     class Vec4 : public VecBase<T, 4> {
     public:
+        // ctors
         using VecBase<T, 4>::VecBase;
         Vec4(const VecBase<T, 4>& base_ref)
             : VecBase<T, 4>{ base_ref }
         {}
-        
+        Vec4(VecBase<T, 4>&& base_ref)
+            : VecBase<T, 4>{ std::move(base_ref) }
+        {}
+        // assignment
+        Vec4<T>& operator=(const VecBase<T, 4>& base_ref) {
+            this->_data = base_ref._data;
+            return *this;
+        }
+        Vec4<T>& operator=(VecBase<T, 4>&& base_ref) {
+            this->_data = std::move(base_ref._data);
+            return *this;
+        }
 
         constexpr T x() const { return this->_data[0]; }
         constexpr T y() const { return this->_data[1]; }
@@ -235,10 +251,23 @@ namespace my_gl_math {
     template<typename T = float> requires std::floating_point<T>
     class Vec3 : public VecBase<T, 3> {
     public:
+        // ctors
         using VecBase<T, 3>::VecBase;
         Vec3(const VecBase<T, 3>& base_ref)
             : VecBase<T, 3>{ base_ref }
         {}
+        Vec3(VecBase<T, 3>&& base_ref)
+            : VecBase<T, 3>{ std::move(base_ref) }
+        {}
+        // assignment
+        Vec3<T>& operator=(const VecBase<T, 3>& base_ref) {
+            this->_data = base_ref._data;
+            return *this;
+        }
+        Vec3<T>& operator=(VecBase<T, 3>&& base_ref) {
+            this->_data = std::move(base_ref._data);
+            return *this;
+        }
 
         constexpr T x() const { return this->_data[0]; }
         constexpr T y() const { return this->_data[1]; }

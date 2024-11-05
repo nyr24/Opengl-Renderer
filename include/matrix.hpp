@@ -3,20 +3,44 @@
 #include <utility>
 #include <iostream>
 #include <cassert>
+#include <initializer_list>
 #include "vec.hpp"
 
 namespace my_gl_math {
-    template<typename T, int ROWS, int COLS> requires std::floating_point<T>
+    template<std::floating_point T, uint16_t ROWS, uint16_t COLS>
     class MatrixBase {
     public:
+    // ctors
         MatrixBase() = default;
         explicit MatrixBase(T val) {
             _data.fill(val);
         }
+        MatrixBase(std::initializer_list<T> init) {
+            assert((init.size() == (ROWS * COLS)) && "init list length is not correct for Matrix initializion");
+            std::copy(init.begin(), init.end(), _data.begin());
+        }
         MatrixBase(const MatrixBase<T, ROWS, COLS>& rhs) = default;
-        MatrixBase& operator=(const MatrixBase<T, ROWS, COLS>& rhs) = default;
+        MatrixBase<T, ROWS, COLS>& operator=(const MatrixBase<T, ROWS, COLS>& rhs) = default;
         MatrixBase(MatrixBase<T, ROWS, COLS>&& rhs) = default;
-        MatrixBase& operator=(MatrixBase<T, ROWS, COLS>&& rhs) = default;
+        MatrixBase<T, ROWS, COLS>& operator=(MatrixBase<T, ROWS, COLS>&& rhs) = default;
+
+        // cubic-bezier
+        static constexpr MatrixBase<T, 3, 3> bezier_quad_mat() {
+            return MatrixBase<T, 3, 3>{
+                1.0f, -2.0f, 1.0f,
+                -2.0f, 2.0f, 0.0f,
+                1.0f, 0.0f, 0.0f
+            };
+        }
+        
+        static constexpr MatrixBase<T, 4, 4> bezier_cubic_mat() {
+            return MatrixBase<T, 4, 4>{
+                1.0f, 3.0f, -3.0f, 1.0f,
+                3.0f, -6.0f, 3.0f, 0.0f,
+                -3.0f, 3.0f, 0.0f, 0.0f,
+                1.0f, 0.0f, 0.0f, 0.0f
+            };
+        }
 
         const T& at(int row, int col) const {
             const int index{ row * COLS + col };
@@ -28,6 +52,55 @@ namespace my_gl_math {
             const int index{ row * COLS + col };
             assert((index >= 0 && index < (ROWS * COLS)) && "invalid indexing");
             return _data[index];
+        }
+
+        MatrixBase<T, ROWS, COLS>& transpose() {
+            for (int i = 0; i < ROWS; ++i) {
+                for (int j = i; j < COLS; ++j) {
+                    T temp{ this->at(i, j) };
+                    this->at(i, j) = this->at(j, i);
+                    this->at(j, i) = temp;
+                }
+            }
+            
+            return *this;
+        }
+
+        friend MatrixBase<T, ROWS, COLS> operator*(const MatrixBase<T, ROWS, COLS>& lhs, const MatrixBase<T, ROWS, COLS>& rhs) {
+            MatrixBase<T, ROWS, COLS> res;
+            
+            for (int r = 0; r < ROWS; ++r) {
+                for (int c = 0; c < COLS; ++c) {
+                    res.at(r, c) = 0;
+
+                    for (int k = 0; k < COLS; ++k) {
+                        res.at(r, c) += lhs.at(r, k) * rhs.at(k, c);
+                    }
+                }
+            }
+
+            return res;
+        }
+
+        template<uint32_t N_VEC>
+        friend VecBase<T, N_VEC> operator*(const MatrixBase<T, ROWS, COLS>& m, const VecBase<T, N_VEC>& v) {
+            static_assert(N_VEC == COLS && "can't multiply this matrix by this vector");
+
+            VecBase<T, N_VEC> res;
+            
+            for (int r{ 0 }; r < ROWS; ++r) {
+                for (int c{ 0 }; c < COLS; ++c) {
+                    res[r] += m.at(r, c) * v[c];
+                }
+            }
+
+            return res;
+        }
+
+        MatrixBase<T, ROWS, COLS>& operator*=(const MatrixBase<T, ROWS, COLS>& rhs) {
+            auto res{ *this * rhs };
+            *this = res;
+            return *this;
         }
 
         void print() const {
@@ -43,24 +116,42 @@ namespace my_gl_math {
 
         const T* data() const { return _data.data(); }
 
-    private:
+        static constexpr uint16_t rows() { return ROWS; }
+        static constexpr uint16_t cols() { return COLS; }
+
+        // same stuff as with VecBase type
         std::array<T, ROWS * COLS> _data{};
     };
 
 
 // Matrix 4x4
-    template<typename T = float> requires std::floating_point<T>
+    template<std::floating_point T>
     class Matrix44 : public MatrixBase<T, 4, 4> {
     public:
         using MatrixBase<T, 4 ,4>::MatrixBase;
+        // ctor derived from base
+        Matrix44(const MatrixBase<T, 4, 4>& base)
+            : MatrixBase<T, 4, 4>{ base }
+        {}
+        Matrix44(MatrixBase<T, 4, 4>&& base)
+            : MatrixBase<T, 4, 4>{ std::move(base) }
+        {}
+        // assigment
+        Matrix44<float>& operator=(const MatrixBase<T, 4, 4>& base_ref) {
+            this->_data = base_ref._data;
+            return *this;
+        }
+        Matrix44<float>& operator=(MatrixBase<T, 4, 4>&& base_ref) {
+            this->_data = std::move(base_ref._data);
+            return *this;
+        }
 
         static Matrix44<T> identity() {
             Matrix44<T> res;
 
-            res.at(0, 0) = 1;
-            res.at(1, 1) = 1;
-            res.at(2, 2) = 1;
-            res.at(3, 3) = 1;
+            for (int i = 0; i < 4; ++i) {
+                res.at(i, i) = static_cast<T>(1.0);
+            }
 
             return res;
         }
@@ -217,70 +308,5 @@ namespace my_gl_math {
 
             *this = std::move(mat_arr[0] * mat_arr[1] * mat_arr[2]);
         }
-
-
-    // need to be tested
-        Matrix44<T>& transpose() {
-            for (int i = 0; i < ROW_COUNT; ++i) {
-                for (int j = i; j < COL_COUNT; ++j) {
-                    T temp{ this->at(i, j) };
-                    this->at(i, j) = this->at(j, i);
-                    this->at(j, i) = temp;
-                }
-            }
-            
-            return *this;
-        }
-
-    // operators
-        friend Matrix44<T> operator*(const Matrix44<T>& lhs, const Matrix44<T>& rhs) {
-            Matrix44<T> res;
-            
-            for (int r = 0; r < lhs.ROW_COUNT; ++r) {
-                for (int c = 0; c < lhs.COL_COUNT; ++c) {
-                    res.at(r, c) = 0;
-
-                    for (int k = 0; k < lhs.COL_COUNT; ++k) {
-                        res.at(r, c) += lhs.at(r, k) * rhs.at(k, c);
-                    }
-                }
-            }
-
-            return res;
-        }
-
-        friend Vec4<T> operator*(const Matrix44<T>& m, const Vec4<T>& v) {
-            Vec4<T> res;
-            
-            for (int r{ 0 }; r < m.ROW_COUNT; ++r) {
-                for (int c{ 0 }; c < v.size(); ++c) {
-                    res[r] += m.at(r, c) * v[c];
-                }
-            }
-
-            return res;
-        }
-        
-        friend Vec3<T> operator*(const Matrix44<T>& m, const Vec3<T>& v) {
-            Vec3<T> res;
-            constexpr int vec_size{ res.size() };
-
-            for (int r{ 0 }; r < vec_size; ++r) {
-                for (int c{ 0 }; c < vec_size; ++c) {
-                    res[r] += m.at(r, c) * v[c];
-                }
-            }
-
-            return res;
-        }
-
-        Matrix44<T>& operator*=(const Matrix44<T>& rhs) {
-            auto res = *this * rhs;
-            *this = res;
-            return *this;
-        }
-
-        static constexpr int ROW_COUNT = 4;
-        static constexpr int COL_COUNT = 4;
     };
 } 
