@@ -19,10 +19,9 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
     }
 }
 
-
 int main() {
     my_gl::Window window{ my_gl::init_window() };
-
+/*
     std::vector<my_gl::Attribute> attributes = {
         my_gl::Attribute{ .name = "position", .gl_type = GL_FLOAT, .count = 3, .byte_stride = 0, .byte_offset = 0 },
         my_gl::Attribute{ .name = "color", .gl_type = GL_FLOAT, .count = 4, .byte_stride = 0, .byte_offset = sizeof(float) * 3 * 24 }
@@ -38,6 +37,7 @@ int main() {
         std::move(attributes),
         std::move(uniforms)
     )};
+
 
     #define LEFT_TOP_NEAR       -.5f, .5f, .5f
     #define LEFT_BOT_NEAR       -.5f, -.5f, .5f
@@ -101,9 +101,6 @@ int main() {
         program
     )};
 
-    glViewport(0, 0, window.width(), window.height());
-    glfwSwapInterval(1);
-
     // geometry objects
     std::vector<my_gl::Animation<float>> cube1_anims = {
         {
@@ -165,23 +162,117 @@ int main() {
         vertex_arr
     };
 
+    */
+
+// new stuff
+    const uint32_t program = my_gl::createProgram(
+        "../../shaders/vertShader.vert",
+        "../../shaders/fragShader.frag"
+    );
+
+    glEnable(GL_PROGRAM_POINT_SIZE);
+
+    const float vertices[] = {
+        // control points
+        -0.6f, -0.5f, -1.0f,
+        -0.2f, 0.5f, -1.0f,
+        0.2f, -0.6f, -1.0f,
+        0.6f, 0.2f, -1.0f,
+        
+        // movable point
+        0.0f, 0.0f, -1.0f,
+    };
+
+    uint32_t vao_id;
+    glGenVertexArrays(1, &vao_id);
+    glBindVertexArray(vao_id);
+
+    uint32_t vbo_id;
+    glGenBuffers(1, &vbo_id);
+
+    glBindBuffer(GL_ARRAY_BUFFER, vbo_id);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 3 * 5, vertices, GL_STATIC_DRAW);
+
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    //glBindVertexArray(0);
+
+    int32_t projection_matrix_location = glGetUniformLocation(program, "u_proj_mat");
+    int32_t move_offset_unif_loc = glGetUniformLocation(program, "u_move_offset");
+
+    glViewport(0, 0, window.width(), window.height());
+    glfwSwapInterval(1);
+
+    const float duration = 3.0f;
+    float move_offest[] = { 0.0f, 0.0f, -1.0f };
+    const float move_offest_const[2] = { 0.0f, 0.0f };
+
     while (!glfwWindowShouldClose(window.ptr_raw()))
     {
         glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
         glClearDepth(1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        //float curr_time{ static_cast<float>(glfwGetTime()) };
+        glUseProgram(program);
 
-        program.use();
-        vertex_arr.bind();
-        renderer.render();
+        auto view_mat{ my_gl_math::Matrix44<float>::translation(
+            { 0.0f, 0.0f, -1.0f }
+        )};
+        auto projection_mat{ my_gl_math::Matrix44<float>::perspective_fov(
+            35.0f, window.width() / window.height(), 0.1f, 30.0f
+        )};
+        auto final_mat{ projection_mat * view_mat };
+
+        glUniformMatrix4fv(projection_matrix_location, 1, true, final_mat.data());
+        glUniform2fv(move_offset_unif_loc, 1, move_offest_const);
+
+        glBindBuffer(GL_ARRAY_BUFFER, vbo_id);
+        glEnableVertexAttribArray(0);
+        glVertexAttribPointer(0, 3, GL_FLOAT, false, 0, 0);
+        glDrawArrays(GL_POINTS, 0, 4);
+        //vertex_arr.bind();
+        //renderer.render();
     
+        // draw movable point
+        float curr_time{ static_cast<float>(glfwGetTime()) };
+        float from_0_to_dur{ fmodf(curr_time, duration) };
+        float from_0_to_1{ from_0_to_dur / duration };
+
+        auto cubic_bezier_mat{ my_gl_math::Matrix44<float>::bezier_cubic_mat() };
+        auto mon_basis_cubic{ my_gl_math::Global::monomial_basis_cube(from_0_to_1) };
+        my_gl_math::Vec4<float> coefs_for_points{ cubic_bezier_mat * mon_basis_cubic };
+        
+        // x offset
+        move_offest[0] = (
+            vertices[0] * coefs_for_points[0] 
+            +
+            vertices[3] * coefs_for_points[1]
+            +
+            vertices[6] * coefs_for_points[2]
+            +
+            vertices[9] * coefs_for_points[3]
+        );
+        move_offest[1] = (
+            vertices[1] * coefs_for_points[0] 
+            +
+            vertices[4] * coefs_for_points[1]
+            +
+            vertices[7] * coefs_for_points[2]
+            +
+            vertices[10] * coefs_for_points[3]
+        );
+
+        //glBindBuffer(GL_ARRAY_BUFFER, vbo_id);
+        //glBufferSubData(GL_ARRAY_BUFFER, sizeof(float) * 3 * 4, sizeof(float) * 3, move_offest);
+        glUniform2fv(move_offset_unif_loc, 1, move_offest);
+        glEnableVertexAttribArray(0);
+        glVertexAttribPointer(0, 3, GL_FLOAT, false, 0, (void*)(sizeof(float) * 3 * 4));
+        glDrawArrays(GL_POINTS, 0, 1);
+
         glfwSwapBuffers(window.ptr_raw());
         glfwPollEvents(); 
     }
 
-    program.un_use();
+    //program.un_use(); 
 
     return 0;
 }

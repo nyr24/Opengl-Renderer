@@ -35,7 +35,7 @@ namespace my_gl_math {
         
         static constexpr MatrixBase<T, 4, 4> bezier_cubic_mat() {
             return MatrixBase<T, 4, 4>{
-                1.0f, 3.0f, -3.0f, 1.0f,
+                -1.0f, 3.0f, -3.0f, 1.0f,
                 3.0f, -6.0f, 3.0f, 0.0f,
                 -3.0f, 3.0f, 0.0f, 0.0f,
                 1.0f, 0.0f, 0.0f, 0.0f
