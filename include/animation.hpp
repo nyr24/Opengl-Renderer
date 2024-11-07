@@ -3,6 +3,7 @@
 #include <concepts>
 #include <cassert>
 #include <math.h>
+#include <unordered_map>
 #include "matrix.hpp"
 
 namespace my_gl {
@@ -13,7 +14,87 @@ namespace my_gl {
         SCALE
     };
 
-    template<typename VAL_TYPE> requires std::floating_point<VAL_TYPE>
+    enum BEZIER_CURVE_TYPE {
+        LINEAR,
+        EASE_IN,
+        EASE_OUT,
+        EASE_IN_OUT,
+        CURVE_COUNT
+    };
+
+    struct Bezier_curve_point_values {
+        my_gl_math::Vec4<float> x_vals;
+        my_gl_math::Vec4<float> y_vals;
+    };
+
+// for easier array initalization
+    using Points = Bezier_curve_point_values;
+
+    const std::array<Points, CURVE_COUNT> predefined_bezier_values = {
+        Points{
+            .x_vals = { 0.0f, 0.3f, 0.6f, 1.0f },
+            .y_vals = { 0.0f, 0.3f, 0.6f, 1.0f }
+        },
+        Points{
+            .x_vals = { 0.0f, 0.4f, 0.7f, 1.0f },
+            .y_vals = { 0.0f, 0.0f, 0.45f, 1.0f }
+        },
+        Points{
+            .x_vals = { 0.0f, 0.3f, 0.6f, 1.0f },
+            .y_vals = { 0.0f, 0.55f, 1.0f, 1.0f }
+        },
+        Points{
+            .x_vals = { 0.0f, 0.4f, 0.6f, 1.0f },
+            .y_vals = { 0.0f, 0.0f, 1.0f, 1.0f }
+        }
+    };
+
+    template<std::floating_point T = float>
+    class Bezier_curve {
+    public:
+        Bezier_curve(
+            const Points& init_values,
+            BEZIER_CURVE_TYPE type
+        )
+            : _points{ init_values }
+            , _mat{ my_gl_math::Matrix44<float>::bezier_cubic_mat() }
+            , _type{ type }
+        {}
+
+    // get current time from curve
+    // maps linear 0 to 1 range to bezier curve 0 to 1 range
+        T update(T time_from_0to1) const {
+            my_gl_math::Vec4<float> mon_basis_cubic{
+                my_gl_math::Global::monomial_basis_cube(time_from_0to1) 
+            };
+
+            my_gl_math::Vec4<float> coefs_for_points{ _mat * mon_basis_cubic };
+
+            my_gl_math::VecBase<T, 2> curr_val_vec = {
+                _points.x_vals.dot(coefs_for_points),
+                _points.y_vals.dot(coefs_for_points)
+            };
+
+            my_gl_math::VecBase<T, 2> difference_vec = { curr_val_vec - _init_dist_vec };
+
+        // getting 1 at the end, and 0 at the start
+        // signifying animation duration progress
+            return difference_vec.length() - _init_dist_length;
+        }
+
+        const Points&     get_points() const { return _points; }
+        BEZIER_CURVE_TYPE get_type() const { return _type; }
+
+    private:
+        const my_gl_math::Matrix44<float>    _mat;
+    // x and y values of points a stored inside separate vectors to efficiently perform some operations
+        const my_gl_math::VecBase<T, 2>      _init_dist_vec{ 1.0f, 1.0f };
+        Points                               _points;
+        BEZIER_CURVE_TYPE                    _type;
+        static constexpr T                   _init_dist_length{ 1.0f };
+    };
+
+    template<std::floating_point VAL_TYPE>
     class Animation {
     public:
         Animation(
@@ -48,21 +129,22 @@ namespace my_gl {
         }
 
         // ctor with duration
+        // only supports predefined bezier values, dependent on passed 'bezier_type' 
         Animation(
             ANIMATION_TYPE anim_type,
             float duration,
             my_gl_math::Vec3<VAL_TYPE>&& start_val,
             my_gl_math::Vec3<VAL_TYPE>&& end_val, 
-            my_gl_math::Vec3<VAL_TYPE>&& delta_val,
-            bool loop
+            BEZIER_CURVE_TYPE bezier_type = LINEAR
+            //bool loop = false
         ) 
             : _anim_type{ anim_type }
             , _start_val{ std::move(start_val) }
             , _end_val{ std::move(end_val) }
-            , _delta_val{ delta_val }
             , _curr_val{ _start_val }
             , _duration{ duration }
-            , _loop{ loop }
+            // loop option disabled currently because of time control issues
+            , _loop{ false }
         {
 
             switch (anim_type) {
@@ -77,6 +159,36 @@ namespace my_gl {
                 break;
             case ANIMATION_TYPE::ROTATE:
                 assert(true && "Can't use this ctor for rotate type animation"); 
+                break;
+            }
+
+            switch (bezier_type) {
+            case BEZIER_CURVE_TYPE::LINEAR:
+                _bezier_curve = {
+                    predefined_bezier_values[LINEAR],
+                    LINEAR
+                };
+                break;
+            case BEZIER_CURVE_TYPE::EASE_IN:
+                _bezier_curve = {
+                    predefined_bezier_values[EASE_IN],
+                    EASE_IN
+                };
+                break;
+            case BEZIER_CURVE_TYPE::EASE_OUT:
+                _bezier_curve = {
+                    predefined_bezier_values[EASE_OUT],
+                    EASE_IN_OUT
+                };
+                break;
+            case BEZIER_CURVE_TYPE::EASE_IN_OUT:
+                _bezier_curve = {
+                    predefined_bezier_values[EASE_IN_OUT],
+                    EASE_IN_OUT
+                };
+                break;
+            default:
+                assert(true && "invalid initialization bezier curve type"); 
                 break;
             }
         } 
@@ -152,21 +264,23 @@ namespace my_gl {
             }
         }
 
-        // based on curr time and duration
+        // based on curr time & duration & bezier curve 
         my_gl_math::Matrix44<VAL_TYPE>& update(float curr_time) {
-            if (!_loop && curr_time > _duration) {
+            if (!_loop && (curr_time > _duration)) {
                 return _mat;
             }
             
-            float val_for_lerp{ (fmod(curr_time, _duration)) / _duration };
-            _curr_val = my_gl_math::Global::lerp<my_gl_math::Vec3<VAL_TYPE>, VAL_TYPE>(_start_val, _end_val, val_for_lerp);
+            float linear_0to1{ (fmod(curr_time, _duration)) / _duration };
+            float bezier_0to1{ _bezier_curve.update(linear_0to1) };
+            _curr_val = my_gl_math::Global::lerp<my_gl_math::Vec3<VAL_TYPE>, VAL_TYPE>(_start_val, _end_val, bezier_0to1);
             update_matrix();
             return _mat;
         }
-        
+
 
     private:
         my_gl_math::Matrix44<VAL_TYPE>      _mat;
+        Bezier_curve<VAL_TYPE>              _bezier_curve;
         my_gl_math::Vec3<VAL_TYPE>          _start_val;
         my_gl_math::Vec3<VAL_TYPE>          _end_val;
         my_gl_math::Vec3<VAL_TYPE>          _delta_val;
@@ -178,8 +292,6 @@ namespace my_gl {
         bool                                _loop{ false };
         bool                                _is_ended{ false };
 
-
-        // TODO: duration, bezier-curve, interpolation instead of delta (maybe)
         void update_matrix() {
             switch (_anim_type) {
             case my_gl::TRANSLATE:

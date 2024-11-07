@@ -175,9 +175,9 @@ int main() {
     const float vertices[] = {
         // control points
         -0.6f, -0.5f, -1.0f,
-        -0.2f, 0.5f, -1.0f,
-        0.2f, -0.6f, -1.0f,
-        0.6f, 0.2f, -1.0f,
+        -0.1f, 0.5f, -1.0f,
+        0.4f, -0.6f, -1.0f,
+        0.8f, 0.2f, -1.0f,
         
         // movable point
         0.0f, 0.0f, -1.0f,
@@ -205,6 +205,9 @@ int main() {
     const float duration = 3.0f;
     float move_offest[] = { 0.0f, 0.0f, -1.0f };
     const float move_offest_const[2] = { 0.0f, 0.0f };
+    // **
+    float dist_to_end[] = { 0.0f, 0.0f };
+    float end_vec[] = { 0.8f, 0.2f };
 
     while (!glfwWindowShouldClose(window.ptr_raw()))
     {
@@ -215,10 +218,10 @@ int main() {
         glUseProgram(program);
 
         auto view_mat{ my_gl_math::Matrix44<float>::translation(
-            { 0.0f, 0.0f, -1.0f }
+            { 0.0f, 0.0f, -4.0f }
         )};
         auto projection_mat{ my_gl_math::Matrix44<float>::perspective_fov(
-            35.0f, window.width() / window.height(), 0.1f, 30.0f
+            45.0f, window.width() / window.height(), 0.1f, 30.0f
         )};
         auto final_mat{ projection_mat * view_mat };
 
@@ -233,17 +236,15 @@ int main() {
         //renderer.render();
     
         // draw movable point
-        float curr_time{ static_cast<float>(glfwGetTime()) };
-        float from_0_to_dur{ fmodf(curr_time, duration) };
-        float from_0_to_1{ from_0_to_dur / duration };
+        float val_from_0_to_1{ my_gl_math::Global::value_01_from_curr_time<float>(static_cast<float>(glfwGetTime()), duration )};
 
         auto cubic_bezier_mat{ my_gl_math::Matrix44<float>::bezier_cubic_mat() };
-        auto mon_basis_cubic{ my_gl_math::Global::monomial_basis_cube(from_0_to_1) };
+        auto mon_basis_cubic{ my_gl_math::Global::monomial_basis_cube(val_from_0_to_1) };
         my_gl_math::Vec4<float> coefs_for_points{ cubic_bezier_mat * mon_basis_cubic };
         
         // x offset
         move_offest[0] = (
-            vertices[0] * coefs_for_points[0] 
+            vertices[0] * coefs_for_points[0]
             +
             vertices[3] * coefs_for_points[1]
             +
@@ -260,6 +261,16 @@ int main() {
             +
             vertices[10] * coefs_for_points[3]
         );
+
+        // distance to end
+        dist_to_end[0] = move_offest[0] - end_vec[0];
+        dist_to_end[1] = move_offest[1] - end_vec[1];
+
+        float dist_len = sqrt(dist_to_end[0] * dist_to_end[0] + dist_to_end[1] * dist_to_end[1]);
+
+        std::cout << "lerp is: " << val_from_0_to_1 << '\n';
+        std::cout << "dist is: " << dist_len << '\n';
+        std::cout << "progress: " << 1.0f - dist_len << '\n';
 
         //glBindBuffer(GL_ARRAY_BUFFER, vbo_id);
         //glBufferSubData(GL_ARRAY_BUFFER, sizeof(float) * 3 * 4, sizeof(float) * 3, move_offest);

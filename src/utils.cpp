@@ -27,6 +27,9 @@ my_gl::Window my_gl::init_window() {
     glDepthFunc(GL_LESS);
     glDepthRange(0.0f, 1.0f);
 
+    // points drawing
+    glEnable(GL_PROGRAM_POINT_SIZE);
+
     return window;
 }
 

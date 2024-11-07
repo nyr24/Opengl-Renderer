@@ -119,6 +119,12 @@ namespace my_gl_math {
             return Vec4<T>{ (t * t * t), (t * t), t, static_cast<T>(1.0) };
         }
 
+        template<std::floating_point T>
+        static T value_01_from_curr_time(T curr_time, T duration) {
+            T from_0_to_dur{ fmodf(curr_time, duration) };
+            return from_0_to_dur / duration;   
+        }
+
     private:
         static constexpr double DEG_TO_RAD = PI / 180;
         static constexpr double RAD_TO_DEG = 180 / PI;
