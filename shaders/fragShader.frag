@@ -1,6 +1,6 @@
 #version 330
 
-//flat in vec4 passed_color;
+flat in vec4 passed_color;
 
 out vec4 output_color;
 
@@ -12,5 +12,5 @@ out vec4 output_color;
 
 void main() {
     output_color = vec4(0.0f, 1.0f, 0.0f, 1.0f);
-    //output_color = passed_color;
+    output_color = passed_color;
 }

@@ -8,7 +8,7 @@ my_gl::Program::Program(
     const char*                         fragment_shader_path,
     std::vector<my_gl::Attribute>&&     attribs
 )
-    : _program_id{ my_gl::createProgram(vertex_shader_path, fragment_shader_path) }
+    : _program_id{ my_gl::create_program(vertex_shader_path, fragment_shader_path) }
 {
     // set attributes
     for (my_gl::Attribute& attrib : attribs) {
@@ -23,7 +23,7 @@ my_gl::Program::Program(
     std::vector<my_gl::Attribute>&&     attribs,
     std::vector<my_gl::Uniform>&&       unifs
 )
-    : _program_id{ my_gl::createProgram(vertex_shader_path, fragment_shader_path) }
+    : _program_id{ my_gl::create_program(vertex_shader_path, fragment_shader_path) }
 {
     // set attributes
     for (my_gl::Attribute& attrib : attribs) {
@@ -182,20 +182,8 @@ void my_gl::Renderer::render() const {
     }
 }
 
-
-void my_gl::Renderer::render(float curr_time) const {
-    for (int i = 0; i < _objects.size(); ++i) {
-        const auto local_mat{ _objects[i]->get_local_mat(curr_time) };
-        my_gl_math::Matrix44<float> mvp_mat{ _proj_mat * _view_mat * local_mat };
-        // pizdec
-        int loc = glGetUniformLocation(_program.get_id(), "u_mvp_mat");
-        glUniformMatrix4fv(loc, 1, true, mvp_mat.data());
-        //glUniformMatrix4fv(_program.get_uniform("u_mvp_mat")->location, 1, true, mvp_mat.data());
-        glDrawElements(
-            GL_TRIANGLES, 
-            _objects[i]->get_vertices_count(), 
-            GL_UNSIGNED_SHORT, 
-            reinterpret_cast<const void*>(_objects[i]->get_buffer_byte_offset())
-        );
+void my_gl::Renderer::set_frame_time(float frame_duration) const {
+    for (const auto& obj : _objects) {
+        // continue
     }
 }

@@ -7,15 +7,15 @@
 my_gl::Window my_gl::init_window() {
     std::cout << "Starting GLFW context, OpenGL 3.3\n";
 
-    my_gl::initGLFW();
+    my_gl::init_GLFW();
 
     my_gl::Window window{ 700, 500, "my_window", nullptr, nullptr };
 
-    my_gl::initGLEW();
+    my_gl::init_GLEW();
 
     // error handling
 	glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
-	glDebugMessageCallback(my_gl::GLDebugMessageCallback, NULL);
+	glDebugMessageCallback(my_gl::callback_debug_message, NULL);
 
     // culling
     glEnable(GL_CULL_FACE);
@@ -27,13 +27,17 @@ my_gl::Window my_gl::init_window() {
     glDepthFunc(GL_LESS);
     glDepthRange(0.0f, 1.0f);
 
+    // callbacks
+    glfwSetFramebufferSizeCallback(window.ptr_raw(), my_gl::callback_framebuffer_size);
+    glfwSetKeyCallback(window.ptr_raw(), my_gl::callback_keyboard);
+
     // points drawing
     glEnable(GL_PROGRAM_POINT_SIZE);
 
     return window;
 }
 
-void my_gl::initGLFW() {
+void my_gl::init_GLFW() {
     if (!glfwInit()) {
         std::cout << "Failed to initialize GLFW" << std::endl;
         std::exit(EXIT_FAILURE);
@@ -43,10 +47,9 @@ void my_gl::initGLFW() {
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     glfwWindowHint(GLFW_RESIZABLE, GL_TRUE);
-    glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GL_TRUE);
 }
 
-void my_gl::initGLEW() {
+void my_gl::init_GLEW() {
     glewExperimental = GL_TRUE;
     if (glewInit() != GLEW_OK)
     {
@@ -55,11 +58,11 @@ void my_gl::initGLEW() {
     } 
 }
 
-GLuint my_gl::createProgram(const char* vertexShaderFilePath, const char* fragmentShaderFilePath) {
+GLuint my_gl::create_program(const char* vertexShaderFilePath, const char* fragmentShaderFilePath) {
     GLuint program{ glCreateProgram() };
 
-    GLuint vertexShader{ my_gl::createShader(GL_VERTEX_SHADER, vertexShaderFilePath) };
-    GLuint fragShader{ my_gl::createShader(GL_FRAGMENT_SHADER, fragmentShaderFilePath) };
+    GLuint vertexShader{ my_gl::create_shader(GL_VERTEX_SHADER, vertexShaderFilePath) };
+    GLuint fragShader{ my_gl::create_shader(GL_FRAGMENT_SHADER, fragmentShaderFilePath) };
 
     std::vector<GLuint> shaders{ vertexShader, fragShader };
     
@@ -92,7 +95,7 @@ GLuint my_gl::createProgram(const char* vertexShaderFilePath, const char* fragme
 }
 
 
-GLuint my_gl::createShader(GLenum shaderType, const char* filePath) {        
+GLuint my_gl::create_shader(GLenum shaderType, const char* filePath) {        
     std::ifstream shaderFile{ filePath, std::ios_base::binary };
 
     if (!shaderFile.is_open()) {
@@ -141,8 +144,35 @@ GLuint my_gl::createShader(GLenum shaderType, const char* filePath) {
     return shaderId;
 }
 
+// callbacks
+void my_gl::callback_framebuffer_size(GLFWwindow* window, int width, int height) {
+    glViewport(0, 0, width, height);
+}
 
-void my_gl::GLDebugMessageCallback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* msg, const void* data) {
+void my_gl::callback_keyboard(GLFWwindow* window, int key, int scancode, int action, int mode)
+{
+    std::cout << "pressed: " << key << '\n';
+
+    switch (key) {
+    case GLFW_KEY_ESCAPE:
+        glfwSetWindowShouldClose(window, GL_TRUE);
+        break;
+    case GLFW_KEY_A:
+        std::cout << "moving left\n";
+        break;
+    case GLFW_KEY_D:
+        std::cout << "moving right\n";
+        break;
+    case GLFW_KEY_W:
+        std::cout << "moving forward\n";
+        break;
+    case GLFW_KEY_S:
+        std::cout << "moving backwards\n";
+        break;
+    }
+}
+
+void my_gl::callback_debug_message(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* msg, const void* data) {
     const char* _source;
     const char* _type;
     const char* _severity;

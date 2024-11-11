@@ -91,9 +91,11 @@ namespace my_gl {
         );
 
         void render() const;
-        void render(float curr_time) const;
+        void set_frame_time(float frame_duration) const;
         void set_proj_mat(my_gl_math::Matrix44<float>&& proj_mat);
         void set_view_mat(my_gl_math::Matrix44<float>&& view_mat);
+        void set_program(const my_gl::Program& program);
+        void set_vao(const my_gl::VertexArray& vao);
 
     private:
         std::vector<IGeometry_object*>   _objects;

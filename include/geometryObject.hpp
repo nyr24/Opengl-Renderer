@@ -5,8 +5,7 @@
 namespace my_gl {
     class IGeometry_object {
     public:
-        virtual const my_gl_math::Matrix44<float> get_local_mat() const = 0;
-        virtual const my_gl_math::Matrix44<float> get_local_mat(float curr_time) const = 0;
+        virtual my_gl_math::Matrix44<float> get_local_mat() const = 0;
         virtual constexpr std::size_t get_vertices_count() const = 0;
         virtual constexpr std::size_t get_buffer_byte_offset() const = 0;
 
@@ -43,8 +42,7 @@ namespace my_gl {
         Cube& operator=(Cube&& rhs) = default;
         ~Cube() = default;
 
-        const my_gl_math::Matrix44<float> get_local_mat() const override;
-        const my_gl_math::Matrix44<float> get_local_mat(float curr_time) const override;
+        my_gl_math::Matrix44<float> get_local_mat() const override;
         
         constexpr std::size_t get_vertices_count() const override { 
             return _vertices_count;
@@ -54,9 +52,9 @@ namespace my_gl {
         }
 
     private:
-        std::vector<my_gl_math::Matrix44<float>>  _matrices;
-        std::vector<my_gl::Animation<float>>      _animations;
-        std::size_t                               _vertices_count;
-        std::size_t                               _buffer_byte_offset;
+        std::vector<my_gl_math::Matrix44<float>>          _matrices;
+        mutable std::vector<my_gl::Animation<float>>      _animations;
+        std::size_t                                       _vertices_count;
+        std::size_t                                       _buffer_byte_offset;
     };
 }
