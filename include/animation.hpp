@@ -122,6 +122,7 @@ namespace my_gl {
     template<std::floating_point Val_type>
     class Animation {
     public:
+        // main ctor
         // only supports predefined bezier values, dependent on passed 'bezier_type' 
         Animation(
             Animation_type                  anim_type,
@@ -192,7 +193,7 @@ namespace my_gl {
             set_bezier_type(bezier_type);
         }
 
-        // based on curr time & duration & bezier curve 
+        // updates inner matrix based on current time & interpolated value & choosen bezier curve type
         my_gl_math::Matrix44<Val_type>& update() {
             if (_loop == Loop_type::NONE && _is_ended) {
                 return _mat;
@@ -216,6 +217,8 @@ namespace my_gl {
             return _mat;
         }
 
+        // should be called at the end of the current frame
+        // to properly update curr animation time
         void update_time(Duration_sec frame_time) {
             if (_is_reversed) {
                 frame_time *= -1.0;
