@@ -1,11 +1,13 @@
 #pragma once
 #include <vector>
 #include "animation.hpp"
+#include "shared_types.hpp"
 
 namespace my_gl {
     class IGeometry_object {
     public:
         virtual my_gl_math::Matrix44<float> get_local_mat() const = 0;
+        virtual void update_anims_time(Duration_sec frame_time) const = 0; 
         virtual constexpr std::size_t get_vertices_count() const = 0;
         virtual constexpr std::size_t get_buffer_byte_offset() const = 0;
 
@@ -43,6 +45,7 @@ namespace my_gl {
         ~Cube() = default;
 
         my_gl_math::Matrix44<float> get_local_mat() const override;
+        void update_anims_time(Duration_sec frame_time) const override;
         
         constexpr std::size_t get_vertices_count() const override { 
             return _vertices_count;

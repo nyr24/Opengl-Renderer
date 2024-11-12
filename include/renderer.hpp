@@ -3,7 +3,9 @@
 #include <vector>
 #include <GLEW/glew.h>
 #include <cstdint>
+#include <string_view>
 #include "matrix.hpp"
+#include "shared_types.hpp"
 
 namespace my_gl {
     class VertexArray;
@@ -64,44 +66,41 @@ namespace my_gl {
         );
         ~Program();
 
-        const Attribute* const get_attrib(const char* attrib_name) const;
-        const Uniform* const get_uniform(const char* unif_name) const;
+        const Attribute* const get_attrib(std::string_view attrib_name) const;
+        const Uniform* const get_uniform(std::string_view unif_name) const;
         void  set_attrib(Attribute& attr);
         void  set_uniform(Uniform& unif);
-        const std::unordered_map<const char*, Attribute>& get_attrs() const; 
-        const std::unordered_map<const char*, Uniform>& get_unifs() const; 
+        const std::unordered_map<std::string_view, Attribute>& get_attrs() const; 
+        const std::unordered_map<std::string_view, Uniform>& get_unifs() const; 
         void  use() const { glUseProgram(_program_id); }
         void  un_use() const { glUseProgram(0); }
         uint32_t get_id() const { return _program_id; }
 
     private:
-        std::unordered_map<const char*, Attribute>  _attrs;
-        std::unordered_map<const char*, Uniform>    _unifs;
+        std::unordered_map<std::string_view, Attribute>  _attrs;
+        std::unordered_map<std::string_view, Uniform>    _unifs;
         uint32_t                                    _program_id{ 0 };
     };
 
     class Renderer {
     public:
         Renderer(
-            std::vector<IGeometry_object*>&& objects,
-            my_gl_math::Matrix44<float>&&   proj_mat,
-            my_gl_math::Matrix44<float>&&   view_mat,
-            my_gl::Program& program,
-            my_gl::VertexArray& vertex_array
+            std::vector<IGeometry_object*>&&    objects,
+            my_gl_math::Matrix44<float>&&       projection_view_mat,
+            my_gl::Program&                     program,
+            my_gl::VertexArray&                 vertex_array
         );
 
         void render() const;
-        void set_frame_time(float frame_duration) const;
-        void set_proj_mat(my_gl_math::Matrix44<float>&& proj_mat);
-        void set_view_mat(my_gl_math::Matrix44<float>&& view_mat);
+        void update_time(Duration_sec frame_time) const;
+        void set_projection_view_mat(my_gl_math::Matrix44<float>&& proj_mat);
         void set_program(const my_gl::Program& program);
         void set_vao(const my_gl::VertexArray& vao);
 
     private:
-        std::vector<IGeometry_object*>   _objects;
-        my_gl_math::Matrix44<float>     _proj_mat;
-        my_gl_math::Matrix44<float>     _view_mat;
-        my_gl::Program&                 _program;
-        my_gl::VertexArray&             _vertex_arr;
+        std::vector<IGeometry_object*>      _objects;
+        my_gl_math::Matrix44<float>         _projection_view_mat;
+        my_gl::Program&                     _program;
+        my_gl::VertexArray&                 _vertex_arr;
     };
 }

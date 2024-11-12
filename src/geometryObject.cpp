@@ -31,36 +31,27 @@ my_gl::Cube::Cube(
     , _buffer_byte_offset{ buffer_byte_offset }
 {}
 
-/* my_gl_math::Matrix44<float> my_gl::Cube::get_local_mat() const {
-    auto result_mat{ my_gl_math::Matrix44<float>::identity() };
-    
-    if (_matrices.size() > 0) {
-        for (int i = 0; i < _matrices.size(); ++i) {
-            result_mat *= _matrices[i];
-        }
-    }
-    if (_animations.size() > 0) {
-        for (int i = 0; i < _animations.size(); ++i) {
-            result_mat *= const_cast<my_gl::Animation<float>&>(_animations[i]).update();
-        }
-    }
-
-    return result_mat;
-} */
-
 my_gl_math::Matrix44<float> my_gl::Cube::get_local_mat() const {
     auto result_mat{ my_gl_math::Matrix44<float>::identity() };
     
     if (_matrices.size() > 0) {
-        for (int i = 0; i < _matrices.size(); ++i) {
-            result_mat *= _matrices[i];
+        for (const auto& curr_mat : _matrices) {
+            result_mat *= curr_mat;
         }
     }
     if (_animations.size() > 0) {
-        for (int i = 0; i < _animations.size(); ++i) {
-            result_mat *= _animations[i].update();
+        for (auto& curr_anim : _animations) {
+            result_mat *= curr_anim.update();
         }
     }
 
     return result_mat;
+}
+
+void my_gl::Cube::update_anims_time(Duration_sec frame_time) const {
+    if (_animations.size() > 0) {
+        for (auto& anim : _animations) {
+            anim.update_time(frame_time);
+        }
+    }
 }

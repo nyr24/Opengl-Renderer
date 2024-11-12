@@ -94,40 +94,42 @@ int main() {
             3.0f,
             { 1.0f, 1.0f, -2.0f },
             { -1.0f, -1.0f, 2.0f },
-            my_gl::Bezier_curve_type::EASE_IN_OUT,
+            my_gl::Bezier_curve_type::EASE_IN,
             my_gl::Loop_type::INVERT
         },
         {
             my_gl::ROTATE3d,
             3.0f,
             { 0.0f, 0.0f, 0.0f },
-            { 10.0f, 0.0f, 0.0f },
-            my_gl::Bezier_curve_type::EASE_IN_OUT,
+            { 0.0f, 10.0f, 0.0f },
+            my_gl::Bezier_curve_type::EASE_IN,
             my_gl::Loop_type::INVERT
         },
     };
 
-    /* std::vector<my_gl::Animation<float>> cube2_anims = { 
+    std::vector<my_gl::Animation<float>> cube2_anims = { 
+        {
+            my_gl::TRANSLATE,
+            5.0f,
+            { -1.0f, 1.0f, -2.0f },
+            { 1.0f, -1.0f, 2.0f },
+            my_gl::Bezier_curve_type::EASE_OUT,
+            my_gl::Loop_type::INVERT
+        },
         {
             my_gl::ROTATE3d,
             5.0f,
             { 0.0f, 0.0f, 0.0f },
-            { 180.0f, 180.0f, 0.0f },
-            my_gl::BEZIER_CURVE_TYPE::EASE_OUT
+            { 10.0f, 0.0f, 0.0f },
+            my_gl::Bezier_curve_type::EASE_OUT,
+            my_gl::Loop_type::INVERT
         },
-        {
-            my_gl::TRANSLATE,
-            5.0f,
-            { -1.0f, -1.0f, 2.0f },
-            { 1.0f, 1.0f, -2.0f },
-            my_gl::BEZIER_CURVE_TYPE::EASE_OUT
-        },
-    }; */
+    };
 
     my_gl::Cube cube1{ std::move(cube1_anims), 36, 0 };
-    //my_gl::Cube cube2{ std::move(cube2_anims), 36, 0 };
+    my_gl::Cube cube2{ std::move(cube2_anims), 36, 0 };
 
-    std::vector<my_gl::IGeometry_object*> objects{ &cube1, /* &cube2 */ };  
+    std::vector<my_gl::IGeometry_object*> objects{ &cube1, &cube2 };  
 
     auto view_mat{ my_gl_math::Matrix44<float>::translation(
         my_gl_math::Vec3<float>{ 0.0f, 0.0f, -4.0f }
@@ -137,16 +139,15 @@ int main() {
         45.0f, window.width() / window.height(), 0.1f, 50.0f
     )};
 
+    auto projection_view_mat{ projection_mat * view_mat };
+
     // renderer
     my_gl::Renderer renderer{ 
         std::move(objects),
-        std::move(projection_mat),
-        std::move(view_mat),
+        std::move(projection_view_mat),
         program,
         vertex_arr
     };
-
-    auto projection_view_mat{ projection_mat * view_mat };
 
     glfwSwapInterval(1);
     
@@ -165,9 +166,9 @@ int main() {
         glfwSwapBuffers(window.ptr_raw());
         glfwPollEvents();
 
-        std::chrono::duration<float, std::ratio<1, 1000>> frame_duration{ std::chrono::steady_clock::now() - start_frame };
+        my_gl::Duration_sec frame_duration{ std::chrono::steady_clock::now() - start_frame };
 
-        std::cout << frame_duration << '\n';
+        renderer.update_time(frame_duration);
     }
 
     program.un_use();

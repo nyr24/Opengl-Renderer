@@ -39,7 +39,7 @@ my_gl::Program::~Program() {
     glDeleteProgram(_program_id);
 }
 
-const my_gl::Attribute* const my_gl::Program::get_attrib(const char* attrib_name) const {
+const my_gl::Attribute* const my_gl::Program::get_attrib(std::string_view attrib_name) const {
     auto attr{ _attrs.find(attrib_name) };
     if (attr != _attrs.end()) {
         return &(attr->second);
@@ -49,7 +49,7 @@ const my_gl::Attribute* const my_gl::Program::get_attrib(const char* attrib_name
     }
 }
 
-const my_gl::Uniform* const my_gl::Program::get_uniform(const char* unif_name) const {
+const my_gl::Uniform* const my_gl::Program::get_uniform(std::string_view unif_name) const {
     auto unif{ _unifs.find(unif_name) };
     if (unif != _unifs.end() ) {
         return &(unif->second);
@@ -95,11 +95,11 @@ void my_gl::Program::set_uniform(my_gl::Uniform& unif) {
     _unifs[unif.name] = std::move(unif);
 }
 
-const std::unordered_map<const char*, my_gl::Attribute>& my_gl::Program::get_attrs() const {
+const std::unordered_map<std::string_view, my_gl::Attribute>& my_gl::Program::get_attrs() const {
     return _attrs;
 }
 
-const std::unordered_map<const char*, my_gl::Uniform>& my_gl::Program::get_unifs() const {
+const std::unordered_map<std::string_view, my_gl::Uniform>& my_gl::Program::get_unifs() const {
     return _unifs;
 } 
 
@@ -152,38 +152,33 @@ my_gl::VertexArray::~VertexArray() {
 
 // Renderer
 my_gl::Renderer::Renderer(
-    std::vector<IGeometry_object*>&& objects,
-    my_gl_math::Matrix44<float>&&   proj_mat,
-    my_gl_math::Matrix44<float>&&   view_mat,
-    my_gl::Program& program,
-    my_gl::VertexArray& vertex_arr
+    std::vector<IGeometry_object*>&&    objects,
+    my_gl_math::Matrix44<float>&&       projection_view_mat,
+    my_gl::Program&                     program,
+    my_gl::VertexArray&                 vertex_arr
 ) 
     : _objects{ std::move(objects) }
-    , _proj_mat{ std::move(proj_mat) }
-    , _view_mat{ std::move(view_mat) }
+    , _projection_view_mat{ std::move(projection_view_mat) }
     , _program{ program }
     , _vertex_arr{ vertex_arr }
 {}
 
 void my_gl::Renderer::render() const {
-    for (int i = 0; i < _objects.size(); ++i) {
-        const auto local_mat{ _objects[i]->get_local_mat() };
-        my_gl_math::Matrix44<float> mvp_mat{ _proj_mat * _view_mat * local_mat };
-        // pizdec
-        int loc = glGetUniformLocation(_program.get_id(), "u_mvp_mat");
-        glUniformMatrix4fv(loc, 1, true, mvp_mat.data());
-        //glUniformMatrix4fv(_program.get_uniform("u_mvp_mat")->location, 1, true, mvp_mat.data());
+    for (const auto* obj : _objects) {
+        const auto local_mat{ obj->get_local_mat() };
+        my_gl_math::Matrix44<float> mvp_mat{ _projection_view_mat * local_mat };
+        glUniformMatrix4fv(_program.get_uniform("u_mvp_mat")->location, 1, true, mvp_mat.data());
         glDrawElements(
-            GL_TRIANGLES, 
-            _objects[i]->get_vertices_count(), 
+            GL_TRIANGLES,
+            obj->get_vertices_count(), 
             GL_UNSIGNED_SHORT, 
-            reinterpret_cast<const void*>(_objects[i]->get_buffer_byte_offset())
+            reinterpret_cast<const void*>(obj->get_buffer_byte_offset())
         );
     }
 }
 
-void my_gl::Renderer::set_frame_time(float frame_duration) const {
-    for (const auto& obj : _objects) {
-        // continue
+void my_gl::Renderer::update_time(Duration_sec frame_duration) const {
+    for (const auto* obj : _objects) {
+        obj->update_anims_time(frame_duration);
     }
 }

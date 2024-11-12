@@ -5,7 +5,10 @@
 #include <math.h>
 #include <unordered_map>
 #include <chrono>
+// TEMP
+#include <iostream>
 #include "matrix.hpp"
+#include "shared_types.hpp"
 
 namespace my_gl {
     enum Animation_type {
@@ -116,16 +119,13 @@ namespace my_gl {
     };
 
 
-    template<std::floating_point Val_type, std::floating_point Time_type = float>
+    template<std::floating_point Val_type>
     class Animation {
     public:
-        using Duration_sec = std::chrono::duration<Time_type, std::ratio<1>>;
-        using Timepoint_sec = std::chrono::time_point<std::chrono::steady_clock, Duration_sec>;
-
         // only supports predefined bezier values, dependent on passed 'bezier_type' 
         Animation(
             Animation_type                  anim_type,
-            Time_type                       duration,
+            float                           duration,
             my_gl_math::Vec3<Val_type>&&    start_val,
             my_gl_math::Vec3<Val_type>&&    end_val, 
             Bezier_curve_type               bezier_type = LINEAR,
@@ -161,7 +161,7 @@ namespace my_gl {
         Animation(
             Val_type                 start_val,
             Val_type                 end_val,
-            Time_type                duration,
+            float                    duration,
             my_gl_math::Global::AXIS axis,
             Bezier_curve_type        bezier_type = LINEAR,
             Loop_type                loop = Loop_type::NONE
@@ -213,8 +213,15 @@ namespace my_gl {
             };
 
             update_matrix(_curr_val);
-            // frame time should be added here
-            _curr_time += Duration_sec{ _delta_time };
+            return _mat;
+        }
+
+        void update_time(Duration_sec frame_time) {
+            if (_is_reversed) {
+                frame_time *= -1.0;
+            }
+
+            _curr_time += frame_time;
 
             if (_curr_time >= (_start_time + _duration)) {
                 if (_loop == Loop_type::NONE) {
@@ -224,27 +231,23 @@ namespace my_gl {
                     _curr_time = _start_time;
                 }
                 else {
-                    _delta_time *= static_cast<Time_type>(-1.0);
+                    _is_reversed = !_is_reversed;
                 }
             }
             else if (_curr_time <= _start_time && _loop == Loop_type::INVERT) {
-                _delta_time *= static_cast<Time_type>(-1.0);
+                _is_reversed = !_is_reversed;
             }
-
-            return _mat;
         }
-
 
     private:
         my_gl_math::Matrix44<Val_type>      _mat;
-        Bezier_curve<Time_type>             _bezier_curve;
+        Bezier_curve<float>                 _bezier_curve;
         my_gl_math::Vec3<Val_type>          _start_val;
         my_gl_math::Vec3<Val_type>          _end_val;
         // make sence only with pause / play system
         //my_gl_math::Vec3<Val_type>          _curr_val;
         Timepoint_sec                       _start_time;
         Timepoint_sec                       _curr_time;
-        Time_type                           _delta_time{ static_cast<Time_type>(0.015) };
         Duration_sec                        _duration;
         // only for single-axis rotation
         my_gl_math::Global::AXIS            _axis{ my_gl_math::Global::Z };
@@ -252,6 +255,7 @@ namespace my_gl {
         Loop_type                           _loop{ Loop_type::NONE };
         bool                                _is_started{ false };
         bool                                _is_ended{ false };
+        bool                                _is_reversed{ false };
         //bool                                _is_paused{ false };
 
         // input can be Vector or Scalar (single axis rotation)
