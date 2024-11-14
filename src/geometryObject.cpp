@@ -1,6 +1,6 @@
 #include "geometryObject.hpp"
 
-my_gl::Cube::Cube(
+my_gl::Geometry_object::Geometry_object(
     std::vector<my_gl_math::Matrix44<float>>&& matrices,
     std::vector<my_gl::Animation<float>>&&     animations,
     std::size_t                                vertices_count,
@@ -12,7 +12,7 @@ my_gl::Cube::Cube(
     , _buffer_byte_offset{ buffer_byte_offset }
 {}
 
-my_gl::Cube::Cube(
+my_gl::Geometry_object::Geometry_object(
     std::vector<my_gl::Animation<float>>&&     animations,
     std::size_t                                vertices_count,
     std::size_t                                buffer_byte_offset   
@@ -22,7 +22,7 @@ my_gl::Cube::Cube(
     , _buffer_byte_offset{ buffer_byte_offset }
 {}
 
-my_gl::Cube::Cube(
+my_gl::Geometry_object::Geometry_object(
     std::vector<my_gl_math::Matrix44<float>>&& matrices,
     std::size_t                                vertices_count,    std::size_t                                buffer_byte_offset   
 )
@@ -31,7 +31,7 @@ my_gl::Cube::Cube(
     , _buffer_byte_offset{ buffer_byte_offset }
 {}
 
-my_gl_math::Matrix44<float> my_gl::Cube::get_local_mat() const {
+my_gl_math::Matrix44<float> my_gl::Geometry_object::get_local_mat() const {
     auto result_mat{ my_gl_math::Matrix44<float>::identity() };
     
     if (_matrices.size() > 0) {
@@ -48,7 +48,7 @@ my_gl_math::Matrix44<float> my_gl::Cube::get_local_mat() const {
     return result_mat;
 }
 
-void my_gl::Cube::update_anims_time(Duration_sec frame_time) const {
+void my_gl::Geometry_object::update_anims_time(Duration_sec frame_time) const {
     if (_animations.size() > 0) {
         for (auto& anim : _animations) {
             anim.update_time(frame_time);

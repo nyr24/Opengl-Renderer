@@ -5,13 +5,13 @@
 #include <cstdint>
 #include <string_view>
 #include "matrix.hpp"
-#include "shared_types.hpp"
+#include "sharedTypes.hpp"
 
 namespace my_gl {
     class VertexArray;
     class Program;
     class Renderer;
-    class IGeometry_object;
+    class Geometry_object;
 
     struct Attribute {
         const char*     name;
@@ -23,8 +23,8 @@ namespace my_gl {
     };
 
     struct Uniform {
-        const char*         name;
-        int32_t             location{ -1 };
+        const char*     name;
+        int32_t         location{ -1 };
     };
 
     class VertexArray {
@@ -85,7 +85,7 @@ namespace my_gl {
     class Renderer {
     public:
         Renderer(
-            std::vector<IGeometry_object*>&&    objects,
+            std::vector<Geometry_object>&&      objects,
             my_gl_math::Matrix44<float>&&       projection_view_mat,
             my_gl::Program&                     program,
             my_gl::VertexArray&                 vertex_array
@@ -98,7 +98,7 @@ namespace my_gl {
         void set_vao(const my_gl::VertexArray& vao);
 
     private:
-        std::vector<IGeometry_object*>      _objects;
+        std::vector<Geometry_object>        _objects;
         my_gl_math::Matrix44<float>         _projection_view_mat;
         my_gl::Program&                     _program;
         my_gl::VertexArray&                 _vertex_arr;

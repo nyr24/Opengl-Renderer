@@ -265,4 +265,10 @@ void my_gl::callback_debug_message(GLenum source, GLenum type, GLuint id, GLenum
 
     printf("[Open gl note]%d: %s of %s severity, raised from %s: %s\n",
         id, _type, _severity, _source, msg);
-} 
+}
+
+void my_gl::print_max_vert_attrs_supported() {
+    int nrAttributes;
+    glGetIntegerv(GL_MAX_VERTEX_ATTRIBS, &nrAttributes);
+    std::cout << "Maximum nr of vertex attributes supported: " << nrAttributes << std::endl;
+}

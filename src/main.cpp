@@ -6,18 +6,22 @@
 #include "window.hpp"
 #include "renderer.hpp"
 #include "geometryObject.hpp"
+#include "texture.hpp"
 
 int main() {
     my_gl::Window window{ my_gl::init_window() };
 
     std::vector<my_gl::Attribute> attributes = {
-        my_gl::Attribute{ .name = "position", .gl_type = GL_FLOAT, .count = 3, .byte_stride = 0, .byte_offset = 0 },
-        my_gl::Attribute{ .name = "color", .gl_type = GL_FLOAT, .count = 4, .byte_stride = 0, .byte_offset = sizeof(float) * 3 * 24 }
+        { .name = "a_position", .gl_type = GL_FLOAT, .count = 3, .byte_stride = 0, .byte_offset = 0 },
+        /* { .name = "a_color", .gl_type = GL_FLOAT, .count = 4, .byte_stride = 0, .byte_offset = sizeof(float) * 3 * 24 }, */
+        { .name = "a_tex_coord", .gl_type = GL_FLOAT, .count = 2, .byte_stride = 0, .byte_offset = (sizeof(float) * 3 * 4 * 6) }
     };
 
     std::vector<my_gl::Uniform> uniforms = {
         { .name = "u_mvp_mat" },
     };
+
+    my_gl::Texture texture2d{ "../../res/brick_wall.jpg" };
 
     my_gl::Program program{ my_gl::Program(
         "../../shaders/vertShader.vert", 
@@ -26,6 +30,7 @@ int main() {
         std::move(uniforms)
     )};
 
+    // positions
     #define LEFT_TOP_NEAR       -.5f, .5f, .5f
     #define LEFT_BOT_NEAR       -.5f, -.5f, .5f
     #define LEFT_TOP_FAR        -.5f, .5f, -.5f
@@ -43,7 +48,16 @@ int main() {
     #define PURPLE  0.5f, 0.0f, 0.5f, 1.0f
     #define YELLOW  1.0f, 1.0f, 0.0f, 1.0f
 
+    // textures
+    #define TEX_LEFT_TOP       0.0f, 1.0f
+    #define TEX_MIDDLE_TOP     0.5f, 1.0f
+    #define TEX_LEFT_BOT       0.0f, 0.0f
+    #define TEX_RIGHT_TOP      1.0f, 1.0f
+    #define TEX_MIDDLE_BOT     0.5f, 0.0f
+    #define TEX_RIGHT_BOT      1.0f, 0.0f
+
     std::vector<float> vertices = {
+        // POSITIONS
         // front
         LEFT_TOP_NEAR, LEFT_BOT_NEAR, RIGHT_BOT_NEAR, RIGHT_TOP_NEAR,
         // back
@@ -57,10 +71,18 @@ int main() {
         // bottom
         LEFT_BOT_NEAR, RIGHT_BOT_NEAR, LEFT_BOT_FAR, RIGHT_BOT_FAR,
 
-        // COLORS
-
+        // TEXTURES
         // front
-        GREEN, GREEN, GREEN, GREEN,
+        TEX_LEFT_TOP, TEX_LEFT_BOT, TEX_RIGHT_BOT, TEX_RIGHT_TOP,
+        TEX_LEFT_TOP, TEX_LEFT_BOT, TEX_RIGHT_BOT, TEX_RIGHT_TOP,
+        TEX_LEFT_TOP, TEX_LEFT_BOT, TEX_RIGHT_TOP, TEX_RIGHT_BOT,
+        TEX_LEFT_TOP, TEX_LEFT_BOT, TEX_RIGHT_TOP, TEX_RIGHT_BOT,
+        TEX_LEFT_TOP, TEX_LEFT_BOT, TEX_RIGHT_TOP, TEX_RIGHT_BOT,
+        TEX_LEFT_TOP, TEX_LEFT_BOT, TEX_RIGHT_TOP, TEX_RIGHT_BOT,
+
+        // COLORS
+        // front
+        /* GREEN, GREEN, GREEN, GREEN,
         // back
         YELLOW, YELLOW, YELLOW, YELLOW,
         // right
@@ -70,7 +92,7 @@ int main() {
         // top
         ORANGE, ORANGE, ORANGE, ORANGE,
         // bottom
-        PURPLE, PURPLE, PURPLE, PURPLE,
+        PURPLE, PURPLE, PURPLE, PURPLE, */
     };
 
     std::vector<uint16_t> indices = {
@@ -91,45 +113,61 @@ int main() {
     std::vector<my_gl::Animation<float>> cube1_anims = {
         {
             my_gl::TRANSLATE,
-            3.0f,
+            5.0f,
             { 1.0f, 1.0f, -2.0f },
-            { -1.0f, -1.0f, 2.0f },
+            { -1.0f, -1.0f, 1.0f },
             my_gl::Bezier_curve_type::EASE_IN,
             my_gl::Loop_type::INVERT
         },
         {
             my_gl::ROTATE3d,
-            3.0f,
+            5.0f,
             { 0.0f, 0.0f, 0.0f },
             { 0.0f, 10.0f, 0.0f },
             my_gl::Bezier_curve_type::EASE_IN,
             my_gl::Loop_type::INVERT
         },
+        {
+            my_gl::SCALE,
+            5.0f,
+            { 1.0f, 1.0f, 1.0f },
+            { 2.0f, 2.0f, 2.0f },
+            my_gl::Bezier_curve_type::EASE_IN,
+            my_gl::Loop_type::INVERT
+        }
     };
 
     std::vector<my_gl::Animation<float>> cube2_anims = { 
         {
             my_gl::TRANSLATE,
             5.0f,
+            { 1.0f, -1.0f, 1.0f },
             { -1.0f, 1.0f, -2.0f },
-            { 1.0f, -1.0f, 2.0f },
             my_gl::Bezier_curve_type::EASE_OUT,
             my_gl::Loop_type::INVERT
         },
         {
             my_gl::ROTATE3d,
             5.0f,
-            { 0.0f, 0.0f, 0.0f },
             { 10.0f, 0.0f, 0.0f },
+            { 0.0f, 0.0f, 0.0f },
             my_gl::Bezier_curve_type::EASE_OUT,
             my_gl::Loop_type::INVERT
         },
+        {
+            my_gl::SCALE,
+            5.0f,
+            { 2.0f, 2.0f, 2.0f },
+            { 1.0f, 1.0f, 1.0f },
+            my_gl::Bezier_curve_type::EASE_OUT,
+            my_gl::Loop_type::INVERT
+        }
     };
 
-    my_gl::Cube cube1{ std::move(cube1_anims), 36, 0 };
-    my_gl::Cube cube2{ std::move(cube2_anims), 36, 0 };
+    my_gl::Geometry_object cube1{ std::move(cube1_anims), 36, 0 };
+    my_gl::Geometry_object cube2{ std::move(cube2_anims), 36, 0 };
 
-    std::vector<my_gl::IGeometry_object*> objects{ &cube1, &cube2 };  
+    std::vector<my_gl::Geometry_object> objects{ cube1, cube2 };  
 
     auto view_mat{ my_gl_math::Matrix44<float>::translation(
         my_gl_math::Vec3<float>{ 0.0f, 0.0f, -4.0f }
@@ -141,7 +179,6 @@ int main() {
 
     auto projection_view_mat{ projection_mat * view_mat };
 
-    // renderer
     my_gl::Renderer renderer{ 
         std::move(objects),
         std::move(projection_view_mat),
@@ -150,7 +187,7 @@ int main() {
     };
 
     glfwSwapInterval(1);
-    
+
     while (!glfwWindowShouldClose(window.ptr_raw())) {
         auto start_frame{ std::chrono::steady_clock::now() };
 
@@ -158,6 +195,7 @@ int main() {
         glClearDepth(1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+        texture2d.bind();
         program.use();
         vertex_arr.bind();
 

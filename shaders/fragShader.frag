@@ -1,16 +1,13 @@
 #version 330
 
-flat in vec4 passed_color;
+//flat in vec4 passed_color;
+in vec2 tex_coord;
 
 out vec4 output_color;
 
-//uniform float u_elapsed_time;
-//uniform float u_loop_duration;
-
-//const vec4 color_one = vec4(0.0f, 0.0f, 1.0f, 1.0f);
-//const vec4 color_two = vec4(0.0f, 1.0f, 0.0f, 1.0f);
+uniform sampler2D u_texture_data;
 
 void main() {
-    output_color = vec4(0.0f, 1.0f, 0.0f, 1.0f);
-    output_color = passed_color;
+    //output_color = passed_color;
+    output_color = texture2D(u_texture_data, tex_coord);
 }

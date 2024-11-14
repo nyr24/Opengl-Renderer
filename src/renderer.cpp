@@ -152,7 +152,7 @@ my_gl::VertexArray::~VertexArray() {
 
 // Renderer
 my_gl::Renderer::Renderer(
-    std::vector<IGeometry_object*>&&    objects,
+    std::vector<my_gl::Geometry_object>&&    objects,
     my_gl_math::Matrix44<float>&&       projection_view_mat,
     my_gl::Program&                     program,
     my_gl::VertexArray&                 vertex_arr
@@ -164,21 +164,21 @@ my_gl::Renderer::Renderer(
 {}
 
 void my_gl::Renderer::render() const {
-    for (const auto* obj : _objects) {
-        const auto local_mat{ obj->get_local_mat() };
+    for (const auto& obj : _objects) {
+        const auto local_mat{ obj.get_local_mat() };
         my_gl_math::Matrix44<float> mvp_mat{ _projection_view_mat * local_mat };
         glUniformMatrix4fv(_program.get_uniform("u_mvp_mat")->location, 1, true, mvp_mat.data());
         glDrawElements(
             GL_TRIANGLES,
-            obj->get_vertices_count(), 
+            obj.get_vertices_count(), 
             GL_UNSIGNED_SHORT, 
-            reinterpret_cast<const void*>(obj->get_buffer_byte_offset())
+            reinterpret_cast<const void*>(obj.get_buffer_byte_offset())
         );
     }
 }
 
 void my_gl::Renderer::update_time(Duration_sec frame_duration) const {
-    for (const auto* obj : _objects) {
-        obj->update_anims_time(frame_duration);
+    for (const auto& obj : _objects) {
+        obj.update_anims_time(frame_duration);
     }
 }

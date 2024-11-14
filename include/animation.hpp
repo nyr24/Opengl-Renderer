@@ -8,7 +8,7 @@
 // TEMP
 #include <iostream>
 #include "matrix.hpp"
-#include "shared_types.hpp"
+#include "sharedTypes.hpp"
 
 namespace my_gl {
     enum Animation_type {
