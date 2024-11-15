@@ -11,7 +11,7 @@ namespace my_gl {
     class VertexArray;
     class Program;
     class Renderer;
-    class Geometry_object;
+    class GeometryObject;
 
     struct Attribute {
         const char*     name;
@@ -85,7 +85,7 @@ namespace my_gl {
     class Renderer {
     public:
         Renderer(
-            std::vector<Geometry_object>&&      objects,
+            std::vector<GeometryObject>&&       objects,
             my_gl_math::Matrix44<float>&&       projection_view_mat,
             my_gl::Program&                     program,
             my_gl::VertexArray&                 vertex_array
@@ -93,14 +93,10 @@ namespace my_gl {
 
         void render() const;
         void update_time(Duration_sec frame_time) const;
-        void set_projection_view_mat(my_gl_math::Matrix44<float>&& proj_mat);
-        void set_program(const my_gl::Program& program);
-        void set_vao(const my_gl::VertexArray& vao);
+        void set_world_matrix(my_gl_math::Matrix44<float>&& new_world_matrix);
 
     private:
-        std::vector<Geometry_object>        _objects;
-        my_gl_math::Matrix44<float>         _projection_view_mat;
-        my_gl::Program&                     _program;
-        my_gl::VertexArray&                 _vertex_arr;
+        std::vector<GeometryObject>         _objects;
+        my_gl_math::Matrix44<float>         _world_matrix;
     };
 }

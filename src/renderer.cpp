@@ -152,28 +152,30 @@ my_gl::VertexArray::~VertexArray() {
 
 // Renderer
 my_gl::Renderer::Renderer(
-    std::vector<my_gl::Geometry_object>&&    objects,
-    my_gl_math::Matrix44<float>&&       projection_view_mat,
-    my_gl::Program&                     program,
-    my_gl::VertexArray&                 vertex_arr
+    std::vector<my_gl::GeometryObject>&&    objects,
+    my_gl_math::Matrix44<float>&&           world_matrix,
+    my_gl::Program&                         program,
+    my_gl::VertexArray&                     vertex_arr
 ) 
     : _objects{ std::move(objects) }
-    , _projection_view_mat{ std::move(projection_view_mat) }
-    , _program{ program }
-    , _vertex_arr{ vertex_arr }
+    , _world_matrix{ std::move(world_matrix) }
 {}
+
+void my_gl::Renderer::set_world_matrix(my_gl_math::Matrix44<float>&& new_world_matrix) {
+    _world_matrix = new_world_matrix;
+}
 
 void my_gl::Renderer::render() const {
     for (const auto& obj : _objects) {
+        obj.bind_state();
+
         const auto local_mat{ obj.get_local_mat() };
-        my_gl_math::Matrix44<float> mvp_mat{ _projection_view_mat * local_mat };
-        glUniformMatrix4fv(_program.get_uniform("u_mvp_mat")->location, 1, true, mvp_mat.data());
-        glDrawElements(
-            GL_TRIANGLES,
-            obj.get_vertices_count(), 
-            GL_UNSIGNED_SHORT, 
-            reinterpret_cast<const void*>(obj.get_buffer_byte_offset())
-        );
+        const auto mvp_mat{ _world_matrix * local_mat };
+        glUniformMatrix4fv(obj.get_program().get_uniform("u_mvp_mat")->location, 1, true, mvp_mat.data());
+        
+        obj.draw();
+
+        obj.un_bind_state();
     }
 }
 

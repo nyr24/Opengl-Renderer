@@ -164,10 +164,10 @@ int main() {
         }
     };
 
-    my_gl::Geometry_object cube1{ std::move(cube1_anims), 36, 0 };
-    my_gl::Geometry_object cube2{ std::move(cube2_anims), 36, 0 };
+    my_gl::GeometryObject cube1{ std::move(cube1_anims), 36, 0, program, vertex_arr, GL_TRIANGLES, &texture2d };
+    my_gl::GeometryObject cube2{ std::move(cube2_anims), 36, 0, program, vertex_arr, GL_TRIANGLES, &texture2d };
 
-    std::vector<my_gl::Geometry_object> objects{ cube1, cube2 };  
+    std::vector<my_gl::GeometryObject> objects{ cube1, cube2 };  
 
     auto view_mat{ my_gl_math::Matrix44<float>::translation(
         my_gl_math::Vec3<float>{ 0.0f, 0.0f, -4.0f }
@@ -194,10 +194,6 @@ int main() {
         glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
         glClearDepth(1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-        texture2d.bind();
-        program.use();
-        vertex_arr.bind();
 
         renderer.render();
 
