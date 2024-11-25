@@ -3,6 +3,7 @@
 #include <sstream>
 #include <vector>
 #include "utils.hpp"
+#include <STB_IMG/stb_image.h>
 
 my_gl::Window my_gl::init_window() {
     std::cout << "Starting GLFW context, OpenGL 3.3\n";
@@ -33,6 +34,9 @@ my_gl::Window my_gl::init_window() {
 
     // points drawing
     glEnable(GL_PROGRAM_POINT_SIZE);
+
+    // other
+    stbi_set_flip_vertically_on_load(true);  
 
     return window;
 }

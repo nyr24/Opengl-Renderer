@@ -54,6 +54,17 @@ namespace my_gl_math {
             std::valarray<T> res = _data * rhs._data;
             return res.sum();
         }
+
+        VecBase<T, N>& negate_inplace() {
+            _data *= static_cast<T>(-1.0);
+            return *this;
+        }
+
+        VecBase<T, N> negate_new() const {
+            VecBase<T, N> res{ *this };
+            res._data *= static_cast<T>(-1.0);
+            return res;
+        }
     
     // operators
         T& operator[](int i) {

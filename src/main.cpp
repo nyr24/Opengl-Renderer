@@ -19,9 +19,9 @@ int main() {
 
     std::vector<my_gl::Uniform> uniforms = {
         { .name = "u_mvp_mat" },
+        { .name = "u_tex_data1" },
+        { .name = "u_tex_data2" }
     };
-
-    my_gl::Texture texture2d{ "../../res/brick_wall.jpg" };
 
     my_gl::Program program{ my_gl::Program(
         "../../shaders/vertShader.vert", 
@@ -29,6 +29,13 @@ int main() {
         std::move(attributes),
         std::move(uniforms)
     )};
+
+// move this to object to dynamically assign uniform value,
+//this would be overwritten if specified more textures than uniforms
+    std::vector<my_gl::Texture> textures = {
+        { "../../res/mine_red.jpg", program, program.get_uniform("u_tex_data1"), 0, GL_TEXTURE0 },
+        { "../../res/mine_green.jpg", program, program.get_uniform("u_tex_data2"), 1, GL_TEXTURE1 },
+    };
 
     // positions
     #define LEFT_TOP_NEAR       -.5f, .5f, .5f
@@ -164,8 +171,11 @@ int main() {
         }
     };
 
-    my_gl::GeometryObject cube1{ std::move(cube1_anims), 36, 0, program, vertex_arr, GL_TRIANGLES, &texture2d };
-    my_gl::GeometryObject cube2{ std::move(cube2_anims), 36, 0, program, vertex_arr, GL_TRIANGLES, &texture2d };
+    std::vector<const my_gl::Texture*> cube1_textures = { &textures[0] };
+    std::vector<const my_gl::Texture*> cube2_textures = { &textures[0], &textures[1] };
+
+    my_gl::GeometryObject cube1{ std::move(cube1_anims), 36, 0, program, vertex_arr, GL_TRIANGLES, std::move(cube1_textures) };
+    my_gl::GeometryObject cube2{ std::move(cube2_anims), 36, 0, program, vertex_arr, GL_TRIANGLES, std::move(cube2_textures) };
 
     std::vector<my_gl::GeometryObject> objects{ cube1, cube2 };  
 

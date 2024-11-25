@@ -9,15 +9,15 @@ my_gl::GeometryObject::GeometryObject(
     const Program&                             program,
     const VertexArray&                         vao,
     GLenum                                     draw_type,
-    const my_gl::Texture*                      texture
+    std::vector<const my_gl::Texture*>&&       textures = { nullptr }
 )
     : _matrices{ std::move(matrices) }
     , _animations{ std::move(animations) }
+    , _textures{ std::move(textures) }
     , _vertices_count{ vertices_count }
     , _buffer_byte_offset{ buffer_byte_offset }
     , _program{ program } 
     , _vao{ vao }
-    , _texture{ texture }
     , _draw_type{ draw_type }
 {}
 
@@ -28,14 +28,14 @@ my_gl::GeometryObject::GeometryObject(
     const Program&                             program,
     const VertexArray&                         vao,
     GLenum                                     draw_type,
-    const my_gl::Texture*                      texture
+    std::vector<const my_gl::Texture*>&&       textures = { nullptr }
 )
     : _animations{ std::move(animations) }
     , _vertices_count{ vertices_count }
+    , _textures{ std::move(textures) }
     , _buffer_byte_offset{ buffer_byte_offset }
     , _program{ program } 
     , _vao{ vao }
-    , _texture{ texture }
     , _draw_type{ draw_type }
 {}
 
@@ -46,11 +46,11 @@ my_gl::GeometryObject::GeometryObject(
     const Program&                             program,
     const VertexArray&                         vao,
     GLenum                                     draw_type,
-    const my_gl::Texture*                      texture
+    std::vector<const my_gl::Texture*>&&       textures = { nullptr }
 )
     : _matrices{ std::move(matrices) }
-    , _texture{ texture }
     , _vertices_count{ vertices_count }
+    , _textures{ std::move(textures) }
     , _buffer_byte_offset{ buffer_byte_offset }
     , _program{ program } 
     , _vao{ vao }
@@ -83,16 +83,20 @@ void my_gl::GeometryObject::update_anims_time(Duration_sec frame_time) const {
 }
 
 void my_gl::GeometryObject::bind_state() const {
-    if (_texture) {
-        _texture->bind();
+    if (_textures.size() > 0) {
+        for (const auto* texture : _textures) {
+            texture->bind();
+        }
     }
     _program.use();
     _vao.bind();
 }
 
 void my_gl::GeometryObject::un_bind_state() const {
-    if (_texture) {
-        _texture->un_bind();
+    if (_textures.size() > 0) {
+        for (const auto* texture : _textures) {
+            texture->un_bind();
+        }
     }
     _program.un_use();
     _vao.un_bind();

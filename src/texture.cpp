@@ -1,29 +1,41 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include <iostream>
 #include "texture.hpp"
+#include "renderer.hpp"
 
 namespace my_gl {
     Texture::Texture(
         const char* path,
+        const Program& program,
+        const Uniform* const sampler_uniform,
+        uint32_t sampler_uniform_value,
+        GLenum texture_unit,
         bool is_3d,
         GLenum wrap_option,
         GLenum min_filter_option,
         GLenum mag_filter_option
     )
         : _3d{ is_3d }
+        , _texture_unit{ texture_unit }
     {
         glGenTextures(1, &_id);
 
+        // set texture unit
+        program.use();
+        glUniform1i(sampler_uniform->location, sampler_uniform_value);
+
+        bind();
+
         // set options
         if (!_3d) {
-            glBindTexture(GL_TEXTURE_2D, _id);
+            //glBindTexture(GL_TEXTURE_2D, _id);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, wrap_option);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, wrap_option);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, min_filter_option);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, mag_filter_option);
         }
         else {
-            glBindTexture(GL_TEXTURE_3D, _id);
+            //glBindTexture(GL_TEXTURE_3D, _id);
             glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, wrap_option);
             glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, wrap_option);
             glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, min_filter_option);
@@ -46,19 +58,13 @@ namespace my_gl {
 
             stbi_image_free(_data);
         }
-
         else {
             std::cerr << "failed to load texture from path: " << path << '\n';
         }
     }
 
-    Texture::~Texture() {
-        if (_data) {
-            stbi_image_free(_data);
-        }
-    }
-
     void Texture::bind() const {
+        glActiveTexture(_texture_unit);
         if (!_3d) {
             glBindTexture(GL_TEXTURE_2D, _id);
         }

@@ -19,7 +19,7 @@ namespace my_gl {
             const Program&                             program,
             const VertexArray&                         vao,
             GLenum                                     draw_type,
-            const my_gl::Texture*                      texture = nullptr
+            std::vector<const my_gl::Texture*>&&       textures
         );
         GeometryObject(
             std::vector<my_gl::Animation<float>>&&     animations,
@@ -28,16 +28,16 @@ namespace my_gl {
             const Program&                             program,
             const VertexArray&                         vao,
             GLenum                                     draw_type,
-            const my_gl::Texture*                      texture = nullptr
+            std::vector<const my_gl::Texture*>&&       textures
         );
         GeometryObject(
             std::vector<my_gl_math::Matrix44<float>>&& matrices,
             std::size_t                                vertices_count,
-            std::size_t                                buffer_byte_offset,  
+            std::size_t                                buffer_byte_offset,
             const Program&                             program,
             const VertexArray&                         vao,
             GLenum                                     draw_type,
-            const my_gl::Texture*                      texture = nullptr
+            std::vector<const my_gl::Texture*>&&       textures
         );
 
         GeometryObject(const GeometryObject& rhs) = default;
@@ -64,11 +64,11 @@ namespace my_gl {
     private:
         std::vector<my_gl_math::Matrix44<float>>          _matrices;
         mutable std::vector<my_gl::Animation<float>>      _animations;
+        std::vector<const my_gl::Texture*>                _textures;
         std::size_t                                       _vertices_count;
         std::size_t                                       _buffer_byte_offset;
         const Program&                                    _program;
         const VertexArray&                                _vao;
-        const my_gl::Texture*                             _texture{ nullptr };
         GLenum                                            _draw_type;
     };
 }
