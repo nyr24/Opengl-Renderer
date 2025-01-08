@@ -153,10 +153,8 @@ my_gl::VertexArray::~VertexArray() {
 // Renderer
 my_gl::Renderer::Renderer(
     std::vector<my_gl::GeometryObject>&&    objects,
-    my_gl_math::Matrix44<float>&&           world_matrix,
-    my_gl::Program&                         program,
-    my_gl::VertexArray&                     vertex_arr
-) 
+    my_gl_math::Matrix44<float>&&           world_matrix
+)
     : _objects{ std::move(objects) }
     , _world_matrix{ std::move(world_matrix) }
 {}

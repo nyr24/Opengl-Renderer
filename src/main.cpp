@@ -177,23 +177,21 @@ int main() {
     my_gl::GeometryObject cube1{ std::move(cube1_anims), 36, 0, program, vertex_arr, GL_TRIANGLES, std::move(cube1_textures) };
     my_gl::GeometryObject cube2{ std::move(cube2_anims), 36, 0, program, vertex_arr, GL_TRIANGLES, std::move(cube2_textures) };
 
-    std::vector<my_gl::GeometryObject> objects{ cube1, cube2 };  
+    std::vector<my_gl::GeometryObject> objects{ cube1, cube2 };
 
     auto view_mat{ my_gl_math::Matrix44<float>::translation(
         my_gl_math::Vec3<float>{ 0.0f, 0.0f, -4.0f }
     )};
 
     auto projection_mat{ my_gl_math::Matrix44<float>::perspective_fov(
-        45.0f, window.width() / window.height(), 0.1f, 50.0f
+        45.0f, static_cast<float>(window.width()) / window.height(), 0.1f, 50.0f
     )};
 
     auto projection_view_mat{ projection_mat * view_mat };
 
     my_gl::Renderer renderer{ 
         std::move(objects),
-        std::move(projection_view_mat),
-        program,
-        vertex_arr
+        std::move(projection_view_mat)
     };
 
     glfwSwapInterval(1);

@@ -25,7 +25,7 @@ namespace my_gl_math {
             T length;
             T theta_deg;
             T phi_deg;
-        };
+        };     
     
         template<typename T>
         static constexpr T degToRad(T deg) {
@@ -75,7 +75,7 @@ namespace my_gl_math {
         }
 
         template <std::floating_point T>
-        static bool cmp_float(T x, T y, int precision = 2) {
+        static bool cmp_float(T x, T y) {
             if (std::abs(x - y) <= std::numeric_limits<T>::epsilon())
                 return true;
             return std::abs(x - y) <= std::numeric_limits<T>::epsilon() * std::max(std::abs(x), std::abs(y));

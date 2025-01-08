@@ -1,22 +1,23 @@
 #pragma once
 #include <cmath>
-#include <array>
 #include <initializer_list>
 #include <concepts>
 #include <cstdint>
+#include <cassert>
+#include <iostream>
 #include "math.hpp"
 
 namespace my_gl_math {
     template<typename T, uint32_t N> requires std::floating_point<T>
     class VecBase {
     public:
-        VecBase(): _data(N) {}
-        explicit VecBase(T val): _data(val, N) {}
+        constexpr VecBase(): _data(N) {}
+        constexpr explicit VecBase(T val): _data(val, N) {}
         VecBase(std::initializer_list<T> init): _data{ init } {
             assert(init.size() == N && "invalid initializer list size for this type");
         }
         VecBase(T* values): VecBase() {
-            assert(values + (N - 1) && "not enough values to initialize a vector");
+            static_assert(values + (N - 1) && "not enough values to initialize a vector");
             memcpy(&_data[0], values, sizeof(T) * N);
         }
 
@@ -253,7 +254,7 @@ namespace my_gl_math {
                 z() * rhs.x() - x() * rhs.z(),
                 x() * rhs.y() - y() * rhs.x(),
                 0  // W component remains unchanged
-            };     
+            };
         }
     };
 
@@ -289,7 +290,7 @@ namespace my_gl_math {
                 y() * rhs.z() - z() * rhs.y(),
                 z() * rhs.x() - x() * rhs.z(),
                 x() * rhs.y() - y() * rhs.x(),
-            };     
+            };
         }
     };
 }

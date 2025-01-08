@@ -137,11 +137,11 @@ namespace my_gl_math {
             : MatrixBase<T, 4, 4>{ std::move(base) }
         {}
         // assigment
-        Matrix44<float>& operator=(const MatrixBase<T, 4, 4>& base_ref) {
+        Matrix44<T>& operator=(const MatrixBase<T, 4, 4>& base_ref) {
             this->_data = base_ref._data;
             return *this;
         }
-        Matrix44<float>& operator=(MatrixBase<T, 4, 4>&& base_ref) {
+        Matrix44<T>& operator=(MatrixBase<T, 4, 4>&& base_ref) {
             this->_data = std::move(base_ref._data);
             return *this;
         }
@@ -179,7 +179,7 @@ namespace my_gl_math {
         static Matrix44<T> rotation(float angle_deg, Global::AXIS axis) {
             Matrix44<T> rotation_matrix{ Matrix44<T>::identity() };
             
-            const float angle_rad{ Global::degToRad(angle_deg) };
+            /*const float angle_rad{ Global::degToRad(angle_deg) };*/
             const float angle_sin{ sinf(angle_deg) };
             const float angle_cos{ cosf(angle_deg) };
 
@@ -209,7 +209,7 @@ namespace my_gl_math {
 
         static Matrix44<T> rotation3d(const my_gl_math::Vec3<float>& anglesVec) {
             std::array<Matrix44<T>, 3> mat_arr;
-            std::array<my_gl_math::Global::AXIS, 3> axis_arr{
+            constexpr std::array<my_gl_math::Global::AXIS, 3> axis_arr{
                 my_gl_math::Global::X,
                 my_gl_math::Global::Y,
                 my_gl_math::Global::Z,
@@ -268,7 +268,7 @@ namespace my_gl_math {
         }
 
         void rotate(float angle_deg, Global::AXIS axis) {
-            const float angle_rad{ Global::degToRad(angle_deg) };
+            /*const float angle_rad{ Global::degToRad(angle_deg) };*/
             const float angle_sin{ sinf(angle_deg) };
             const float angle_cos{ cosf(angle_deg) };
 

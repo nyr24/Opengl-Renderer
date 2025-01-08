@@ -86,9 +86,7 @@ namespace my_gl {
     public:
         Renderer(
             std::vector<GeometryObject>&&       objects,
-            my_gl_math::Matrix44<float>&&       projection_view_mat,
-            my_gl::Program&                     program,
-            my_gl::VertexArray&                 vertex_array
+            my_gl_math::Matrix44<float>&&       projection_view_mat
         );
 
         void render() const;

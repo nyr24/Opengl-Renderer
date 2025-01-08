@@ -1,5 +1,6 @@
 #include <iostream>
 #include <fstream>
+#include <memory>
 #include <sstream>
 #include <vector>
 #include "utils.hpp"
@@ -123,9 +124,9 @@ GLuint my_gl::create_shader(GLenum shaderType, const char* filePath) {
     if (compileStatus == GL_FALSE) {
         GLint infoLogLength;
         glGetShaderiv(shaderId, GL_INFO_LOG_LENGTH, &infoLogLength);
-        
-        char infoLogBuffer[infoLogLength + 1];
-        glGetShaderInfoLog(shaderId, infoLogLength, nullptr, infoLogBuffer);
+       
+        auto infoLogBuffer = std::make_unique_for_overwrite<char[]>(infoLogLength + 1);
+        glGetShaderInfoLog(shaderId, infoLogLength, nullptr, infoLogBuffer.get());
 
         std::string_view shaderTypeStr;
 

@@ -5,7 +5,7 @@
 
 namespace my_gl {
     class Program;
-    class Uniform;
+    struct Uniform;
 
     class Texture {
     public:

@@ -15,8 +15,8 @@ namespace my_gl {
         GLenum min_filter_option,
         GLenum mag_filter_option
     )
-        : _3d{ is_3d }
-        , _texture_unit{ texture_unit }
+        : _texture_unit{ texture_unit }
+        , _3d{ is_3d }
     {
         glGenTextures(1, &_id);
 
@@ -28,14 +28,12 @@ namespace my_gl {
 
         // set options
         if (!_3d) {
-            //glBindTexture(GL_TEXTURE_2D, _id);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, wrap_option);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, wrap_option);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, min_filter_option);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, mag_filter_option);
         }
         else {
-            //glBindTexture(GL_TEXTURE_3D, _id);
             glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, wrap_option);
             glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, wrap_option);
             glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, min_filter_option);

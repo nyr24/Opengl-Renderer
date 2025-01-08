@@ -3,12 +3,13 @@
 #include <concepts>
 #include <cassert>
 #include <math.h>
-#include <unordered_map>
 #include <chrono>
-// TEMP
-#include <iostream>
 #include "matrix.hpp"
 #include "sharedTypes.hpp"
+#include "vec.hpp"
+#ifdef DEBUG
+#include <iostream>
+#endif
 
 namespace my_gl {
     enum Animation_type {
@@ -101,21 +102,25 @@ namespace my_gl {
                 _points.y_vals.dot(coefs_for_points)
             };
 
-            my_gl_math::VecBase<T, 2> distance = { curr_val - my_gl_math::VecBase<T, 2>(1.0f) };
+            // current distance between current and end point of the curve
+            my_gl_math::VecBase<T, 2> curr_distance = { curr_val - _vec_end };
 
             // getting 1 at the end, and 0 at the start
             // signifying animation duration progress
-            return 1.0f - distance.length();
+            return _max_distance - curr_distance.length();
         }
 
         const Points&     get_points() const { return _points; }
         Bezier_curve_type get_type() const { return _type; }
 
     private:
-        my_gl_math::Matrix44<float>                 _mat;
+        my_gl_math::Matrix44<float>                     _mat;
         // x and y values of points a stored inside separate vectors to efficiently perform math operations
-        Points                                      _points{ predefined_bezier_values[LINEAR] };
-        Bezier_curve_type                           _type{ LINEAR };
+        Points                                          _points{ predefined_bezier_values[LINEAR] };
+        Bezier_curve_type                               _type{ LINEAR };
+        // utility
+        static inline const my_gl_math::VecBase<T, 2>   _vec_end{ T(1.0), T(1.0) };
+        static inline const T                           _max_distance{ _vec_end.length() };
     };
 
 
@@ -262,7 +267,8 @@ namespace my_gl {
         //bool                                _is_paused{ false };
 
         // input can be Vector or Scalar (single axis rotation)
-        void update_matrix(const auto& _curr_val) {
+        template<typename T>
+        void update_matrix(const T& _curr_val) {
             switch (_anim_type) {
             case my_gl::TRANSLATE:
                 _mat.translate(_curr_val);
