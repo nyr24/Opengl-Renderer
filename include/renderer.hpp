@@ -32,8 +32,22 @@ namespace my_gl {
         VertexArray(
             std::vector<float>&& vbo_data,
             std::vector<uint16_t>&& ibo_data,
+            const std::vector<const Program*>& programs
+        );
+        VertexArray(
+            const std::vector<float>& vbo_data,
+            const std::vector<uint16_t>& ibo_data,
+            const std::vector<const Program*>& programs
+        );
+        // temp
+        VertexArray(
+            std::vector<float>&& vbo_data,
+            std::vector<uint16_t>&& ibo_data,
             const Program& program
         );
+        // temp
+        VertexArray(const VertexArray& rhs) = default;
+        VertexArray(VertexArray&& rhs) = default;
         ~VertexArray();
 
         void bind() const { glBindVertexArray(_vao_id); }
@@ -42,12 +56,13 @@ namespace my_gl {
         const uint16_t* get_ibo_data() const { return _ibo_data.data(); }
 
     private:
-        std::vector<float>          _vbo_data;
-        std::vector<uint16_t>       _ibo_data;
-        const Program&              _program;
-        uint32_t                    _vao_id;
-        uint32_t                    _vbo_id;
-        uint32_t                    _ibo_id;
+        void init(const std::vector<const Program*>& programs);
+
+        std::vector<float>              _vbo_data;
+        std::vector<uint16_t>           _ibo_data;
+        uint32_t                        _vao_id;
+        uint32_t                        _vbo_id;
+        uint32_t                        _ibo_id;
     };
 
     class Program {
@@ -64,6 +79,8 @@ namespace my_gl {
             std::vector<Attribute>&&        attribs,
             std::vector<Uniform>&&          uniforms
         );
+        Program(const Program& rhs) = default;
+        Program(Program&& rhs) = default;
         ~Program();
 
         const Attribute* const get_attrib(std::string_view attrib_name) const;

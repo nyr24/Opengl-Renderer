@@ -12,7 +12,7 @@ namespace my_gl {
     class GeometryObject {
     public:
         GeometryObject(
-            std::vector<my_gl_math::Matrix44<float>>&& matrices,
+            std::vector<my_gl_math::Matrix44<float>>&& transforms,
             std::vector<my_gl::Animation<float>>&&     animations,
             std::size_t                                vertices_count,
             std::size_t                                buffer_byte_offset,
@@ -31,7 +31,7 @@ namespace my_gl {
             std::vector<const my_gl::Texture*>&&       textures
         );
         GeometryObject(
-            std::vector<my_gl_math::Matrix44<float>>&& matrices,
+            std::vector<my_gl_math::Matrix44<float>>&& transforms,
             std::size_t                                vertices_count,
             std::size_t                                buffer_byte_offset,
             const Program&                             program,
@@ -62,7 +62,7 @@ namespace my_gl {
         const VertexArray& get_vao() const { return _vao; }
 
     private:
-        std::vector<my_gl_math::Matrix44<float>>          _matrices;
+        std::vector<my_gl_math::Matrix44<float>>          _transforms;
         mutable std::vector<my_gl::Animation<float>>      _animations;
         std::vector<const my_gl::Texture*>                _textures;
         std::size_t                                       _vertices_count;

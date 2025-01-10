@@ -30,7 +30,24 @@ $(DEBUG_EXE): $(DEBUG_OBJS)
 	$(CXX) $(CFLAGS) $(DEBUG_FLAGS) -o $@ $^
 	echo "debug build completed!"
 
-$(DEBUG_DIR)/%.o: $(SRC_DIR)/%.cpp
+$(DEBUG_DIR)/main.o: $(SRC_DIR)/main.cpp $(INCLUDE_DIR)/utils.hpp $(INCLUDE_DIR)/renderer.hpp \
+	$(INCLUDE_DIR)/window.hpp $(INCLUDE_DIR)/geometryObject.hpp $(INCLUDE_DIR)/texture.hpp
+	$(CXX) $(CFLAGS) $(DEBUG_FLAGS) -o $@ -c $<
+
+$(DEBUG_DIR)/renderer.o: $(SRC_DIR)/renderer.cpp $(INCLUDE_DIR)/renderer.hpp $(INCLUDE_DIR)/utils.hpp \
+	$(INCLUDE_DIR)/geometryObject.hpp $(INCLUDE_DIR)/matrix.hpp $(INCLUDE_DIR)/sharedTypes.hpp
+	$(CXX) $(CFLAGS) $(DEBUG_FLAGS) -o $@ -c $<
+
+$(DEBUG_DIR)/window.o: $(SRC_DIR)/window.cpp $(INCLUDE_DIR)/window.hpp
+	$(CXX) $(CFLAGS) $(DEBUG_FLAGS) -o $@ -c $<
+
+$(DEBUG_DIR)/utils.o: $(SRC_DIR)/utils.cpp $(INCLUDE_DIR)/utils.hpp
+	$(CXX) $(CFLAGS) $(DEBUG_FLAGS) -o $@ -c $<
+
+$(DEBUG_DIR)/texture.o: $(SRC_DIR)/texture.cpp $(INCLUDE_DIR)/texture.hpp $(INCLUDE_DIR)/renderer.hpp
+	$(CXX) $(CFLAGS) $(DEBUG_FLAGS) -o $@ -c $<
+
+$(DEBUG_DIR)/geometryObject.o: $(SRC_DIR)/geometryObject.cpp $(INCLUDE_DIR)/geometryObject.hpp $(INCLUDE_DIR)/renderer.hpp
 	$(CXX) $(CFLAGS) $(DEBUG_FLAGS) -o $@ -c $<
 
 # release
@@ -38,7 +55,24 @@ $(RELEASE_EXE): $(RELEASE_OBJS)
 	$(CXX) $(CFLAGS) $(RELEASE_FLAGS) -o $@ $^
 	echo "release build completed!"
 
-$(RELEASE_DIR)/%.o: $(SRC_DIR)/%.cpp
+$(RELEASE_DIR)/main.o: $(SRC_DIR)/main.cpp $(INCLUDE_DIR)/utils.hpp $(INCLUDE_DIR)/renderer.hpp \
+	$(INCLUDE_DIR)/window.hpp $(INCLUDE_DIR)/geometryObject.hpp $(INCLUDE_DIR)/texture.hpp
+	$(CXX) $(CFLAGS) $(RELEASE_FLAGS) -o $@ -c $<
+
+$(RELEASE_DIR)/renderer.o: $(SRC_DIR)/renderer.cpp $(INCLUDE_DIR)/renderer.hpp $(INCLUDE_DIR)/utils.hpp \
+	$(INCLUDE_DIR)/geometryObject.hpp $(INCLUDE_DIR)/matrix.hpp $(INCLUDE_DIR)/sharedTypes.hpp
+	$(CXX) $(CFLAGS) $(RELEASE_FLAGS) -o $@ -c $<
+
+$(RELEASE_DIR)/window.o: $(SRC_DIR)/window.cpp $(INCLUDE_DIR)/window.hpp
+	$(CXX) $(CFLAGS) $(RELEASE_FLAGS) -o $@ -c $<
+
+$(RELEASE_DIR)/utils.o: $(SRC_DIR)/utils.cpp $(INCLUDE_DIR)/utils.hpp
+	$(CXX) $(CFLAGS) $(RELEASE_FLAGS) -o $@ -c $<
+
+$(RELEASE_DIR)/texture.o: $(SRC_DIR)/texture.cpp $(INCLUDE_DIR)/texture.hpp $(INCLUDE_DIR)/renderer.hpp
+	$(CXX) $(CFLAGS) $(RELEASE_FLAGS) -o $@ -c $<
+
+$(RELEASE_DIR)/geometryObject.o: $(SRC_DIR)/geometryObject.cpp $(INCLUDE_DIR)/geometryObject.hpp $(INCLUDE_DIR)/renderer.hpp
 	$(CXX) $(CFLAGS) $(RELEASE_FLAGS) -o $@ -c $<
 
 # util

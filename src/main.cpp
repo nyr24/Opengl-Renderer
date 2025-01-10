@@ -1,6 +1,5 @@
 #include <GLEW/glew.h>
 #include <GLFW/glfw3.h>
-#include <iostream>
 #include <chrono>
 #include "utils.hpp"
 #include "window.hpp"
@@ -11,30 +10,41 @@
 int main() {
     my_gl::Window window{ my_gl::init_window() };
 
-    std::vector<my_gl::Attribute> attributes = {
-        { .name = "a_position", .gl_type = GL_FLOAT, .count = 3, .byte_stride = 0, .byte_offset = 0 },
-        /* { .name = "a_color", .gl_type = GL_FLOAT, .count = 4, .byte_stride = 0, .byte_offset = sizeof(float) * 3 * 24 }, */
-        { .name = "a_tex_coord", .gl_type = GL_FLOAT, .count = 2, .byte_stride = 0, .byte_offset = (sizeof(float) * 3 * 4 * 6) }
+    constexpr uint16_t texture_offset{ sizeof(float) * 3 * 4 * 6 };
+    constexpr uint16_t color_offset{ texture_offset + sizeof(float) * 2 * 4 * 6 };
+
+    my_gl::Program program1{
+        "shaders/vertShader.glsl",
+        "shaders/fragShader.glsl",
+        {
+            { .name = "a_position", .gl_type = GL_FLOAT, .count = 3, .byte_stride = 0, .byte_offset = 0 },
+            { .name = "a_color", .gl_type = GL_FLOAT, .count = 4, .byte_stride = 0, .byte_offset = color_offset },
+        },
+        {
+            { .name = "u_mvp_mat" },
+        }
     };
 
-    std::vector<my_gl::Uniform> uniforms = {
-        { .name = "u_mvp_mat" },
-        { .name = "u_tex_data1" },
-        { .name = "u_tex_data2" }
+    my_gl::Program program2{
+        "shaders/vertShaderTexture.glsl",
+        "shaders/fragShaderTexture.glsl",
+        {
+            { .name = "a_position", .gl_type = GL_FLOAT, .count = 3, .byte_stride = 0, .byte_offset = 0 },
+            { .name = "a_tex_coord", .gl_type = GL_FLOAT, .count = 2, .byte_stride = 0, .byte_offset = texture_offset }
+        },
+        {
+            { .name = "u_mvp_mat" },
+            { .name = "u_tex_data1" },
+            { .name = "u_tex_data2" }
+        }
     };
-
-    my_gl::Program program{ my_gl::Program(
-        "../../shaders/vertShader.vert", 
-        "../../shaders/fragShader.frag",
-        std::move(attributes),
-        std::move(uniforms)
-    )};
+ 
 
 // move this to object to dynamically assign uniform value,
 //this would be overwritten if specified more textures than uniforms
     std::vector<my_gl::Texture> textures = {
-        { "../../res/mine_red.jpg", program, program.get_uniform("u_tex_data1"), 0, GL_TEXTURE0 },
-        { "../../res/mine_green.jpg", program, program.get_uniform("u_tex_data2"), 1, GL_TEXTURE1 },
+        { "res/mine_red.jpg", program2, program2.get_uniform("u_tex_data1"), 0, GL_TEXTURE0 },
+        { "res/mine_green.jpg", program2, program2.get_uniform("u_tex_data2"), 1, GL_TEXTURE1 },
     };
 
     // positions
@@ -89,7 +99,7 @@ int main() {
 
         // COLORS
         // front
-        /* GREEN, GREEN, GREEN, GREEN,
+        GREEN, GREEN, GREEN, GREEN,
         // back
         YELLOW, YELLOW, YELLOW, YELLOW,
         // right
@@ -99,7 +109,7 @@ int main() {
         // top
         ORANGE, ORANGE, ORANGE, ORANGE,
         // bottom
-        PURPLE, PURPLE, PURPLE, PURPLE, */
+        PURPLE, PURPLE, PURPLE, PURPLE,
     };
 
     std::vector<uint16_t> indices = {
@@ -111,11 +121,13 @@ int main() {
         20, 22, 21,     21, 22, 23
     };
 
-    my_gl::VertexArray vertex_arr{ my_gl::VertexArray(
+    std::vector<const my_gl::Program*> programs{ &program1, &program2 };
+
+    my_gl::VertexArray vertex_arr{
         std::move(vertices),
         std::move(indices),
-        program
-    )};
+        programs
+    };
 
     std::vector<my_gl::Animation<float>> cube1_anims = {
         {
@@ -144,7 +156,7 @@ int main() {
         }
     };
 
-    std::vector<my_gl::Animation<float>> cube2_anims = { 
+    std::vector<my_gl::Animation<float>> cube2_anims = {
         {
             my_gl::TRANSLATE,
             5.0f,
@@ -171,11 +183,8 @@ int main() {
         }
     };
 
-    std::vector<const my_gl::Texture*> cube1_textures = { &textures[0] };
-    std::vector<const my_gl::Texture*> cube2_textures = { &textures[0], &textures[1] };
-
-    my_gl::GeometryObject cube1{ std::move(cube1_anims), 36, 0, program, vertex_arr, GL_TRIANGLES, std::move(cube1_textures) };
-    my_gl::GeometryObject cube2{ std::move(cube2_anims), 36, 0, program, vertex_arr, GL_TRIANGLES, std::move(cube2_textures) };
+    my_gl::GeometryObject cube1{ std::move(cube1_anims), 36, 0, program1, vertex_arr, GL_TRIANGLES, {} };
+    my_gl::GeometryObject cube2{ std::move(cube2_anims), 36, 0, program2, vertex_arr, GL_TRIANGLES, { &textures[0] } };
 
     std::vector<my_gl::GeometryObject> objects{ cube1, cube2 };
 
@@ -189,7 +198,7 @@ int main() {
 
     auto projection_view_mat{ projection_mat * view_mat };
 
-    my_gl::Renderer renderer{ 
+    my_gl::Renderer renderer{
         std::move(objects),
         std::move(projection_view_mat)
     };
@@ -212,8 +221,6 @@ int main() {
 
         renderer.update_time(frame_duration);
     }
-
-    program.un_use();
 
     return 0;
 }

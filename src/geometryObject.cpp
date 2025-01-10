@@ -2,21 +2,21 @@
 #include "renderer.hpp"
 
 my_gl::GeometryObject::GeometryObject(
-    std::vector<my_gl_math::Matrix44<float>>&& matrices,
+    std::vector<my_gl_math::Matrix44<float>>&& transforms,
     std::vector<my_gl::Animation<float>>&&     animations,
     std::size_t                                vertices_count,
     std::size_t                                buffer_byte_offset,
     const Program&                             program,
     const VertexArray&                         vao,
     GLenum                                     draw_type,
-    std::vector<const my_gl::Texture*>&&       textures = { nullptr }
+    std::vector<const my_gl::Texture*>&&       textures = {}
 )
-    : _matrices{ std::move(matrices) }
+    : _transforms{ std::move(transforms) }
     , _animations{ std::move(animations) }
     , _textures{ std::move(textures) }
     , _vertices_count{ vertices_count }
     , _buffer_byte_offset{ buffer_byte_offset }
-    , _program{ program } 
+    , _program{ program }
     , _vao{ vao }
     , _draw_type{ draw_type }
 {}
@@ -28,7 +28,7 @@ my_gl::GeometryObject::GeometryObject(
     const Program&                             program,
     const VertexArray&                         vao,
     GLenum                                     draw_type,
-    std::vector<const my_gl::Texture*>&&       textures = { nullptr }
+    std::vector<const my_gl::Texture*>&&       textures = {}
 )
     : _animations{ std::move(animations) }
     , _vertices_count{ vertices_count }
@@ -40,15 +40,15 @@ my_gl::GeometryObject::GeometryObject(
 {}
 
 my_gl::GeometryObject::GeometryObject(
-    std::vector<my_gl_math::Matrix44<float>>&& matrices,
-    std::size_t                                vertices_count,  
+    std::vector<my_gl_math::Matrix44<float>>&& transforms,
+    std::size_t                                vertices_count,
     std::size_t                                buffer_byte_offset,
     const Program&                             program,
     const VertexArray&                         vao,
     GLenum                                     draw_type,
-    std::vector<const my_gl::Texture*>&&       textures = { nullptr }
+    std::vector<const my_gl::Texture*>&&       textures = {}
 )
-    : _matrices{ std::move(matrices) }
+    : _transforms{ std::move(transforms) }
     , _vertices_count{ vertices_count }
     , _textures{ std::move(textures) }
     , _buffer_byte_offset{ buffer_byte_offset }
@@ -60,8 +60,8 @@ my_gl::GeometryObject::GeometryObject(
 my_gl_math::Matrix44<float> my_gl::GeometryObject::get_local_mat() const {
     auto result_mat{ my_gl_math::Matrix44<float>::identity() };
     
-    if (_matrices.size() > 0) {
-        for (const auto& curr_mat : _matrices) {
+    if (_transforms.size() > 0) {
+        for (const auto& curr_mat : _transforms) {
             result_mat *= curr_mat;
         }
     }

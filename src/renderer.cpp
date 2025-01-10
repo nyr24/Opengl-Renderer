@@ -2,6 +2,8 @@
 #include "renderer.hpp"
 #include "utils.hpp"
 #include "geometryObject.hpp"
+#include "matrix.hpp"
+#include "sharedTypes.hpp"
 
 my_gl::Program::Program(
     const char*                         vertex_shader_path,
@@ -36,6 +38,7 @@ my_gl::Program::Program(
 }
 
 my_gl::Program::~Program() {
+    un_use();
     glDeleteProgram(_program_id);
 }
 
@@ -107,11 +110,33 @@ const std::unordered_map<std::string_view, my_gl::Uniform>& my_gl::Program::get_
 my_gl::VertexArray::VertexArray(
     std::vector<float>&& vbo_data,
     std::vector<uint16_t>&& ibo_data,
-    const my_gl::Program& program
+    const std::vector<const Program*>& programs
 )
     : _vbo_data{ std::move(vbo_data) }
     , _ibo_data{ std::move(ibo_data) }
-    , _program{ program }
+{
+    init(programs);
+}
+
+my_gl::VertexArray::VertexArray(
+    const std::vector<float>& vbo_data,
+    const std::vector<uint16_t>& ibo_data,
+    const std::vector<const Program*>& programs
+)
+    : _vbo_data{ vbo_data }
+    , _ibo_data{ ibo_data }
+{
+    init(programs);
+}
+
+// temp
+my_gl::VertexArray::VertexArray(
+    std::vector<float>&& vbo_data,
+    std::vector<uint16_t>&& ibo_data,
+    const Program& program
+)
+    : _vbo_data{ std::move(vbo_data) }
+    , _ibo_data{ std::move(ibo_data) }
 {
     // vao
     glCreateVertexArrays(1, &_vao_id);
@@ -127,7 +152,7 @@ my_gl::VertexArray::VertexArray(
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _ibo_id);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(uint16_t) * _ibo_data.size(), _ibo_data.data(), GL_STATIC_DRAW);
 
-    const auto& attrs = _program.get_attrs();
+    const auto& attrs = program.get_attrs();
 
     for (auto it = attrs.begin(); it != attrs.end(); ++it) {
         const my_gl::Attribute& attr_ref{ it->second };
@@ -143,11 +168,46 @@ my_gl::VertexArray::VertexArray(
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 }
+// temp
 
 my_gl::VertexArray::~VertexArray() {
     glDeleteVertexArrays(1, &_vao_id);
     glDeleteBuffers(1, &_vbo_id);
     glDeleteBuffers(1, &_ibo_id);
+}
+
+void my_gl::VertexArray::init(const std::vector<const Program*>& programs) {
+    // vao
+    glCreateVertexArrays(1, &_vao_id);
+    glBindVertexArray(_vao_id);
+
+    // vertex data
+    glCreateBuffers(1, &_vbo_id);
+    glBindBuffer(GL_ARRAY_BUFFER, _vbo_id);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * _vbo_data.size(), _vbo_data.data(), GL_STATIC_DRAW);
+
+    // indices
+    glCreateBuffers(1, &_ibo_id);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _ibo_id);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(uint16_t) * _ibo_data.size(), _ibo_data.data(), GL_STATIC_DRAW);
+
+    for (const auto* program : programs) {
+        const auto& attrs = program->get_attrs();
+
+        for (auto it = attrs.begin(); it != attrs.end(); ++it) {
+            const my_gl::Attribute& attr_ref{ it->second };
+
+            glEnableVertexAttribArray(attr_ref.location);
+            glVertexAttribPointer(attr_ref.location, attr_ref.count, attr_ref.gl_type, false, attr_ref.byte_stride, reinterpret_cast<void*>(attr_ref.byte_offset));
+
+            printf("info: attribute '%s' successfully initialized, location: '%d'\n", attr_ref.name, attr_ref.location);
+        }
+    }
+
+    // unbind
+    glBindVertexArray(0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 }
 
 // Renderer
