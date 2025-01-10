@@ -186,7 +186,8 @@ int main() {
     my_gl::GeometryObject cube1{ std::move(cube1_anims), 36, 0, program1, vertex_arr, GL_TRIANGLES, {} };
     my_gl::GeometryObject cube2{ std::move(cube2_anims), 36, 0, program2, vertex_arr, GL_TRIANGLES, { &textures[0] } };
 
-    std::vector<my_gl::GeometryObject> objects{ cube1, cube2 };
+    std::vector<my_gl::GeometryObject> objects{ std::move(cube1), std::move(cube2) };
+    my_gl::ObjectCache object_cache{};
 
     auto view_mat{ my_gl_math::Matrix44<float>::translation(
         my_gl_math::Vec3<float>{ 0.0f, 0.0f, -4.0f }
@@ -212,7 +213,7 @@ int main() {
         glClearDepth(1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        renderer.render();
+        renderer.render(object_cache);
 
         glfwSwapBuffers(window.ptr_raw());
         glfwPollEvents();
