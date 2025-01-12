@@ -1,5 +1,6 @@
 #pragma once
 #include <array>
+#include <cstdlib>
 #include <utility>
 #include <iostream>
 #include <cassert>
@@ -10,9 +11,9 @@ namespace my_gl_math {
     template<std::floating_point T, uint16_t ROWS, uint16_t COLS>
     class MatrixBase {
     public:
-    // ctors
-        MatrixBase() = default;
-        explicit MatrixBase(T val) {
+        // ctors
+        constexpr MatrixBase() = default;
+        constexpr explicit MatrixBase(T val) {
             _data.fill(val);
         }
         MatrixBase(std::initializer_list<T> init) {
@@ -27,18 +28,18 @@ namespace my_gl_math {
         // cubic-bezier
         static constexpr MatrixBase<T, 3, 3> bezier_quad_mat() {
             return MatrixBase<T, 3, 3>{
-                1.0f, -2.0f, 1.0f,
-                -2.0f, 2.0f, 0.0f,
-                1.0f, 0.0f, 0.0f
+                1.0f,   -2.0f,  1.0f,
+                -2.0f,  2.0f,   0.0f,
+                1.0f,   0.0f,   0.0f
             };
         }
         
         static constexpr MatrixBase<T, 4, 4> bezier_cubic_mat() {
             return MatrixBase<T, 4, 4>{
-                -1.0f, 3.0f, -3.0f, 1.0f,
-                3.0f, -6.0f, 3.0f, 0.0f,
-                -3.0f, 3.0f, 0.0f, 0.0f,
-                1.0f, 0.0f, 0.0f, 0.0f
+                -1.0f,  3.0f,   -3.0f,  1.0f,
+                3.0f,   -6.0f,  3.0f,   0.0f,
+                -3.0f,  3.0f,   0.0f,   0.0f,
+                1.0f,   0.0f,   0.0f,   0.0f
             };
         }
 
@@ -114,8 +115,76 @@ namespace my_gl_math {
             std::cout << '\n';
         }
 
-        const T* data() const { return _data.data(); }
+        template<uint32_t N>
+        MatrixBase<T, ROWS, COLS>& fill_row(const VecBase<T, N>& fill_with_vec, uint16_t row_index) {
+            static_assert(N <= ROWS && "incompatible vector to fill with");
+            if (row_index >= ROWS) {
+                assert(false && "row_index parameter has a larger value than maximum count of rows of the matrix");
+            #ifdef NDEBUG
+                std::exit(EXIT_FAILURE);
+            #endif
+            }
 
+            for (int i = 0; i < N; ++i) {
+                T val = fill_with_vec[i];
+                this->at(row_index, i) = val;
+            }
+
+            return *this;
+        }
+
+        template<uint32_t N>
+        MatrixBase<T, ROWS, COLS>& fill_col(const VecBase<T, N>& fill_with_vec, uint16_t col_index) {
+            static_assert(N <= COLS && "incompatible vector to fill with");
+            if (col_index >= COLS) {
+                assert(true && "col_index parameter has a larger value than maximum count of columns of the matrix");
+            #ifdef NDEBUG
+                std::exit(EXIT_FAILURE);
+            #endif
+            }
+
+            for (int i = 0; i < N; ++i) {
+                this->at(i, col_index) = fill_with_vec[i];
+            }
+
+            return *this;
+        }
+
+        template<uint32_t N>
+        MatrixBase<T, ROWS, COLS>& fill_row(VecBase<T, N>&& fill_with_vec, uint16_t row_index) {
+            static_assert(N <= ROWS && "incompatible vector to fill with");
+            if (row_index >= ROWS) {
+                assert(true && "row_index parameter has a larger value than maximum count of rows of the matrix");
+            #ifdef NDEBUG
+                std::exit(EXIT_FAILURE);
+            #endif
+            }
+
+            for (int i = 0; i < N; ++i) {
+                this->at(row_index, i) = fill_with_vec[i];
+            }
+
+            return *this;
+        }
+
+        template<uint32_t N>
+        MatrixBase<T, ROWS, COLS>& fill_col(VecBase<T, N>&& fill_with_vec, uint16_t col_index) {
+            static_assert(N <= COLS && "incompatible vector to fill with");
+            if (col_index >= COLS) {
+                assert(true && "col_index parameter has a larger value than maximum count of columns of the matrix");
+            #ifdef NDEBUG
+                std::exit(EXIT_FAILURE);
+            #endif
+            }
+
+            for (int i = 0; i < N; ++i) {
+                this->at(i, col_index) = fill_with_vec[i];
+            }
+
+            return *this;
+        }
+
+        const T* data() const { return _data.data(); }
         static constexpr uint16_t rows() { return ROWS; }
         static constexpr uint16_t cols() { return COLS; }
 
@@ -146,7 +215,7 @@ namespace my_gl_math {
             return *this;
         }
 
-        static Matrix44<T> identity() {
+        static constexpr Matrix44<T> identity() {
             Matrix44<T> res;
 
             for (int i = 0; i < 4; ++i) {
@@ -249,9 +318,24 @@ namespace my_gl_math {
             res.at(1, 2) = (top + bottom) / (top - bottom);
             res.at(2, 2) = (-(zFar + zNear)) / (zFar - zNear);
             res.at(2, 3) = (-2.0f * zFar * zNear) / (zFar - zNear);
-            res.at(3, 2) = -1.0f;  
+            res.at(3, 2) = -1.0f;
 
             return res;
+        }
+
+        static constexpr Matrix44<T> look_at(const Vec3<T>& cameraPos, const Vec3<T>& cameraTarget, const Vec3<T>& up) {
+            const Vec3<T> cameraDir{ my_gl_math::Vec3<T>{ cameraPos - cameraTarget }.normalize_inplace() };
+            const Vec3<T> cameraRight{ up.cross(cameraDir).normalize_inplace() };
+            const Vec3<T> cameraUp{ cameraDir.cross(cameraRight).normalize_inplace() };
+
+            Matrix44<T> lhs{ Matrix44<T>::identity()
+                .fill_row(cameraRight, 0)
+                .fill_row(cameraUp, 1)
+                .fill_row(cameraDir, 2)
+            };
+
+            Matrix44<T> rhs{ Matrix44<T>::translation(cameraPos.negate_new()) };
+            return lhs * rhs;
         }
 
     // non-static
