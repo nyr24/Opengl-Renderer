@@ -51,7 +51,7 @@ namespace my_gl {
         GeometryObject& operator=(GeometryObject&& rhs) = delete;
         ~GeometryObject() = default;
 
-        my_gl_math::Matrix44<float> get_local_mat(ObjectCache obj_cache) const;
+        my_gl_math::Matrix44<float> get_local_mat(ObjectCache& obj_cache) const;
         void                        update_anims_time(Duration_sec frame_time) const;
         void                        bind_state() const;
         void                        un_bind_state() const;

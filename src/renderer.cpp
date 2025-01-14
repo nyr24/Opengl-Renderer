@@ -223,14 +223,14 @@ void my_gl::Renderer::set_world_matrix(my_gl_math::Matrix44<float>&& new_world_m
     _world_matrix = new_world_matrix;
 }
 
-void my_gl::Renderer::render(const my_gl::ObjectCache& obj_cache) const {
+void my_gl::Renderer::render(my_gl::ObjectCache& obj_cache) const {
     for (const auto& obj : _objects) {
         obj.bind_state();
 
         const auto local_mat{ obj.get_local_mat(obj_cache) };
         const auto mvp_mat{ _world_matrix * local_mat };
         glUniformMatrix4fv(obj.get_program().get_uniform("u_mvp_mat")->location, 1, true, mvp_mat.data());
-        
+ 
         obj.draw();
 
         obj.un_bind_state();

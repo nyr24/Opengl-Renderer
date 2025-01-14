@@ -1,11 +1,15 @@
 #include <GLEW/glew.h>
 #include <GLFW/glfw3.h>
 #include <chrono>
+#include "animation.hpp"
+#include "matrix.hpp"
+#include "vec.hpp"
 #include "utils.hpp"
 #include "window.hpp"
 #include "renderer.hpp"
 #include "geometryObject.hpp"
 #include "texture.hpp"
+
 
 int main() {
     my_gl::Window window{ my_gl::init_window() };
@@ -35,10 +39,10 @@ int main() {
         {
             { .name = "u_mvp_mat" },
             { .name = "u_tex_data1" },
-            { .name = "u_tex_data2" }
+            { .name = "u_tex_data2" },
+            { .name = "u_lerp" }
         }
     };
- 
 
 // move this to object to dynamically assign uniform value,
 //this would be overwritten if specified more textures than uniforms
@@ -133,64 +137,53 @@ int main() {
         {
             my_gl::TRANSLATE,
             5.0f,
-            { 1.0f, 1.0f, -2.0f },
-            { -1.0f, -1.0f, 1.0f },
+            { -1.0f, 1.0f, 0.0f },
+            { -1.0f, -1.0f, 0.0f },
             my_gl::Bezier_curve_type::EASE_IN,
             my_gl::Loop_type::INVERT
         },
         {
-            my_gl::ROTATE3d,
+            0.0f,
+            360.0f,
             5.0f,
-            { 0.0f, 0.0f, 0.0f },
-            { 0.0f, 10.0f, 0.0f },
-            my_gl::Bezier_curve_type::EASE_IN,
+            my_gl_math::Global::AXIS::Y,
+            my_gl::Bezier_curve_type::EASE_IN_OUT,
             my_gl::Loop_type::INVERT
         },
-        {
-            my_gl::SCALE,
-            5.0f,
-            { 1.0f, 1.0f, 1.0f },
-            { 2.0f, 2.0f, 2.0f },
-            my_gl::Bezier_curve_type::EASE_IN,
-            my_gl::Loop_type::INVERT
-        }
+    };
+
+    std::vector<my_gl_math::Matrix44<float>> cube2_transforms = {
+        my_gl_math::Matrix44<float>::translation({ 0.4f, 1.0f, 0.0f })
     };
 
     std::vector<my_gl::Animation<float>> cube2_anims = {
         {
+            0.0f,
+            360.0f,
+            5.0f,
+            my_gl_math::Global::AXIS::Y,
+            my_gl::Bezier_curve_type::EASE_IN_OUT,
+            my_gl::Loop_type::INVERT
+        },
+        {
             my_gl::TRANSLATE,
             5.0f,
-            { 1.0f, -1.0f, 1.0f },
-            { -1.0f, 1.0f, -2.0f },
-            my_gl::Bezier_curve_type::EASE_OUT,
+            { 1.0f, 1.0f, 0.0f },
+            { 1.0f, -1.0f, 0.0f },
+            my_gl::Bezier_curve_type::EASE_IN,
             my_gl::Loop_type::INVERT
         },
-        {
-            my_gl::ROTATE3d,
-            5.0f,
-            { 10.0f, 0.0f, 0.0f },
-            { 0.0f, 0.0f, 0.0f },
-            my_gl::Bezier_curve_type::EASE_OUT,
-            my_gl::Loop_type::INVERT
-        },
-        {
-            my_gl::SCALE,
-            5.0f,
-            { 2.0f, 2.0f, 2.0f },
-            { 1.0f, 1.0f, 1.0f },
-            my_gl::Bezier_curve_type::EASE_OUT,
-            my_gl::Loop_type::INVERT
-        }
     };
 
+
     my_gl::GeometryObject cube1{ std::move(cube1_anims), 36, 0, program1, vertex_arr, GL_TRIANGLES, {} };
-    my_gl::GeometryObject cube2{ std::move(cube2_anims), 36, 0, program2, vertex_arr, GL_TRIANGLES, { &textures[0] } };
+    my_gl::GeometryObject cube2{ std::move(cube2_anims), 36, 0, program2, vertex_arr, GL_TRIANGLES, { &textures[0], &textures[1] } };
 
     std::vector<my_gl::GeometryObject> objects{ std::move(cube1), std::move(cube2) };
     my_gl::ObjectCache object_cache{};
 
     auto view_mat{ my_gl_math::Matrix44<float>::translation(
-        my_gl_math::Vec3<float>{ 0.0f, 0.0f, -4.0f }
+        my_gl_math::Vec3<float>{ 0.0f, 0.0f, -6.0f }
     )};
 
     auto projection_mat{ my_gl_math::Matrix44<float>::perspective_fov(

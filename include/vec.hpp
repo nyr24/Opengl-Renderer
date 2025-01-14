@@ -51,12 +51,12 @@ namespace my_gl_math {
             return res;
         }
 
-        T dot(const VecBase<T, N>& rhs) const {
+        constexpr T dot(const VecBase<T, N>& rhs) const {
             std::valarray<T> res = _data * rhs._data;
             return res.sum();
         }
 
-        VecBase<T, N>& negate_inplace() {
+        constexpr VecBase<T, N>& negate_inplace() {
             _data *= static_cast<T>(-1.0);
             return *this;
         }
@@ -248,8 +248,8 @@ namespace my_gl_math {
         constexpr T z() const { return this->_data[2]; }
         constexpr T w() const { return this->_data[3]; }
 
-        Vec4 cross(const Vec4& rhs) const {
-            return Vec4{
+        Vec4<T> cross(const Vec4<T>& rhs) const {
+            return Vec4<T>{
                 y() * rhs.z() - z() * rhs.y(),
                 z() * rhs.x() - x() * rhs.z(),
                 x() * rhs.y() - y() * rhs.x(),
@@ -285,8 +285,8 @@ namespace my_gl_math {
         constexpr T y() const { return this->_data[1]; }
         constexpr T z() const { return this->_data[2]; }
 
-        Vec3 cross(const Vec3& rhs) const {
-            return Vec3{
+        Vec3<T> cross(const Vec3<T>& rhs) const {
+            return Vec3<T>{
                 y() * rhs.z() - z() * rhs.y(),
                 z() * rhs.x() - x() * rhs.z(),
                 x() * rhs.y() - y() * rhs.x(),

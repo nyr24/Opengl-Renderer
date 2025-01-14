@@ -25,8 +25,8 @@ namespace my_gl_math {
             T length;
             T theta_deg;
             T phi_deg;
-        };     
-    
+        };
+
         template<typename T>
         static constexpr T degToRad(T deg) {
             return deg * static_cast<T>(Global::DEG_TO_RAD);

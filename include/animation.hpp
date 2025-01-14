@@ -2,7 +2,7 @@
 #include <array>
 #include <concepts>
 #include <cassert>
-#include <math.h>
+#include <cmath>
 #include <chrono>
 #include "matrix.hpp"
 #include "sharedTypes.hpp"
@@ -105,22 +105,27 @@ namespace my_gl {
             // current distance between current and end point of the curve
             my_gl_math::VecBase<T, 2> curr_distance = { curr_val - _vec_end };
 
+        #ifdef DEBUG
+            std::cout << "curr dist: " << curr_distance.length() << '\n';
+        #endif // DEBUG
+
             // getting 1 at the end, and 0 at the start
             // signifying animation duration progress
-            return _max_distance - curr_distance.length();
+            return (_max_distance - curr_distance.length()) * _unit_to_max_ratio;
         }
 
         const Points&     get_points() const { return _points; }
         Bezier_curve_type get_type() const { return _type; }
 
     private:
-        my_gl_math::Matrix44<float>                     _mat;
+        my_gl_math::Matrix44<T>                         _mat;
         // x and y values of points a stored inside separate vectors to efficiently perform math operations
         Points                                          _points{ predefined_bezier_values[LINEAR] };
         Bezier_curve_type                               _type{ LINEAR };
         // utility
         static inline const my_gl_math::VecBase<T, 2>   _vec_end{ T(1.0), T(1.0) };
         static inline const T                           _max_distance{ _vec_end.length() };
+        static inline const T                           _unit_to_max_ratio{ T(1.0) / _max_distance };
     };
 
 
@@ -136,7 +141,7 @@ namespace my_gl {
             my_gl_math::Vec3<Val_type>&&    end_val, 
             Bezier_curve_type               bezier_type = LINEAR,
             Loop_type                       loop = Loop_type::NONE
-        ) 
+        )
             : _anim_type{ anim_type }
             , _start_val{ std::move(start_val) }
             , _end_val{ std::move(end_val) }
@@ -156,7 +161,7 @@ namespace my_gl {
                 _mat = my_gl_math::Matrix44<Val_type>::rotation3d(_start_val);
                 break;
             case Animation_type::ROTATE:
-                assert(true && "Can't use this ctor for rotate type animation"); 
+                assert(false && "Can't use this ctor for rotate type animation"); 
                 break;
             }
 
@@ -209,13 +214,21 @@ namespace my_gl {
                 _is_started = true;
             }
 
-            Duration_sec passed_time{ _curr_time - _start_time }; 
-            
-            float linear_0to1{ passed_time / _duration };
-            float bezier_0to1{ _bezier_curve.update(linear_0to1) };
+            // can't be bigger than duration, see update_time()
+            Duration_sec passed_time{ _curr_time - _start_time };
 
-            auto _curr_val{ 
-                my_gl_math::Global::lerp(_start_val, _end_val, bezier_0to1) 
+            float linear_0to1{ passed_time / _duration };
+            if (_bezier_curve.get_type() != Bezier_curve_type::LINEAR) {
+                linear_0to1 = _bezier_curve.update(linear_0to1);
+            }
+
+#ifdef DEBUG
+            std::cout << "passed time: " << passed_time << '\n';
+            std::cout << "linear: " << linear_0to1 << '\n';
+#endif // DEBUG
+
+            auto _curr_val{
+                my_gl_math::Global::lerp(_start_val, _end_val, linear_0to1)
             };
 
             update_matrix(_curr_val);
@@ -223,7 +236,6 @@ namespace my_gl {
         }
 
         // should be called at the end of the current frame
-        // to properly update curr animation time
         void update_time(Duration_sec frame_time) {
             if (_is_reversed) {
                 frame_time *= -1.0;
@@ -242,7 +254,7 @@ namespace my_gl {
                     _is_reversed = !_is_reversed;
                 }
             }
-            else if (_curr_time <= _start_time && _loop == Loop_type::INVERT) {
+            else if (_curr_time < _start_time && _loop == Loop_type::INVERT) {
                 _is_reversed = !_is_reversed;
             }
         }

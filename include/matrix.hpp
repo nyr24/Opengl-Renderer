@@ -245,12 +245,12 @@ namespace my_gl_math {
             return translationMatrix;
         }
 
-        static Matrix44<T> rotation(float angle_deg, Global::AXIS axis) {
+        static Matrix44<T> rotation(T angle_deg, Global::AXIS axis) {
             Matrix44<T> rotation_matrix{ Matrix44<T>::identity() };
-            
-            /*const float angle_rad{ Global::degToRad(angle_deg) };*/
-            const float angle_sin{ sinf(angle_deg) };
-            const float angle_cos{ cosf(angle_deg) };
+ 
+            const T angle_rad{ Global::degToRad(angle_deg) };
+            const T angle_sin{ std::sin(angle_rad) };
+            const T angle_cos{ std::cos(angle_rad) };
 
             switch (axis) {
             case Global::AXIS::X:
@@ -276,7 +276,7 @@ namespace my_gl_math {
             return rotation_matrix;
         }
 
-        static Matrix44<T> rotation3d(const my_gl_math::Vec3<float>& anglesVec) {
+        static Matrix44<T> rotation3d(const my_gl_math::Vec3<T>& anglesVec) {
             std::array<Matrix44<T>, 3> mat_arr;
             constexpr std::array<my_gl_math::Global::AXIS, 3> axis_arr{
                 my_gl_math::Global::X,
@@ -292,11 +292,11 @@ namespace my_gl_math {
         }
         
     // symmetric
-        static Matrix44<T> perspective_fov(float fov_y_deg, float aspect, float zNear, float zFar) {
-            const float fov_y_rad{ my_gl_math::Global::degToRad(fov_y_deg) };
-            const float top_to_near{ tanf(fov_y_rad / 2) };
-            const float top{ top_to_near * zNear };
-            const float right{ top * aspect };
+        static Matrix44<T> perspective_fov(T fov_y_deg, T aspect, T zNear, T zFar) {
+            const T fov_y_rad{ my_gl_math::Global::degToRad(fov_y_deg) };
+            const T top_to_near{ std::tan(fov_y_rad / 2) };
+            const T top{ top_to_near * zNear };
+            const T right{ top * aspect };
 
             Matrix44<T> res;
 
@@ -309,7 +309,7 @@ namespace my_gl_math {
             return res;
         }
 
-        static Matrix44<T> perspective(float right, float left, float top, float bottom, float zNear, float zFar) {
+        static Matrix44<T> perspective(T right, T left, T top, T bottom, T zNear, T zFar) {
             Matrix44<T> res;
 
             res.at(0, 0) = (2.0f * zNear) / (right - left);
@@ -351,10 +351,14 @@ namespace my_gl_math {
             this->at(2, 3) = translation_vec.z();
         }
 
-        void rotate(float angle_deg, Global::AXIS axis) {
-            /*const float angle_rad{ Global::degToRad(angle_deg) };*/
-            const float angle_sin{ sinf(angle_deg) };
-            const float angle_cos{ cosf(angle_deg) };
+        void rotate(T angle_deg, Global::AXIS axis) {
+#ifdef DEBUG
+#include <iostream>
+            std::cout << "angle: " << angle_deg << '\n';
+#endif
+            const T angle_rad{ Global::degToRad(angle_deg) };
+            const T angle_sin{ std::sin(angle_rad) };
+            const T angle_cos{ std::cos(angle_rad) };
 
             switch (axis) {
             case Global::AXIS::X:
@@ -378,7 +382,7 @@ namespace my_gl_math {
             }
         }
 
-        void rotate3d(const my_gl_math::Vec3<float>& rotationVec) {
+        void rotate3d(const my_gl_math::Vec3<T>& rotationVec) {
             std::array<Matrix44<T>, 3> mat_arr;
             std::array<my_gl_math::Global::AXIS, 3> axis_arr{
                 my_gl_math::Global::X,

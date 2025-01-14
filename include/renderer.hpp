@@ -107,7 +107,7 @@ namespace my_gl {
             my_gl_math::Matrix44<float>&&       projection_view_mat
         );
 
-        void render(const ObjectCache& obj_cache) const;
+        void render(ObjectCache& obj_cache) const;
         void update_time(Duration_sec frame_time) const;
         void set_world_matrix(my_gl_math::Matrix44<float>&& new_world_matrix);
 

@@ -62,7 +62,7 @@ my_gl::GeometryObject::GeometryObject(
     , _draw_type{ draw_type }
 {}
 
-my_gl_math::Matrix44<float> my_gl::GeometryObject::get_local_mat(ObjectCache obj_cache) const {
+my_gl_math::Matrix44<float> my_gl::GeometryObject::get_local_mat(ObjectCache& obj_cache) const {
     auto result_mat{ my_gl_math::Matrix44<float>::identity() };
 
     if (_transforms.size() > 0) {
@@ -165,7 +165,7 @@ bool my_gl::ObjectCache::toggle_modified_state(std::size_t obj_id) {
 
 bool my_gl::ObjectCache::should_recalc(std::size_t obj_id) const {
     if (!_map.contains(obj_id)) {
-        return false;
+        return true;
     }
 
     return _map.at(obj_id).was_modified;

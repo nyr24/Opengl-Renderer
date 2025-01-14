@@ -31,7 +31,8 @@ $(DEBUG_EXE): $(DEBUG_OBJS)
 	echo "debug build completed!"
 
 $(DEBUG_DIR)/main.o: $(SRC_DIR)/main.cpp $(INCLUDE_DIR)/utils.hpp $(INCLUDE_DIR)/renderer.hpp \
-	$(INCLUDE_DIR)/window.hpp $(INCLUDE_DIR)/geometryObject.hpp $(INCLUDE_DIR)/texture.hpp
+	$(INCLUDE_DIR)/window.hpp $(INCLUDE_DIR)/geometryObject.hpp $(INCLUDE_DIR)/texture.hpp \
+	$(INCLUDE_DIR)/matrix.hpp $(INCLUDE_DIR)/vec.hpp $(INCLUDE_DIR)/animation.hpp
 	$(CXX) $(CFLAGS) $(DEBUG_FLAGS) -o $@ -c $<
 
 $(DEBUG_DIR)/renderer.o: $(SRC_DIR)/renderer.cpp $(INCLUDE_DIR)/renderer.hpp $(INCLUDE_DIR)/utils.hpp \
