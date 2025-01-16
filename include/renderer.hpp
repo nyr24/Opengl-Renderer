@@ -40,13 +40,6 @@ namespace my_gl {
             const std::vector<uint16_t>& ibo_data,
             const std::vector<const Program*>& programs
         );
-        // temp
-        VertexArray(
-            std::vector<float>&& vbo_data,
-            std::vector<uint16_t>&& ibo_data,
-            const Program& program
-        );
-        // temp
         VertexArray(const VertexArray& rhs) = default;
         VertexArray(VertexArray&& rhs) = default;
         ~VertexArray();
@@ -95,9 +88,9 @@ namespace my_gl {
         uint32_t get_id() const { return _program_id; }
 
     private:
-        std::unordered_map<std::string_view, Attribute>  _attrs;
-        std::unordered_map<std::string_view, Uniform>    _unifs;
-        uint32_t                                    _program_id{ 0 };
+        std::unordered_map<std::string_view, Attribute>     _attrs;
+        std::unordered_map<std::string_view, Uniform>       _unifs;
+        uint32_t                                            _program_id{ 0 };
     };
 
     class Renderer {
@@ -107,12 +100,18 @@ namespace my_gl {
             my_gl_math::Matrix44<float>&&       projection_view_mat
         );
 
-        void render(ObjectCache& obj_cache) const;
-        void update_time(Duration_sec frame_time) const;
+        void render(ObjectCache& obj_cache, float time_0to1) const;
+        void update_time(Duration_sec frame_time);
         void set_world_matrix(my_gl_math::Matrix44<float>&& new_world_matrix);
+        void set_start_time(Timepoint_sec start_time);
+        Duration_sec get_curr_rendering_duration() const;
+        bool get_is_started() const { return _is_started; }
 
     private:
         std::vector<GeometryObject>         _objects;
         my_gl_math::Matrix44<float>         _world_matrix;
+        Timepoint_sec                       _rendering_time_curr;
+        Timepoint_sec                       _rendering_time_start;
+        bool                                _is_started{false};
     };
 }

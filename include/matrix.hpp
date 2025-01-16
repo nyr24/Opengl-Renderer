@@ -5,6 +5,7 @@
 #include <iostream>
 #include <cassert>
 #include <initializer_list>
+#include "math.hpp"
 #include "vec.hpp"
 
 namespace my_gl_math {
@@ -88,7 +89,7 @@ namespace my_gl_math {
             static_assert(N_VEC == COLS && "can't multiply this matrix by this vector");
 
             VecBase<T, N_VEC> res;
-            
+ 
             for (int r{ 0 }; r < ROWS; ++r) {
                 for (int c{ 0 }; c < COLS; ++c) {
                     res[r] += m.at(r, c) * v[c];
@@ -227,70 +228,34 @@ namespace my_gl_math {
 
         static Matrix44<T> scaling(const Vec3<T>& scaling_vec) {
             Matrix44<T> scalingMatrix{ Matrix44<T>::identity() };
-            
-            scalingMatrix.at(0, 0) = scaling_vec.x();
-            scalingMatrix.at(1, 1) = scaling_vec.y();
-            scalingMatrix.at(2, 2) = scaling_vec.z();
-
+            scalingMatrix.scale(scaling_vec);
             return scalingMatrix;
         }
 
         static Matrix44<T> translation(const Vec3<T>& translation_vec) {
             Matrix44<T> translationMatrix{ Matrix44<T>::identity() };
-
-            translationMatrix.at(0, 3) = translation_vec.x();
-            translationMatrix.at(1, 3) = translation_vec.y();
-            translationMatrix.at(2, 3) = translation_vec.z();
-
+            translationMatrix.translate(translation_vec);
             return translationMatrix;
         }
 
         static Matrix44<T> rotation(T angle_deg, Global::AXIS axis) {
             Matrix44<T> rotation_matrix{ Matrix44<T>::identity() };
- 
-            const T angle_rad{ Global::degToRad(angle_deg) };
-            const T angle_sin{ std::sin(angle_rad) };
-            const T angle_cos{ std::cos(angle_rad) };
-
-            switch (axis) {
-            case Global::AXIS::X:
-                rotation_matrix.at(1, 1) = angle_cos;
-                rotation_matrix.at(1, 2) = -angle_sin;
-                rotation_matrix.at(2, 1) = angle_sin;
-                rotation_matrix.at(2, 2) = angle_cos;
-                break;
-            case Global::AXIS::Y:
-                rotation_matrix.at(0, 0) = angle_cos;
-                rotation_matrix.at(0, 2) = angle_sin;
-                rotation_matrix.at(2, 0) = -angle_sin;
-                rotation_matrix.at(2, 2) = angle_cos;
-                break;
-            case Global::AXIS::Z:
-                rotation_matrix.at(0, 0) = angle_cos;
-                rotation_matrix.at(0, 1) = -angle_sin;
-                rotation_matrix.at(1, 0) = angle_sin;
-                rotation_matrix.at(1, 1) = angle_cos;
-                break;
-            }
-
+            rotation_matrix.rotate(angle_deg, axis);
             return rotation_matrix;
         }
 
         static Matrix44<T> rotation3d(const my_gl_math::Vec3<T>& anglesVec) {
-            std::array<Matrix44<T>, 3> mat_arr;
-            constexpr std::array<my_gl_math::Global::AXIS, 3> axis_arr{
-                my_gl_math::Global::X,
-                my_gl_math::Global::Y,
-                my_gl_math::Global::Z,
-            };
-            
-            for (int i = 0; i < 3; ++i) {
-                mat_arr[i] = std::move(my_gl_math::Matrix44<T>::rotation(anglesVec[i], axis_arr[i]));
-            }
-
-            return Matrix44<T>{ mat_arr[0] * mat_arr[1] * mat_arr[2] };
+            Matrix44<T> res{ Matrix44<T>::identity() };
+            res.rotate3d(anglesVec);
+            return res;
         }
-        
+ 
+        static Matrix44<T> schearing(my_gl_math::Global::AXIS direction, const my_gl_math::VecBase<T, 2>& values) {
+            Matrix44<T> res{ Matrix44<T>::identity() };
+            res.shear(direction, values);
+            return res;
+        }
+
     // symmetric
         static Matrix44<T> perspective_fov(T fov_y_deg, T aspect, T zNear, T zFar) {
             const T fov_y_rad{ my_gl_math::Global::degToRad(fov_y_deg) };
@@ -323,7 +288,7 @@ namespace my_gl_math {
             return res;
         }
 
-        static constexpr Matrix44<T> look_at(const Vec3<T>& cameraPos, const Vec3<T>& cameraTarget, const Vec3<T>& up) {
+        static Matrix44<T> look_at(const Vec3<T>& cameraPos, const Vec3<T>& cameraTarget, const Vec3<T>& up) {
             const Vec3<T> cameraDir{ my_gl_math::Vec3<T>{ cameraPos - cameraTarget }.normalize_inplace() };
             const Vec3<T> cameraRight{ up.cross(cameraDir).normalize_inplace() };
             const Vec3<T> cameraUp{ cameraDir.cross(cameraRight).normalize_inplace() };
@@ -339,19 +304,21 @@ namespace my_gl_math {
         }
 
     // non-static
-        void scale(const Vec3<T>& scaling_vec) {
+        Matrix44<T>& scale(const Vec3<T>& scaling_vec) {
             this->at(0, 0) = scaling_vec.x();
             this->at(1, 1) = scaling_vec.y();
             this->at(2, 2) = scaling_vec.z();
+            return *this;
         }
 
-        void translate(const Vec3<T>& translation_vec) {
+        Matrix44<T>& translate(const Vec3<T>& translation_vec) {
             this->at(0, 3) = translation_vec.x();
             this->at(1, 3) = translation_vec.y();
             this->at(2, 3) = translation_vec.z();
+            return *this;
         }
 
-        void rotate(T angle_deg, Global::AXIS axis) {
+        Matrix44<T>& rotate(T angle_deg, Global::AXIS axis) {
 #ifdef DEBUG
 #include <iostream>
             std::cout << "angle: " << angle_deg << '\n';
@@ -380,9 +347,11 @@ namespace my_gl_math {
                 this->at(1, 1) = angle_cos;
                 break;
             }
+
+            return *this;
         }
 
-        void rotate3d(const my_gl_math::Vec3<T>& rotationVec) {
+        Matrix44<T>& rotate3d(const my_gl_math::Vec3<T>& rotationVec) {
             std::array<Matrix44<T>, 3> mat_arr;
             std::array<my_gl_math::Global::AXIS, 3> axis_arr{
                 my_gl_math::Global::X,
@@ -391,10 +360,30 @@ namespace my_gl_math {
             };
 
             for (int i = 0; i < 3; ++i) {
-                mat_arr[i] = std::move(rotation(rotationVec[i], axis_arr[i]));
+                mat_arr[i] = rotation(rotationVec[i], axis_arr[i]);
             }
 
             *this = std::move(mat_arr[0] * mat_arr[1] * mat_arr[2]);
+            return *this;
+        }
+
+        Matrix44<T>& shear(my_gl_math::Global::AXIS direction, const my_gl_math::VecBase<T, 2>& values) {
+            switch (direction) {
+            case my_gl_math::Global::AXIS::X:
+                this->at(0, 1) = values[0];
+                this->at(0, 2) = values[1];
+                break;
+            case my_gl_math::Global::AXIS::Y:
+                this->at(1, 0) = values[0];
+                this->at(1, 2) = values[1];
+                break;
+            case my_gl_math::Global::AXIS::Z:
+                this->at(2, 0) = values[0];
+                this->at(2, 1) = values[1];
+                break;
+            }
+
+            return *this;
         }
     };
 } 

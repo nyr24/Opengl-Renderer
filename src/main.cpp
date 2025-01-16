@@ -1,7 +1,9 @@
 #include <GLEW/glew.h>
 #include <GLFW/glfw3.h>
 #include <chrono>
+#include <ctime>
 #include "animation.hpp"
+#include "math.hpp"
 #include "matrix.hpp"
 #include "vec.hpp"
 #include "utils.hpp"
@@ -26,6 +28,7 @@ int main() {
         },
         {
             { .name = "u_mvp_mat" },
+            { .name = "u_lerp" }
         }
     };
 
@@ -133,6 +136,11 @@ int main() {
         programs
     };
 
+    std::vector<my_gl_math::Matrix44<float>> cube1_transforms = {
+        my_gl_math::Matrix44<float>::translation({ 0.4f, 1.0f, 0.0f }),
+        my_gl_math::Matrix44<float>::rotation(90.0f, my_gl_math::Global::AXIS::Z)
+    };
+
     std::vector<my_gl::Animation<float>> cube1_anims = {
         {
             my_gl::TRANSLATE,
@@ -153,6 +161,7 @@ int main() {
     };
 
     std::vector<my_gl_math::Matrix44<float>> cube2_transforms = {
+        my_gl_math::Matrix44<float>::rotation(90.0f, my_gl_math::Global::AXIS::Z),
         my_gl_math::Matrix44<float>::translation({ 0.4f, 1.0f, 0.0f })
     };
 
@@ -175,15 +184,17 @@ int main() {
         },
     };
 
-
-    my_gl::GeometryObject cube1{ std::move(cube1_anims), 36, 0, program1, vertex_arr, GL_TRIANGLES, {} };
-    my_gl::GeometryObject cube2{ std::move(cube2_anims), 36, 0, program2, vertex_arr, GL_TRIANGLES, { &textures[0], &textures[1] } };
+    my_gl::GeometryObject cube1{ std::move(cube1_transforms), 36, 0, program1, vertex_arr, GL_TRIANGLES, {} };
+    my_gl::GeometryObject cube2{ std::move(cube2_transforms), 36, 0, program2, vertex_arr, GL_TRIANGLES, { &textures[0], &textures[1] } };
 
     std::vector<my_gl::GeometryObject> objects{ std::move(cube1), std::move(cube2) };
     my_gl::ObjectCache object_cache{};
 
-    auto view_mat{ my_gl_math::Matrix44<float>::translation(
-        my_gl_math::Vec3<float>{ 0.0f, 0.0f, -6.0f }
+    float radius{5.0f};
+    auto view_mat{ my_gl_math::Matrix44<float>::look_at(
+        { std::sin(0.0f) * radius, 0.0f, std::cos(0.0f) * radius },
+        { 0.0f, 0.0f, 0.0f },
+        { 0.0f, 1.0f, 0.0f }
     )};
 
     auto projection_mat{ my_gl_math::Matrix44<float>::perspective_fov(
@@ -201,12 +212,25 @@ int main() {
 
     while (!glfwWindowShouldClose(window.ptr_raw())) {
         auto start_frame{ std::chrono::steady_clock::now() };
+        if (!renderer.get_is_started()) {
+            renderer.set_start_time(start_frame);
+        }
 
         glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
         glClearDepth(1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        renderer.render(object_cache);
+        float time_0to1 = my_gl_math::Global::clamp_duration_to01(renderer.get_curr_rendering_duration());
+        view_mat = my_gl_math::Matrix44<float>::look_at(
+            { std::sin(renderer.get_curr_rendering_duration().count()) * radius, 0.0f,
+                std::cos(renderer.get_curr_rendering_duration().count()) * radius },
+            { 0.0f, 0.0f, 0.0f },
+            { 0.0f, 1.0f, 0.0f }
+        );
+        projection_view_mat = projection_mat * view_mat;
+
+        renderer.set_world_matrix(projection_view_mat);
+        renderer.render(object_cache, time_0to1);
 
         glfwSwapBuffers(window.ptr_raw());
         glfwPollEvents();

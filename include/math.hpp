@@ -1,4 +1,5 @@
 #pragma once
+#include "sharedTypes.hpp"
 #include <valarray>
 #include <limits>
 #include <concepts>
@@ -40,10 +41,10 @@ namespace my_gl_math {
         template<typename T>
         static constexpr Vec3<T> spher_to_cart(const Spherical_coords<T>& spher_coords) {
             Vec3<T> res;
-            
+ 
             T theta_rad{ degToRad(spher_coords.theta_deg) };
             T phi_rad{ degToRad(spher_coords.phi_deg) };
-            
+ 
             res[0] = spher_coords.length * std::sin(theta_rad) * std::cos(phi_rad);
             res[1] = spher_coords.length * std::sin(theta_rad) * std::sin(phi_rad);
             res[2] = spher_coords.length * std::cos(phi_rad);
@@ -119,10 +120,16 @@ namespace my_gl_math {
             return Vec4<T>{ (t * t * t), (t * t), t, static_cast<T>(1.0) };
         }
 
-        template<std::floating_point T>
-        static T value_01_from_curr_time(T curr_time, T duration) {
-            T from_0_to_dur{ fmodf(curr_time, duration) };
-            return from_0_to_dur / duration;   
+        static float clamp_duration_to01(my_gl::Duration_sec input) {
+            return std::sin(input.count()) * 0.5f + 0.5f;
+        }
+
+        template<std::floating_point T, typename Range>
+        static T clamp_val_to_range_loop(T input, Range start, Range end) {
+            Range out_distance_ratio{ (end - start) / Range(2) };
+            T val_0_to_2{ std::sin(input) + T(1) };
+
+            return val_0_to_2 * out_distance_ratio + start;
         }
 
     private:

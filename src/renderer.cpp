@@ -129,47 +129,6 @@ my_gl::VertexArray::VertexArray(
     init(programs);
 }
 
-// temp
-my_gl::VertexArray::VertexArray(
-    std::vector<float>&& vbo_data,
-    std::vector<uint16_t>&& ibo_data,
-    const Program& program
-)
-    : _vbo_data{ std::move(vbo_data) }
-    , _ibo_data{ std::move(ibo_data) }
-{
-    // vao
-    glCreateVertexArrays(1, &_vao_id);
-    glBindVertexArray(_vao_id);
-
-    // vertex data
-    glCreateBuffers(1, &_vbo_id);
-    glBindBuffer(GL_ARRAY_BUFFER, _vbo_id);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * _vbo_data.size(), _vbo_data.data(), GL_STATIC_DRAW);
-
-    // indices
-    glCreateBuffers(1, &_ibo_id);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _ibo_id);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(uint16_t) * _ibo_data.size(), _ibo_data.data(), GL_STATIC_DRAW);
-
-    const auto& attrs = program.get_attrs();
-
-    for (auto it = attrs.begin(); it != attrs.end(); ++it) {
-        const my_gl::Attribute& attr_ref{ it->second };
-
-        glEnableVertexAttribArray(attr_ref.location);
-        glVertexAttribPointer(attr_ref.location, attr_ref.count, attr_ref.gl_type, false, attr_ref.byte_stride, reinterpret_cast<void*>(attr_ref.byte_offset));
-
-        printf("info: attribute '%s' successfully initialized, location: '%d'\n", attr_ref.name, attr_ref.location);
-    }
-
-    // unbind
-    glBindVertexArray(0);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-}
-// temp
-
 my_gl::VertexArray::~VertexArray() {
     glDeleteVertexArrays(1, &_vao_id);
     glDeleteBuffers(1, &_vbo_id);
@@ -200,7 +159,9 @@ void my_gl::VertexArray::init(const std::vector<const Program*>& programs) {
             glEnableVertexAttribArray(attr_ref.location);
             glVertexAttribPointer(attr_ref.location, attr_ref.count, attr_ref.gl_type, false, attr_ref.byte_stride, reinterpret_cast<void*>(attr_ref.byte_offset));
 
+#ifdef DEBUG
             printf("info: attribute '%s' successfully initialized, location: '%d'\n", attr_ref.name, attr_ref.location);
+#endif
         }
     }
 
@@ -223,22 +184,35 @@ void my_gl::Renderer::set_world_matrix(my_gl_math::Matrix44<float>&& new_world_m
     _world_matrix = new_world_matrix;
 }
 
-void my_gl::Renderer::render(my_gl::ObjectCache& obj_cache) const {
+void my_gl::Renderer::render(my_gl::ObjectCache& obj_cache, float time_0to1) const {
     for (const auto& obj : _objects) {
         obj.bind_state();
 
+        glUniform1f(obj.get_program().get_uniform("u_lerp")->location, time_0to1);
         const auto local_mat{ obj.get_local_mat(obj_cache) };
         const auto mvp_mat{ _world_matrix * local_mat };
         glUniformMatrix4fv(obj.get_program().get_uniform("u_mvp_mat")->location, 1, true, mvp_mat.data());
- 
+
         obj.draw();
 
         obj.un_bind_state();
     }
 }
 
-void my_gl::Renderer::update_time(Duration_sec frame_duration) const {
+void my_gl::Renderer::update_time(Duration_sec frame_duration) {
+    _rendering_time_curr += frame_duration;
+
     for (const auto& obj : _objects) {
         obj.update_anims_time(frame_duration);
     }
+}
+
+my_gl::Duration_sec my_gl::Renderer::get_curr_rendering_duration() const {
+    assert(_is_started && "rendering was not started, can't query the duration");
+    return _rendering_time_curr - _rendering_time_start;
+}
+
+void my_gl::Renderer::set_start_time(Timepoint_sec start_time) {
+    _is_started = true;
+    _rendering_time_start = start_time;
 }

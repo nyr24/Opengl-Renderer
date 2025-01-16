@@ -37,7 +37,7 @@ my_gl::Window my_gl::init_window() {
     glEnable(GL_PROGRAM_POINT_SIZE);
 
     // other
-    stbi_set_flip_vertically_on_load(true);  
+    stbi_set_flip_vertically_on_load(true);
 
     return window;
 }

@@ -105,10 +105,6 @@ namespace my_gl {
             // current distance between current and end point of the curve
             my_gl_math::VecBase<T, 2> curr_distance = { curr_val - _vec_end };
 
-        #ifdef DEBUG
-            std::cout << "curr dist: " << curr_distance.length() << '\n';
-        #endif // DEBUG
-
             // getting 1 at the end, and 0 at the start
             // signifying animation duration progress
             return (_max_distance - curr_distance.length()) * _unit_to_max_ratio;
@@ -221,11 +217,6 @@ namespace my_gl {
             if (_bezier_curve.get_type() != Bezier_curve_type::LINEAR) {
                 linear_0to1 = _bezier_curve.update(linear_0to1);
             }
-
-#ifdef DEBUG
-            std::cout << "passed time: " << passed_time << '\n';
-            std::cout << "linear: " << linear_0to1 << '\n';
-#endif // DEBUG
 
             auto _curr_val{
                 my_gl_math::Global::lerp(_start_val, _end_val, linear_0to1)
