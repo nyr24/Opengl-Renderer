@@ -32,12 +32,11 @@ my_gl::Window my_gl::init_window() {
     glDepthFunc(GL_LESS);
     glDepthRange(0.0f, 1.0f);
 
-    // callbacks
+    // user input && callbacks
     glfwSetFramebufferSizeCallback(window.ptr_raw(), my_gl::callback_framebuffer_size);
     glfwSetKeyCallback(window.ptr_raw(), my_gl::callback_keyboard);
     glfwSetCursorPosCallback(window.ptr_raw(), my_gl::callback_mouse_move);
-
-    // user input
+    glfwSetScrollCallback(window.ptr_raw(), my_gl::callback_scroll);
     glfwSetInputMode(window.ptr_raw(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
     // points drawing
@@ -45,7 +44,7 @@ my_gl::Window my_gl::init_window() {
 
     // other
     stbi_set_flip_vertically_on_load(true);
-    
+ 
     return window;
 }
 
@@ -163,10 +162,6 @@ void my_gl::callback_framebuffer_size(GLFWwindow* window, int width, int height)
 
 void my_gl::callback_keyboard(GLFWwindow* window, int key, int scancode, int action, int mode)
 {
-#ifdef DEBUG
-    std::cout << "pressed: " << key << '\n';
-#endif // DEBUG
-
     globals::camera_props.speed = 2.5f * globals::delta_time;
 
     switch (key) {
@@ -231,6 +226,11 @@ void my_gl::callback_mouse_move(GLFWwindow *window, double xpos, double ypos) {
         std::cos(my_gl_math::Global::degToRad(globals::camera_props.pitch));
 
     globals::camera_props.front = direction.normalize_inplace();
+}
+
+void my_gl::callback_scroll(GLFWwindow* window, double xoffset, double yoffset) {
+    globals::camera_props.fov -= static_cast<float>(yoffset);
+    globals::camera_props.fov = std::clamp(globals::camera_props.fov, 1.0f, 85.0f);
 }
 
 void my_gl::callback_debug_message(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* msg, const void* data) {

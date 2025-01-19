@@ -198,7 +198,7 @@ int main() {
     )};
 
     auto projection_mat{ my_gl_math::Matrix44<float>::perspective_fov(
-        45.0f, static_cast<float>(window.width()) / window.height(), 0.1f, 50.0f
+        globals::camera_props.fov, globals::camera_props.aspect, 0.1f, 50.0f
     )};
 
     auto projection_view_mat{ projection_mat * view_mat };
@@ -220,17 +220,19 @@ int main() {
         glClearDepth(1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        // TODO: redefine view matrix with globals::camera_props global variable
-
-        float time_0to1 = my_gl_math::Global::clamp_duration_to01(renderer.get_curr_rendering_duration());
         view_mat = my_gl_math::Matrix44<float>::look_at(
             globals::camera_props.pos,
             globals::camera_props.pos + globals::camera_props.front,
             globals::camera_props.up
         );
-        projection_view_mat = projection_mat * view_mat;
+        projection_mat = my_gl_math::Matrix44<float>::perspective_fov(
+                globals::camera_props.fov, globals::camera_props.aspect, 0.1f, 50.0f
+        );
 
+        projection_view_mat = projection_mat * view_mat;
         renderer.set_world_matrix(projection_view_mat);
+
+        float time_0to1 = my_gl_math::Global::map_duration_to01(renderer.get_curr_rendering_duration());
         renderer.render(time_0to1);
 
         glfwSwapBuffers(window.ptr_raw());
@@ -240,9 +242,9 @@ int main() {
         renderer.update_time(frame_duration);
         globals::delta_time = frame_duration.count();
 
-#ifdef DEBUG
-        std::cout << "delta time: " << globals::delta_time << '\n';
-#endif // DEBUG
+/*#ifdef DEBUG*/
+/*        std::cout << "delta time: " << globals::delta_time << '\n';*/
+/*#endif // DEBUG*/
     }
 
     return 0;

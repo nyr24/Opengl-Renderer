@@ -15,6 +15,8 @@ namespace globals {
         float                           pitch;
         float                           yaw;
         float                           speed;
+        float                           fov;
+        float                           aspect;
     };
 
     struct MouseProps {

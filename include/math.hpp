@@ -120,7 +120,7 @@ namespace my_gl_math {
             return Vec4<T>{ (t * t * t), (t * t), t, static_cast<T>(1.0) };
         }
 
-        static float clamp_duration_to01(my_gl::Duration_sec input) {
+        static float map_duration_to01(my_gl::Duration_sec input) {
             return std::sin(input.count()) * 0.5f + 0.5f;
         }
 

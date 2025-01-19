@@ -11,6 +11,8 @@ namespace globals {
         .pitch = 0.0f,
         .yaw = -90.0f,
         .speed = 2.5f * delta_time,
+        .fov = 45.0f,
+        .aspect = static_cast<float>(window_props.width) / window_props.height
     };
 
     MouseProps mouse_props {

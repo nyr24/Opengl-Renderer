@@ -319,10 +319,6 @@ namespace my_gl_math {
         }
 
         Matrix44<T>& rotate(T angle_deg, Global::AXIS axis) {
-#ifdef DEBUG
-#include <iostream>
-            std::cout << "angle: " << angle_deg << '\n';
-#endif
             const T angle_rad{ Global::degToRad(angle_deg) };
             const T angle_sin{ std::sin(angle_rad) };
             const T angle_cos{ std::cos(angle_rad) };
