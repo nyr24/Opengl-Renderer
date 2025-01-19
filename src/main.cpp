@@ -11,7 +11,7 @@
 #include "renderer.hpp"
 #include "geometryObject.hpp"
 #include "texture.hpp"
-
+#include "globals.hpp"
 
 int main() {
     my_gl::Window window{ my_gl::init_window() };
@@ -188,9 +188,9 @@ int main() {
     my_gl::GeometryObject cube2{ std::move(cube2_transforms), 36, 0, program2, vertex_arr, GL_TRIANGLES, { &textures[0], &textures[1] } };
 
     std::vector<my_gl::GeometryObject> objects{ std::move(cube1), std::move(cube2) };
-    my_gl::ObjectCache object_cache{};
 
     float radius{5.0f};
+
     auto view_mat{ my_gl_math::Matrix44<float>::look_at(
         { std::sin(0.0f) * radius, 0.0f, std::cos(0.0f) * radius },
         { 0.0f, 0.0f, 0.0f },
@@ -205,7 +205,7 @@ int main() {
 
     my_gl::Renderer renderer{
         std::move(objects),
-        std::move(projection_view_mat)
+        std::move(projection_view_mat),
     };
 
     glfwSwapInterval(1);
@@ -220,24 +220,29 @@ int main() {
         glClearDepth(1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+        // TODO: redefine view matrix with globals::camera_props global variable
+
         float time_0to1 = my_gl_math::Global::clamp_duration_to01(renderer.get_curr_rendering_duration());
         view_mat = my_gl_math::Matrix44<float>::look_at(
-            { std::sin(renderer.get_curr_rendering_duration().count()) * radius, 0.0f,
-                std::cos(renderer.get_curr_rendering_duration().count()) * radius },
-            { 0.0f, 0.0f, 0.0f },
-            { 0.0f, 1.0f, 0.0f }
+            globals::camera_props.pos,
+            globals::camera_props.pos + globals::camera_props.front,
+            globals::camera_props.up
         );
         projection_view_mat = projection_mat * view_mat;
 
         renderer.set_world_matrix(projection_view_mat);
-        renderer.render(object_cache, time_0to1);
+        renderer.render(time_0to1);
 
         glfwSwapBuffers(window.ptr_raw());
         glfwPollEvents();
 
         my_gl::Duration_sec frame_duration{ std::chrono::steady_clock::now() - start_frame };
-
         renderer.update_time(frame_duration);
+        globals::delta_time = frame_duration.count();
+
+#ifdef DEBUG
+        std::cout << "delta time: " << globals::delta_time << '\n';
+#endif // DEBUG
     }
 
     return 0;

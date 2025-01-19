@@ -3,7 +3,7 @@ BUILD_DIR=build
 DEBUG_DIR=$(BUILD_DIR)/debug
 RELEASE_DIR=$(BUILD_DIR)/release
 INCLUDE_DIR=include
-SRCS=main.cpp renderer.cpp utils.cpp window.cpp geometryObject.cpp texture.cpp
+SRCS=main.cpp renderer.cpp utils.cpp window.cpp geometryObject.cpp texture.cpp globals.cpp
 OBJS=$(SRCS:.cpp=.o)
 DEBUG_OBJS=$(addprefix $(DEBUG_DIR)/, $(OBJS))
 RELEASE_OBJS=$(addprefix $(RELEASE_DIR)/, $(OBJS))
@@ -32,7 +32,7 @@ $(DEBUG_EXE): $(DEBUG_OBJS)
 
 $(DEBUG_DIR)/main.o: $(SRC_DIR)/main.cpp $(INCLUDE_DIR)/utils.hpp $(INCLUDE_DIR)/renderer.hpp \
 	$(INCLUDE_DIR)/window.hpp $(INCLUDE_DIR)/geometryObject.hpp $(INCLUDE_DIR)/texture.hpp \
-	$(INCLUDE_DIR)/matrix.hpp $(INCLUDE_DIR)/vec.hpp $(INCLUDE_DIR)/animation.hpp
+	$(INCLUDE_DIR)/matrix.hpp $(INCLUDE_DIR)/vec.hpp $(INCLUDE_DIR)/animation.hpp $(INCLUDE_DIR)/globals.hpp
 	$(CXX) $(CFLAGS) $(DEBUG_FLAGS) -o $@ -c $<
 
 $(DEBUG_DIR)/renderer.o: $(SRC_DIR)/renderer.cpp $(INCLUDE_DIR)/renderer.hpp $(INCLUDE_DIR)/utils.hpp \
@@ -49,6 +49,9 @@ $(DEBUG_DIR)/texture.o: $(SRC_DIR)/texture.cpp $(INCLUDE_DIR)/texture.hpp $(INCL
 	$(CXX) $(CFLAGS) $(DEBUG_FLAGS) -o $@ -c $<
 
 $(DEBUG_DIR)/geometryObject.o: $(SRC_DIR)/geometryObject.cpp $(INCLUDE_DIR)/geometryObject.hpp $(INCLUDE_DIR)/renderer.hpp
+	$(CXX) $(CFLAGS) $(DEBUG_FLAGS) -o $@ -c $<
+
+$(DEBUG_DIR)/globals.o: $(SRC_DIR)/globals.cpp $(INCLUDE_DIR)/globals.hpp $(INCLUDE_DIR)/vec.hpp $(INCLUDE_DIR)/math.hpp
 	$(CXX) $(CFLAGS) $(DEBUG_FLAGS) -o $@ -c $<
 
 # release
@@ -74,6 +77,9 @@ $(RELEASE_DIR)/texture.o: $(SRC_DIR)/texture.cpp $(INCLUDE_DIR)/texture.hpp $(IN
 	$(CXX) $(CFLAGS) $(RELEASE_FLAGS) -o $@ -c $<
 
 $(RELEASE_DIR)/geometryObject.o: $(SRC_DIR)/geometryObject.cpp $(INCLUDE_DIR)/geometryObject.hpp $(INCLUDE_DIR)/renderer.hpp
+	$(CXX) $(CFLAGS) $(RELEASE_FLAGS) -o $@ -c $<
+
+$(RELEASE_DIR)/globals.o: $(SRC_DIR)/globals.cpp $(INCLUDE_DIR)/globals.hpp $(INCLUDE_DIR)/vec.hpp $(INCLUDE_DIR)/math.hpp
 	$(CXX) $(CFLAGS) $(RELEASE_FLAGS) -o $@ -c $<
 
 # util

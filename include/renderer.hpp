@@ -7,6 +7,7 @@
 #include "geometryObject.hpp"
 #include "matrix.hpp"
 #include "sharedTypes.hpp"
+#include "vec.hpp"
 
 namespace my_gl {
     class VertexArray;
@@ -100,13 +101,14 @@ namespace my_gl {
             my_gl_math::Matrix44<float>&&       projection_view_mat
         );
 
-        void render(ObjectCache& obj_cache, float time_0to1) const;
+        void render(float time_0to1);
         void update_time(Duration_sec frame_time);
         void set_world_matrix(my_gl_math::Matrix44<float>&& new_world_matrix);
         void set_start_time(Timepoint_sec start_time);
         Duration_sec get_curr_rendering_duration() const;
         bool get_is_started() const { return _is_started; }
 
+        ObjectCache                         object_cache;
     private:
         std::vector<GeometryObject>         _objects;
         my_gl_math::Matrix44<float>         _world_matrix;
