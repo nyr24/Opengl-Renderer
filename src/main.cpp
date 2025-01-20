@@ -12,6 +12,7 @@
 #include "geometryObject.hpp"
 #include "texture.hpp"
 #include "globals.hpp"
+#include "camera.hpp"
 
 int main() {
     my_gl::Window window{ my_gl::init_window() };
@@ -192,13 +193,13 @@ int main() {
     float radius{5.0f};
 
     auto view_mat{ my_gl_math::Matrix44<float>::look_at(
-        { std::sin(0.0f) * radius, 0.0f, std::cos(0.0f) * radius },
-        { 0.0f, 0.0f, 0.0f },
-        { 0.0f, 1.0f, 0.0f }
+        my_gl::camera.camera_pos,
+        my_gl::camera.camera_pos + my_gl::camera.camera_front,
+        my_gl::camera.camera_up
     )};
 
     auto projection_mat{ my_gl_math::Matrix44<float>::perspective_fov(
-        globals::camera_props.fov, globals::camera_props.aspect, 0.1f, 50.0f
+        my_gl::camera.fov, my_gl::camera.aspect, 0.1f, 50.0f
     )};
 
     auto projection_view_mat{ projection_mat * view_mat };
@@ -221,12 +222,12 @@ int main() {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         view_mat = my_gl_math::Matrix44<float>::look_at(
-            globals::camera_props.pos,
-            globals::camera_props.pos + globals::camera_props.front,
-            globals::camera_props.up
+            my_gl::camera.camera_pos,
+            my_gl::camera.camera_pos + my_gl::camera.camera_front,
+            my_gl::camera.camera_up
         );
         projection_mat = my_gl_math::Matrix44<float>::perspective_fov(
-                globals::camera_props.fov, globals::camera_props.aspect, 0.1f, 50.0f
+            my_gl::camera.fov, my_gl::camera.aspect, 0.1f, 50.0f
         );
 
         projection_view_mat = projection_mat * view_mat;
@@ -240,11 +241,7 @@ int main() {
 
         my_gl::Duration_sec frame_duration{ std::chrono::steady_clock::now() - start_frame };
         renderer.update_time(frame_duration);
-        globals::delta_time = frame_duration.count();
-
-/*#ifdef DEBUG*/
-/*        std::cout << "delta time: " << globals::delta_time << '\n';*/
-/*#endif // DEBUG*/
+        my_gl::globals::delta_time = frame_duration.count();
     }
 
     return 0;
