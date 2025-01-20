@@ -81,6 +81,7 @@ namespace my_gl {
         // front and world_up already normalized here
         camera_right = camera_front.cross(world_up);
         camera_right.normalize_inplace();
-        camera_up = camera_front.cross(camera_right).normalize_inplace();
+        // order of cross matters
+        camera_up = camera_right.cross(camera_front).normalize_inplace();
     }
 }
