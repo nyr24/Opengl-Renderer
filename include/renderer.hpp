@@ -7,7 +7,7 @@
 #include "geometryObject.hpp"
 #include "matrix.hpp"
 #include "sharedTypes.hpp"
-#include "vec.hpp"
+#include "meshes.hpp"
 
 namespace my_gl {
     class VertexArray;
@@ -41,6 +41,14 @@ namespace my_gl {
             const std::vector<uint16_t>& ibo_data,
             const std::vector<const Program*>& programs
         );
+        VertexArray(
+            meshes::Mesh&& mesh,
+            const std::vector<const Program*>& programs
+        );
+        VertexArray(
+            const std::vector<meshes::Mesh>& meshes,
+            const std::vector<const Program*>& programs
+        );
         VertexArray(const VertexArray& rhs) = default;
         VertexArray(VertexArray&& rhs) = default;
         ~VertexArray();
@@ -52,6 +60,7 @@ namespace my_gl {
 
     private:
         void init(const std::vector<const Program*>& programs);
+        void combine_meshes(const std::vector<meshes::Mesh>& meshes);
 
         std::vector<float>              _vbo_data;
         std::vector<uint16_t>           _ibo_data;

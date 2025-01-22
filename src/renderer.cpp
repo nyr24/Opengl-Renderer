@@ -129,6 +129,43 @@ my_gl::VertexArray::VertexArray(
     init(programs);
 }
 
+my_gl::VertexArray::VertexArray(
+    meshes::Mesh&& mesh,
+    const std::vector<const Program*>& programs
+)
+    : _vbo_data{ std::move(mesh.vertices) }
+    , _ibo_data{ std::move(mesh.indices) }
+{
+    init(programs);
+}
+
+my_gl::VertexArray::VertexArray(
+    const std::vector<meshes::Mesh>& meshes,
+    const std::vector<const Program*>& programs
+)
+{
+    combine_meshes(meshes);
+    init(programs);
+}
+
+void my_gl::VertexArray::combine_meshes(const std::vector<meshes::Mesh>& meshes) {
+    size_t vbo_data_size{0};
+    size_t ibo_data_size{0};
+
+    for (const meshes::Mesh& mesh : meshes) {
+        vbo_data_size += mesh.vertices.size();
+        ibo_data_size += mesh.indices.size();
+    }
+
+    _vbo_data.reserve(vbo_data_size);
+    _ibo_data.reserve(ibo_data_size);
+
+    for (const meshes::Mesh& mesh : meshes) {
+        _vbo_data.insert(_vbo_data.end(), mesh.vertices.begin(), mesh.vertices.end());
+        _ibo_data.insert(_ibo_data.end(), mesh.indices.begin(), mesh.indices.end());
+    }
+}
+
 my_gl::VertexArray::~VertexArray() {
     glDeleteVertexArrays(1, &_vao_id);
     glDeleteBuffers(1, &_vbo_id);
@@ -188,7 +225,9 @@ void my_gl::Renderer::render(float time_0to1) {
     for (const auto& obj : _objects) {
         obj.bind_state();
 
-        glUniform1f(obj.get_program().get_uniform("u_lerp")->location, time_0to1);
+        if (const Uniform* u_lerp = obj.get_program().get_uniform("u_lerp")) {
+            glUniform1f(u_lerp->location, time_0to1);
+        }
         const auto local_mat{ obj.get_local_mat(object_cache) };
         const auto mvp_mat{ _world_matrix * local_mat };
         glUniformMatrix4fv(obj.get_program().get_uniform("u_mvp_mat")->location, 1, true, mvp_mat.data());
