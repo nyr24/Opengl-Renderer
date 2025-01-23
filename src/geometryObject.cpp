@@ -66,15 +66,8 @@ my_gl_math::Matrix44<float> my_gl::GeometryObject::get_local_mat(ObjectCache& ob
     auto result_mat{ my_gl_math::Matrix44<float>::identity() };
 
     if (_transforms.size() > 0) {
-        // do calc if was modified or not in the cache
-        if (obj_cache.should_recalc(_uid)) {
-            for (const auto& curr_mat : _transforms) {
-                result_mat *= curr_mat;
-            }
-            obj_cache.add_item(_uid, result_mat);
-        }
-        else {
-            result_mat = obj_cache.get_item(_uid).value();
+        for (const auto& transform : _transforms) {
+            result_mat *= transform;
         }
     }
 
