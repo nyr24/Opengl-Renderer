@@ -3,8 +3,10 @@
 #include <chrono>
 #include <ctime>
 #include "animation.hpp"
+#include "cubeCreature.hpp"
 #include "math.hpp"
 #include "matrix.hpp"
+#include "sharedTypes.hpp"
 #include "vec.hpp"
 #include "utils.hpp"
 #include "window.hpp"
@@ -58,7 +60,7 @@ int main() {
     std::vector<const my_gl::Program*> programs{ &program1, &program2 };
 
     my_gl::VertexArray vertex_arr{
-        std::move(my_gl::meshes::cube_mesh),
+        my_gl::meshes::cube_mesh,
         programs
     };
 
@@ -110,12 +112,12 @@ int main() {
         },
     };
 
-    my_gl::GeometryObject cube1{ std::move(cube1_transforms), 36, 0, program1, vertex_arr, GL_TRIANGLES, {} };
-    my_gl::GeometryObject cube2{ std::move(cube2_transforms), 36, 0, program2, vertex_arr, GL_TRIANGLES, { &textures[0], &textures[1] } };
+    /*my_gl::GeometryObject cube1{ std::move(cube1_transforms), 36, 0, program1, vertex_arr, GL_TRIANGLES, {} };*/
+    /*my_gl::GeometryObject cube2{ std::move(cube2_transforms), 36, 0, program2, vertex_arr, GL_TRIANGLES, { &textures[0], &textures[1] } };*/
 
-    std::vector<my_gl::GeometryObject> objects{ std::move(cube1), std::move(cube2) };
+    my_gl::CubeCreature cube_creature{ my_gl::CubeCreature::create(program1, vertex_arr) };
 
-    float radius{5.0f};
+    std::vector<my_gl::IRenderable*> objects{ &cube_creature };
 
     auto view_mat{ my_gl_math::Matrix44<float>::look_at(
         my_gl::camera.camera_pos,

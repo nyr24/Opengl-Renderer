@@ -14,6 +14,7 @@ namespace my_gl {
     class Program;
     class Renderer;
     class GeometryObject;
+    class IRenderable;
 
     struct Attribute {
         const char*     name;
@@ -43,6 +44,10 @@ namespace my_gl {
         );
         VertexArray(
             meshes::Mesh&& mesh,
+            const std::vector<const Program*>& programs
+        );
+        VertexArray(
+            const meshes::Mesh& mesh,
             const std::vector<const Program*>& programs
         );
         VertexArray(
@@ -106,7 +111,7 @@ namespace my_gl {
     class Renderer {
     public:
         Renderer(
-            std::vector<GeometryObject>&&       objects,
+            std::vector<IRenderable*>&&         objects,
             my_gl_math::Matrix44<float>&&       projection_view_mat
         );
 
@@ -119,7 +124,7 @@ namespace my_gl {
 
         ObjectCache                         object_cache;
     private:
-        std::vector<GeometryObject>         _objects;
+        std::vector<IRenderable*>           _objects;
         my_gl_math::Matrix44<float>         _world_matrix;
         Timepoint_sec                       _rendering_time_curr;
         Timepoint_sec                       _rendering_time_start;

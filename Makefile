@@ -3,7 +3,7 @@ BUILD_DIR=build
 DEBUG_DIR=$(BUILD_DIR)/debug
 RELEASE_DIR=$(BUILD_DIR)/release
 INCLUDE_DIR=include
-SRCS=main.cpp renderer.cpp utils.cpp window.cpp geometryObject.cpp texture.cpp globals.cpp camera.cpp meshes.cpp
+SRCS=main.cpp renderer.cpp utils.cpp window.cpp geometryObject.cpp texture.cpp globals.cpp camera.cpp meshes.cpp cubeCreature.cpp
 OBJS=$(SRCS:.cpp=.o)
 DEBUG_OBJS=$(addprefix $(DEBUG_DIR)/, $(OBJS))
 RELEASE_OBJS=$(addprefix $(RELEASE_DIR)/, $(OBJS))
@@ -33,7 +33,8 @@ $(DEBUG_EXE): $(DEBUG_OBJS)
 $(DEBUG_DIR)/main.o: $(SRC_DIR)/main.cpp $(INCLUDE_DIR)/globals.hpp $(INCLUDE_DIR)/utils.hpp \
 	$(INCLUDE_DIR)/renderer.hpp $(INCLUDE_DIR)/window.hpp $(INCLUDE_DIR)/geometryObject.hpp \
 	$(INCLUDE_DIR)/matrix.hpp $(INCLUDE_DIR)/vec.hpp $(INCLUDE_DIR)/animation.hpp  \
-	$(INCLUDE_DIR)/camera.hpp $(INCLUDE_DIR)/texture.hpp $(INCLUDE_DIR)/meshes.hpp
+	$(INCLUDE_DIR)/camera.hpp $(INCLUDE_DIR)/texture.hpp $(INCLUDE_DIR)/meshes.hpp \
+	$(INCLUDE_DIR)/cubeCreature.hpp
 	$(CXX) $(CFLAGS) $(DEBUG_FLAGS) -o $@ -c $<
 
 $(DEBUG_DIR)/globals.o: $(SRC_DIR)/globals.cpp $(INCLUDE_DIR)/globals.hpp $(INCLUDE_DIR)/camera.hpp
@@ -62,6 +63,9 @@ $(DEBUG_DIR)/camera.o: $(SRC_DIR)/camera.cpp $(INCLUDE_DIR)/camera.hpp $(INCLUDE
 $(DEBUG_DIR)/meshes.o: $(SRC_DIR)/meshes.cpp $(INCLUDE_DIR)/meshes.hpp
 	$(CXX) $(CFLAGS) $(DEBUG_FLAGS) -o $@ -c $<
 
+$(DEBUG_DIR)/cubeCreature.o: $(SRC_DIR)/cubeCreature.cpp $(INCLUDE_DIR)/cubeCreature.hpp
+	$(CXX) $(CFLAGS) $(DEBUG_FLAGS) -o $@ -c $<
+
 # release
 $(RELEASE_EXE): $(RELEASE_OBJS)
 	$(CXX) $(CFLAGS) $(RELEASE_FLAGS) -o $@ $^
@@ -70,7 +74,8 @@ $(RELEASE_EXE): $(RELEASE_OBJS)
 $(RELEASE_DIR)/main.o: $(SRC_DIR)/main.cpp $(INCLUDE_DIR)/globals.hpp $(INCLUDE_DIR)/utils.hpp \
 	$(INCLUDE_DIR)/renderer.hpp $(INCLUDE_DIR)/window.hpp $(INCLUDE_DIR)/geometryObject.hpp \
 	$(INCLUDE_DIR)/matrix.hpp $(INCLUDE_DIR)/vec.hpp $(INCLUDE_DIR)/animation.hpp  \
-	$(INCLUDE_DIR)/camera.hpp $(INCLUDE_DIR)/texture.hpp $(INCLUDE_DIR)/meshes.hpp
+	$(INCLUDE_DIR)/camera.hpp $(INCLUDE_DIR)/texture.hpp $(INCLUDE_DIR)/meshes.hpp \
+	$(INCLUDE_DIR)/cubeCreature.hpp
 	$(CXX) $(CFLAGS) $(RELEASE_FLAGS) -o $@ -c $<
 
 $(RELEASE_DIR)/globals.o: $(SRC_DIR)/globals.cpp $(INCLUDE_DIR)/globals.hpp $(INCLUDE_DIR)/camera.hpp
@@ -97,6 +102,9 @@ $(RELEASE_DIR)/camera.o: $(SRC_DIR)/camera.cpp $(INCLUDE_DIR)/camera.hpp $(INCLU
 	$(CXX) $(CFLAGS) $(RELEASE_FLAGS) -o $@ -c $<
 
 $(RELEASE_DIR)/meshes.o: $(SRC_DIR)/meshes.cpp $(INCLUDE_DIR)/meshes.hpp
+	$(CXX) $(CFLAGS) $(RELEASE_FLAGS) -o $@ -c $<
+
+$(RELEASE_DIR)/cubeCreature.o: $(SRC_DIR)/cubeCreature.cpp $(INCLUDE_DIR)/cubeCreature.hpp
 	$(CXX) $(CFLAGS) $(RELEASE_FLAGS) -o $@ -c $<
 
 # util

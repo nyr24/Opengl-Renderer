@@ -140,6 +140,16 @@ my_gl::VertexArray::VertexArray(
 }
 
 my_gl::VertexArray::VertexArray(
+    const meshes::Mesh& mesh,
+    const std::vector<const Program*>& programs
+)
+    : _vbo_data{ mesh.vertices }
+    , _ibo_data{ mesh.indices }
+{
+    init(programs);
+}
+
+my_gl::VertexArray::VertexArray(
     const std::vector<meshes::Mesh>& meshes,
     const std::vector<const Program*>& programs
 )
@@ -210,7 +220,7 @@ void my_gl::VertexArray::init(const std::vector<const Program*>& programs) {
 
 // Renderer
 my_gl::Renderer::Renderer(
-    std::vector<my_gl::GeometryObject>&&    objects,
+    std::vector<my_gl::IRenderable*>&&    objects,
     my_gl_math::Matrix44<float>&&           world_matrix
 )
     : _objects{         std::move(objects) }
@@ -222,19 +232,8 @@ void my_gl::Renderer::set_world_matrix(my_gl_math::Matrix44<float>&& new_world_m
 }
 
 void my_gl::Renderer::render(float time_0to1) {
-    for (const auto& obj : _objects) {
-        obj.bind_state();
-
-        if (const Uniform* u_lerp = obj.get_program().get_uniform("u_lerp")) {
-            glUniform1f(u_lerp->location, time_0to1);
-        }
-        const auto local_mat{ obj.get_local_mat(object_cache) };
-        const auto mvp_mat{ _world_matrix * local_mat };
-        glUniformMatrix4fv(obj.get_program().get_uniform("u_mvp_mat")->location, 1, true, mvp_mat.data());
-
-        obj.draw();
-
-        obj.un_bind_state();
+    for (const auto* obj : _objects) {
+        obj->render(_world_matrix, time_0to1);
     }
 }
 
@@ -242,7 +241,7 @@ void my_gl::Renderer::update_time(Duration_sec frame_duration) {
     _rendering_time_curr += frame_duration;
 
     for (const auto& obj : _objects) {
-        obj.update_anims_time(frame_duration);
+        obj->update_anims_time(frame_duration);
     }
 }
 

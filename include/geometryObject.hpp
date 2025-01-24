@@ -14,7 +14,7 @@ namespace my_gl {
     class VertexArray;
     class ObjectCache;
 
-    class GeometryObject {
+    class GeometryObject : public IRenderable {
     public:
         GeometryObject(
             std::vector<my_gl_math::Matrix44<float>>&& transforms,
@@ -51,11 +51,12 @@ namespace my_gl {
         GeometryObject& operator=(GeometryObject&& rhs) = delete;
         ~GeometryObject() = default;
 
-        my_gl_math::Matrix44<float> get_local_mat(ObjectCache& obj_cache) const;
-        void                        update_anims_time(Duration_sec frame_time) const;
+        my_gl_math::Matrix44<float> get_local_mat() const;
         void                        bind_state() const;
         void                        un_bind_state() const;
         void                        draw() const;
+        void                        update_anims_time(Duration_sec frame_time) const override;
+        void                        render(const my_gl_math::Matrix44<float>& world_matrix, float time_0to1) const override;
 
         constexpr std::size_t       get_vertices_count() const { 
             return _vertices_count;

@@ -62,7 +62,7 @@ my_gl::GeometryObject::GeometryObject(
     , _draw_type{ draw_type }
 {}
 
-my_gl_math::Matrix44<float> my_gl::GeometryObject::get_local_mat(ObjectCache& obj_cache) const {
+my_gl_math::Matrix44<float> my_gl::GeometryObject::get_local_mat() const {
     auto result_mat{ my_gl_math::Matrix44<float>::identity() };
 
     if (_transforms.size() > 0) {
@@ -115,6 +115,20 @@ void my_gl::GeometryObject::draw() const {
         GL_UNSIGNED_SHORT,
         reinterpret_cast<const void*>(_buffer_byte_offset)
     );
+}
+
+void my_gl::GeometryObject::render(const my_gl_math::Matrix44<float>& world_matrix, float time_0to1) const {
+    bind_state();
+
+    if (const Uniform* u_lerp = get_program().get_uniform("u_lerp")) {
+        glUniform1f(u_lerp->location, time_0to1);
+    }
+    const auto local_mat{ get_local_mat() };
+    const auto mvp_mat{ world_matrix * local_mat };
+    glUniformMatrix4fv(get_program().get_uniform("u_mvp_mat")->location, 1, true, mvp_mat.data());
+
+    draw();
+    un_bind_state();
 }
 
 std::size_t my_gl::IdGenerator::gen() {
