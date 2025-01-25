@@ -3,7 +3,6 @@
 #include <chrono>
 #include <ctime>
 #include "animation.hpp"
-#include "cubeCreature.hpp"
 #include "math.hpp"
 #include "matrix.hpp"
 #include "sharedTypes.hpp"
@@ -16,6 +15,7 @@
 #include "globals.hpp"
 #include "camera.hpp"
 #include "meshes.hpp"
+#include "userDefinedObjects.hpp"
 
 int main() {
     my_gl::Window window{ my_gl::init_window() };
@@ -112,12 +112,11 @@ int main() {
         },
     };
 
-    /*my_gl::GeometryObject cube1{ std::move(cube1_transforms), 36, 0, program1, vertex_arr, GL_TRIANGLES, {} };*/
-    /*my_gl::GeometryObject cube2{ std::move(cube2_transforms), 36, 0, program2, vertex_arr, GL_TRIANGLES, { &textures[0], &textures[1] } };*/
+    /*std::vector<my_gl::GeometryObjectPrimitive> primitives{  };*/
 
-    my_gl::CubeCreature cube_creature{ my_gl::CubeCreature::create(program1, vertex_arr) };
-
-    std::vector<my_gl::IRenderable*> objects{ &cube_creature };
+    std::vector<my_gl::GeometryObjectComplex> complex_objs{{
+        my_gl::create_cube_creature(program1, vertex_arr)
+    }};
 
     auto view_mat{ my_gl_math::Matrix44<float>::look_at(
         my_gl::camera.camera_pos,
@@ -132,16 +131,19 @@ int main() {
     auto projection_view_mat{ projection_mat * view_mat };
 
     my_gl::Renderer renderer{
-        std::move(objects),
+        std::move(complex_objs),
+        std::move(std::vector<my_gl::GeometryObjectPrimitive>{}),
         std::move(projection_view_mat),
     };
 
     glfwSwapInterval(1);
 
+    bool is_rendering_started{false};
     while (!glfwWindowShouldClose(window.ptr_raw())) {
         auto start_frame{ std::chrono::steady_clock::now() };
-        if (!renderer.get_is_started()) {
+        if (!is_rendering_started) {
             renderer.set_start_time(start_frame);
+            is_rendering_started = true;
         }
 
         glClearColor(0.0f, 0.0f, 0.0f, 0.0f);

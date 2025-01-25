@@ -14,9 +14,9 @@ namespace my_gl {
     class VertexArray;
     class ObjectCache;
 
-    class GeometryObject : public IRenderable {
+    class GeometryObjectPrimitive {
     public:
-        GeometryObject(
+        GeometryObjectPrimitive(
             std::vector<my_gl_math::Matrix44<float>>&& transforms,
             std::vector<my_gl::Animation<float>>&&     animations,
             std::size_t                                vertices_count,
@@ -26,7 +26,7 @@ namespace my_gl {
             GLenum                                     draw_type,
             std::vector<const my_gl::Texture*>&&       textures
         );
-        GeometryObject(
+        GeometryObjectPrimitive(
             std::vector<my_gl::Animation<float>>&&     animations,
             std::size_t                                vertices_count,
             std::size_t                                buffer_byte_offset,
@@ -35,7 +35,7 @@ namespace my_gl {
             GLenum                                     draw_type,
             std::vector<const my_gl::Texture*>&&       textures
         );
-        GeometryObject(
+        GeometryObjectPrimitive(
             std::vector<my_gl_math::Matrix44<float>>&& transforms,
             std::size_t                                vertices_count,
             std::size_t                                buffer_byte_offset,
@@ -45,18 +45,18 @@ namespace my_gl {
             std::vector<const my_gl::Texture*>&&       textures
         );
 
-        GeometryObject(const GeometryObject& rhs) = default;
-        GeometryObject(GeometryObject&& rhs) = default;
-        GeometryObject& operator=(const GeometryObject& rhs) = delete;
-        GeometryObject& operator=(GeometryObject&& rhs) = delete;
-        ~GeometryObject() = default;
+        GeometryObjectPrimitive(const GeometryObjectPrimitive& rhs) = default;
+        GeometryObjectPrimitive(GeometryObjectPrimitive&& rhs) = default;
+        GeometryObjectPrimitive& operator=(const GeometryObjectPrimitive& rhs) = delete;
+        GeometryObjectPrimitive& operator=(GeometryObjectPrimitive&& rhs) = delete;
+        ~GeometryObjectPrimitive() = default;
 
         my_gl_math::Matrix44<float> get_local_mat() const;
         void                        bind_state() const;
         void                        un_bind_state() const;
         void                        draw() const;
-        void                        update_anims_time(Duration_sec frame_time) const override;
-        void                        render(const my_gl_math::Matrix44<float>& world_matrix, float time_0to1) const override;
+        void                        update_anims_time(Duration_sec frame_time) const;
+        void                        render(const my_gl_math::Matrix44<float>& world_matrix, float time_0to1) const;
 
         constexpr std::size_t       get_vertices_count() const { 
             return _vertices_count;
@@ -78,6 +78,17 @@ namespace my_gl {
         const Program&                                      _program;
         const VertexArray&                                  _vao;
         GLenum                                              _draw_type;
+    };
+
+    class GeometryObjectComplex {
+    public:
+        GeometryObjectComplex(std::vector<GeometryObjectPrimitive>&& primitives);
+        GeometryObjectComplex(const std::vector<GeometryObjectPrimitive>& primitives);
+
+        void render(const my_gl_math::Matrix44<float>& world_matrix, float time_0to1) const;
+        void update_anims_time(Duration_sec frame_time) const;
+    private:
+        std::vector<GeometryObjectPrimitive> _primitives;
     };
 
     class IdGenerator {

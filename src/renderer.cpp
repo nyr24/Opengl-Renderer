@@ -220,11 +220,13 @@ void my_gl::VertexArray::init(const std::vector<const Program*>& programs) {
 
 // Renderer
 my_gl::Renderer::Renderer(
-    std::vector<my_gl::IRenderable*>&&    objects,
-    my_gl_math::Matrix44<float>&&           world_matrix
+    std::vector<my_gl::GeometryObjectComplex>&&         complex_objs,
+    std::vector<my_gl::GeometryObjectPrimitive>&&       primitives,
+    my_gl_math::Matrix44<float>&&                       projection_view_mat
 )
-    : _objects{         std::move(objects) }
-    , _world_matrix{    std::move(world_matrix) }
+    : _complex_objs{ std::move(complex_objs) }
+    , _primitives{ std::move(primitives) }
+    , _world_matrix{ std::move(projection_view_mat) }
 {}
 
 void my_gl::Renderer::set_world_matrix(my_gl_math::Matrix44<float>&& new_world_matrix) {
@@ -232,25 +234,32 @@ void my_gl::Renderer::set_world_matrix(my_gl_math::Matrix44<float>&& new_world_m
 }
 
 void my_gl::Renderer::render(float time_0to1) {
-    for (const auto* obj : _objects) {
-        obj->render(_world_matrix, time_0to1);
+    for (const auto& complex_obj : _complex_objs) {
+        complex_obj.render(_world_matrix, time_0to1);
     }
+
+    for (const auto& primitive : _primitives) {
+        primitive.render(_world_matrix, time_0to1);
+    }
+
 }
 
 void my_gl::Renderer::update_time(Duration_sec frame_duration) {
     _rendering_time_curr += frame_duration;
 
-    for (const auto& obj : _objects) {
-        obj->update_anims_time(frame_duration);
+    for (const auto& complex_obj : _complex_objs) {
+        complex_obj.update_anims_time(frame_duration);
+    }
+
+    for (const auto& primitive : _primitives) {
+        primitive.update_anims_time(frame_duration);
     }
 }
 
 my_gl::Duration_sec my_gl::Renderer::get_curr_rendering_duration() const {
-    assert(_is_started && "rendering was not started, can't query the duration");
     return _rendering_time_curr - _rendering_time_start;
 }
 
 void my_gl::Renderer::set_start_time(Timepoint_sec start_time) {
-    _is_started = true;
     _rendering_time_start = start_time;
 }

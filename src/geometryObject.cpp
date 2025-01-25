@@ -1,9 +1,10 @@
 #include "geometryObject.hpp"
 #include "matrix.hpp"
 #include "renderer.hpp"
+#include "sharedTypes.hpp"
 #include <optional>
 
-my_gl::GeometryObject::GeometryObject(
+my_gl::GeometryObjectPrimitive::GeometryObjectPrimitive(
     std::vector<my_gl_math::Matrix44<float>>&& transforms,
     std::vector<my_gl::Animation<float>>&&     animations,
     std::size_t                                vertices_count,
@@ -24,7 +25,7 @@ my_gl::GeometryObject::GeometryObject(
     , _draw_type{ draw_type }
 {}
 
-my_gl::GeometryObject::GeometryObject(
+my_gl::GeometryObjectPrimitive::GeometryObjectPrimitive(
     std::vector<my_gl::Animation<float>>&&     animations,
     std::size_t                                vertices_count,
     std::size_t                                buffer_byte_offset,
@@ -43,7 +44,7 @@ my_gl::GeometryObject::GeometryObject(
     , _draw_type{ draw_type }
 {}
 
-my_gl::GeometryObject::GeometryObject(
+my_gl::GeometryObjectPrimitive::GeometryObjectPrimitive(
     std::vector<my_gl_math::Matrix44<float>>&& transforms,
     std::size_t                                vertices_count,
     std::size_t                                buffer_byte_offset,
@@ -62,7 +63,7 @@ my_gl::GeometryObject::GeometryObject(
     , _draw_type{ draw_type }
 {}
 
-my_gl_math::Matrix44<float> my_gl::GeometryObject::get_local_mat() const {
+my_gl_math::Matrix44<float> my_gl::GeometryObjectPrimitive::get_local_mat() const {
     auto result_mat{ my_gl_math::Matrix44<float>::identity() };
 
     if (_transforms.size() > 0) {
@@ -80,7 +81,7 @@ my_gl_math::Matrix44<float> my_gl::GeometryObject::get_local_mat() const {
     return result_mat;
 }
 
-void my_gl::GeometryObject::update_anims_time(Duration_sec frame_time) const {
+void my_gl::GeometryObjectPrimitive::update_anims_time(Duration_sec frame_time) const {
     if (_animations.size() > 0) {
         for (auto& anim : _animations) {
             anim.update_time(frame_time);
@@ -88,7 +89,7 @@ void my_gl::GeometryObject::update_anims_time(Duration_sec frame_time) const {
     }
 }
 
-void my_gl::GeometryObject::bind_state() const {
+void my_gl::GeometryObjectPrimitive::bind_state() const {
     if (_textures.size() > 0) {
         for (const auto* texture : _textures) {
             texture->bind();
@@ -98,7 +99,7 @@ void my_gl::GeometryObject::bind_state() const {
     _vao.bind();
 }
 
-void my_gl::GeometryObject::un_bind_state() const {
+void my_gl::GeometryObjectPrimitive::un_bind_state() const {
     if (_textures.size() > 0) {
         for (const auto* texture : _textures) {
             texture->un_bind();
@@ -108,7 +109,7 @@ void my_gl::GeometryObject::un_bind_state() const {
     _vao.un_bind();
 }
 
-void my_gl::GeometryObject::draw() const {
+void my_gl::GeometryObjectPrimitive::draw() const {
     glDrawElements(
         _draw_type,
         _vertices_count,
@@ -117,7 +118,7 @@ void my_gl::GeometryObject::draw() const {
     );
 }
 
-void my_gl::GeometryObject::render(const my_gl_math::Matrix44<float>& world_matrix, float time_0to1) const {
+void my_gl::GeometryObjectPrimitive::render(const my_gl_math::Matrix44<float>& world_matrix, float time_0to1) const {
     bind_state();
 
     if (const Uniform* u_lerp = get_program().get_uniform("u_lerp")) {
@@ -131,6 +132,32 @@ void my_gl::GeometryObject::render(const my_gl_math::Matrix44<float>& world_matr
     un_bind_state();
 }
 
+// GeometryObjectComplex
+my_gl::GeometryObjectComplex::GeometryObjectComplex(
+    std::vector<my_gl::GeometryObjectPrimitive>&& primitives
+)
+    : _primitives{ std::move(primitives) }
+{}
+
+my_gl::GeometryObjectComplex::GeometryObjectComplex(
+    const std::vector<my_gl::GeometryObjectPrimitive>& primitives
+)
+    : _primitives{ primitives }
+{}
+
+void my_gl::GeometryObjectComplex::render(const my_gl_math::Matrix44<float>& world_matrix, float time_0to1) const {
+    for (const auto& primitive : _primitives) {
+        primitive.render(world_matrix, time_0to1);
+    }
+}
+
+void my_gl::GeometryObjectComplex::update_anims_time(my_gl::Duration_sec frame_time) const {
+    for (const auto& primitive : _primitives) {
+        primitive.update_anims_time(frame_time);
+    }
+}
+
+// IdGenerator
 std::size_t my_gl::IdGenerator::gen() {
     return _uid++;
 }
@@ -143,6 +170,7 @@ void my_gl::IdGenerator::reset() {
     _uid = 0;
 }
 
+// ObjectCache
 void my_gl::ObjectCache::add_item(std::size_t obj_id, my_gl_math::Matrix44<float> transform_res) {
     if (_map.contains(obj_id)) {
         return;

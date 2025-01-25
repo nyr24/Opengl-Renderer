@@ -13,8 +13,6 @@ namespace my_gl {
     class VertexArray;
     class Program;
     class Renderer;
-    class GeometryObject;
-    class IRenderable;
 
     struct Attribute {
         const char*     name;
@@ -103,16 +101,17 @@ namespace my_gl {
         uint32_t get_id() const { return _program_id; }
 
     private:
-        std::unordered_map<std::string_view, Attribute>     _attrs;
-        std::unordered_map<std::string_view, Uniform>       _unifs;
-        uint32_t                                            _program_id{ 0 };
+        std::unordered_map<std::string_view, Attribute>         _attrs;
+        std::unordered_map<std::string_view, Uniform>           _unifs;
+        uint32_t                                                _program_id{ 0 };
     };
 
     class Renderer {
     public:
         Renderer(
-            std::vector<IRenderable*>&&         objects,
-            my_gl_math::Matrix44<float>&&       projection_view_mat
+            std::vector<my_gl::GeometryObjectComplex>&&         complex_objs,
+            std::vector<my_gl::GeometryObjectPrimitive>&&       primitives,
+            my_gl_math::Matrix44<float>&&                       projection_view_mat
         );
 
         void render(float time_0to1);
@@ -122,12 +121,13 @@ namespace my_gl {
         Duration_sec get_curr_rendering_duration() const;
         bool get_is_started() const { return _is_started; }
 
-        ObjectCache                         object_cache;
     private:
-        std::vector<IRenderable*>           _objects;
-        my_gl_math::Matrix44<float>         _world_matrix;
-        Timepoint_sec                       _rendering_time_curr;
-        Timepoint_sec                       _rendering_time_start;
-        bool                                _is_started{false};
+        std::vector<my_gl::GeometryObjectComplex>           _complex_objs;
+        std::vector<my_gl::GeometryObjectPrimitive>         _primitives;
+        my_gl_math::Matrix44<float>                         _world_matrix;
+        Timepoint_sec                                       _rendering_time_curr;
+        Timepoint_sec                                       _rendering_time_start;
+        // move to render loop, local variable
+        bool                                                _is_started{false};
     };
 }
