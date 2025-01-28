@@ -206,6 +206,7 @@ void my_gl::VertexArray::init(const std::vector<const Program*>& programs) {
             glEnableVertexAttribArray(attr_ref.location);
             glVertexAttribPointer(attr_ref.location, attr_ref.count, attr_ref.gl_type, false, attr_ref.byte_stride, reinterpret_cast<void*>(attr_ref.byte_offset));
 
+            // TODO: add a macro wrapper for debug messages
 #ifdef DEBUG
             printf("info: attribute '%s' successfully initialized, location: '%d'\n", attr_ref.name, attr_ref.location);
 #endif
