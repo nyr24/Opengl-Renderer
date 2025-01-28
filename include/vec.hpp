@@ -68,12 +68,12 @@ namespace my_gl_math {
         }
     
     // operators
-        T& operator[](int i) {
+        T& operator[](uint32_t i) {
             assert((i >= 0 && i < N) && "invalid indexing");
             return _data[i];
         }
 
-        const T& operator[](int i) const {
+        const T& operator[](uint32_t i) const {
             assert((i >= 0 && i < N) && "invalid indexing");
             return _data[i];
         }

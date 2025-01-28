@@ -133,8 +133,9 @@ namespace my_gl {
         Animation(
             Animation_type                  anim_type,
             float                           duration,
+            float                           delay,
             my_gl_math::Vec3<Val_type>&&    start_val,
-            my_gl_math::Vec3<Val_type>&&    end_val, 
+            my_gl_math::Vec3<Val_type>&&    end_val,
             Bezier_curve_type               bezier_type = LINEAR,
             Loop_type                       loop = Loop_type::NONE
         )
@@ -143,6 +144,7 @@ namespace my_gl {
             , _end_val{ std::move(end_val) }
             //, _curr_val{ _start_val }
             , _duration{ duration }
+            , _delay{ delay }
             , _loop{ loop }
         {
 
@@ -162,13 +164,14 @@ namespace my_gl {
             }
 
             set_bezier_type(bezier_type);
-        } 
+        }
 
         // constructor for rotation around single axis
         Animation(
             Val_type                 start_val,
             Val_type                 end_val,
             float                    duration,
+            float                    delay,
             my_gl_math::Global::AXIS axis,
             Bezier_curve_type        bezier_type = LINEAR,
             Loop_type                loop = Loop_type::NONE
@@ -176,6 +179,7 @@ namespace my_gl {
             : _anim_type{ Animation_type::ROTATE }
             , _axis{ axis }
             , _duration{ duration }
+            , _delay{ delay }
             , _loop{ loop }
         {
             switch (_axis) {
@@ -213,6 +217,17 @@ namespace my_gl {
             // can't be bigger than duration, see update_time()
             Duration_sec passed_time{ _curr_time - _start_time };
 
+            if (_delay.count() > 0.0f && !_is_delay_passed) {
+                if (passed_time >= _delay) {
+                    _start_time = std::chrono::steady_clock::now();
+                    _curr_time = _start_time;
+                    _is_delay_passed = true;
+                }
+                else {
+                    return _mat;
+                }
+            }
+
             float linear_0to1{ passed_time / _duration };
             if (_bezier_curve.get_type() != Bezier_curve_type::LINEAR) {
                 linear_0to1 = _bezier_curve.update(linear_0to1);
@@ -233,6 +248,12 @@ namespace my_gl {
             }
 
             _curr_time += frame_time;
+
+            // prevent case where delay time can be more than duration
+            // to not set erroneous flags
+            if (!_is_delay_passed) {
+                return;
+            }
 
             if (_curr_time >= (_start_time + _duration)) {
                 if (_loop == Loop_type::NONE) {
@@ -259,15 +280,17 @@ namespace my_gl {
         //my_gl_math::Vec3<Val_type>          _curr_val;
         Timepoint_sec                       _start_time;
         Timepoint_sec                       _curr_time;
-        Duration_sec                        _duration;
+        Duration_sec                        _duration{1.0f};
+        Duration_sec                        _delay{0.0f};
         // only for single-axis rotation
         my_gl_math::Global::AXIS            _axis{ my_gl_math::Global::Z };
         Animation_type                      _anim_type;
         Loop_type                           _loop{ Loop_type::NONE };
         bool                                _is_started{ false };
+        bool                                _is_delay_passed{ false };
         bool                                _is_ended{ false };
         bool                                _is_reversed{ false };
-        //bool                                _is_paused{ false };
+       // bool                                _is_paused{ false };
 
         // input can be Vector or Scalar (single axis rotation)
         template<typename T>

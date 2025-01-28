@@ -73,6 +73,7 @@ int main() {
         {
             my_gl::TRANSLATE,
             5.0f,
+            0.0f,
             { -1.0f, 1.0f, 0.0f },
             { -1.0f, -1.0f, 0.0f },
             my_gl::Bezier_curve_type::EASE_IN,
@@ -82,6 +83,7 @@ int main() {
             0.0f,
             360.0f,
             5.0f,
+            0.0f,
             my_gl_math::Global::AXIS::Y,
             my_gl::Bezier_curve_type::EASE_IN_OUT,
             my_gl::Loop_type::INVERT
@@ -98,6 +100,7 @@ int main() {
             0.0f,
             360.0f,
             5.0f,
+            0.0f,
             my_gl_math::Global::AXIS::Y,
             my_gl::Bezier_curve_type::EASE_IN_OUT,
             my_gl::Loop_type::INVERT
@@ -105,6 +108,7 @@ int main() {
         {
             my_gl::TRANSLATE,
             5.0f,
+            0.0f,
             { 1.0f, 1.0f, 0.0f },
             { 1.0f, -1.0f, 0.0f },
             my_gl::Bezier_curve_type::EASE_IN,
@@ -132,7 +136,7 @@ int main() {
 
     my_gl::Renderer renderer{
         std::move(complex_objs),
-        std::move(std::vector<my_gl::GeometryObjectPrimitive>{}),
+        std::vector<my_gl::GeometryObjectPrimitive>{},
         std::move(projection_view_mat),
     };
 
