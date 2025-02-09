@@ -168,28 +168,28 @@ void my_gl::callback_keyboard(GLFWwindow* window, int key, int scancode, int act
         glfwSetWindowShouldClose(window, GL_TRUE);
         break;
     case GLFW_KEY_W:
-        my_gl::camera.process_keyboard_input(my_gl::Camera_movement::FORWARD);
+        my_gl::globals::camera.process_keyboard_input(my_gl::Camera_movement::FORWARD);
         break;
     case GLFW_KEY_S:
-        my_gl::camera.process_keyboard_input(my_gl::Camera_movement::BACKWARD);
+        my_gl::globals::camera.process_keyboard_input(my_gl::Camera_movement::BACKWARD);
         break;
     case GLFW_KEY_A:
-        my_gl::camera.process_keyboard_input(my_gl::Camera_movement::LEFT);
+        my_gl::globals::camera.process_keyboard_input(my_gl::Camera_movement::LEFT);
         break;
     case GLFW_KEY_D:
-        my_gl::camera.process_keyboard_input(my_gl::Camera_movement::RIGHT);
+        my_gl::globals::camera.process_keyboard_input(my_gl::Camera_movement::RIGHT);
         break;
     }
 }
 
 void my_gl::callback_mouse_move(GLFWwindow *window, double xpos, double ypos) {
-    my_gl::camera.process_mouse_input(
+    my_gl::globals::camera.process_mouse_input(
         static_cast<float>(xpos), static_cast<float>(ypos)
     );
 }
 
 void my_gl::callback_scroll(GLFWwindow* window, double xoffset, double yoffset) {
-    my_gl::camera.process_scroll_input(
+    my_gl::globals::camera.process_scroll_input(
         static_cast<float>(xoffset), static_cast<float>(yoffset)
     );
 }

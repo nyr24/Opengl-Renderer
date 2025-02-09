@@ -101,13 +101,13 @@ int main() {
 
     // camera
     auto view_mat{ my_gl_math::Matrix44<float>::look_at(
-        my_gl::camera.camera_pos,
-        my_gl::camera.camera_pos + my_gl::camera.camera_front,
-        my_gl::camera.camera_up
+        my_gl::globals::camera.camera_pos,
+        my_gl::globals::camera.camera_pos + my_gl::globals::camera.camera_front,
+        my_gl::globals::camera.camera_up
     )};
 
     auto projection_mat{ my_gl_math::Matrix44<float>::perspective_fov(
-        my_gl::camera.fov, my_gl::camera.aspect, 0.1f, 50.0f
+        my_gl::globals::camera.fov, my_gl::globals::camera.aspect, 0.1f, 50.0f
     )};
 
     auto projection_view_mat{ projection_mat * view_mat };
@@ -141,12 +141,12 @@ int main() {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         view_mat = my_gl_math::Matrix44<float>::look_at(
-            my_gl::camera.camera_pos,
-            my_gl::camera.camera_pos + my_gl::camera.camera_front,
-            my_gl::camera.camera_up
+            my_gl::globals::camera.camera_pos,
+            my_gl::globals::camera.camera_pos + my_gl::globals::camera.camera_front,
+            my_gl::globals::camera.camera_up
         );
         projection_mat = my_gl_math::Matrix44<float>::perspective_fov(
-            my_gl::camera.fov, my_gl::camera.aspect, 0.1f, 50.0f
+            my_gl::globals::camera.fov, my_gl::globals::camera.aspect, 0.1f, 50.0f
         );
 
         projection_view_mat = projection_mat * view_mat;
