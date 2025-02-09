@@ -2,7 +2,6 @@
 #include <GLFW/glfw3.h>
 #include <chrono>
 #include <ctime>
-#include "animation.hpp"
 #include "math.hpp"
 #include "matrix.hpp"
 #include "sharedTypes.hpp"
@@ -33,10 +32,11 @@ int main() {
             { .name = "a_normal", .gl_type = GL_FLOAT, .count = 3, .byte_stride = 0, .byte_offset = normal_offset },
         },
         {
-            { .name = "u_mvp" },
-            { .name = "u_model" },
+            { .name = "u_mvp_mat" },
+            { .name = "u_model_mat" },
             { .name = "u_light_color" },
             { .name = "u_light_pos" },
+            { .name = "u_view_pos" },
         }
     };
 
@@ -47,7 +47,7 @@ int main() {
             { .name = "a_pos", .gl_type = GL_FLOAT, .count = 3, .byte_stride = 0, .byte_offset = 0 },
         },
         {
-            { .name = "u_mvp" },
+            { .name = "u_mvp_mat" },
             { .name = "u_color" }
         }
     };
@@ -105,8 +105,8 @@ int main() {
         my_gl::globals::camera.camera_pos + my_gl::globals::camera.camera_front,
         my_gl::globals::camera.camera_up
     )};
-
     auto projection_mat{ my_gl_math::Matrix44<float>::perspective_fov(
+
         my_gl::globals::camera.fov, my_gl::globals::camera.aspect, 0.1f, 50.0f
     )};
 
@@ -124,9 +124,15 @@ int main() {
 
     world_shader.set_uniform_value("u_light_color", 1.0f, 1.0f, 1.0f);
     world_shader.set_uniform_value("u_light_pos",
-            my_gl::globals::light_pos[0],
-            my_gl::globals::light_pos[1],
-            my_gl::globals::light_pos[2]);
+        my_gl::globals::light_pos[0],
+        my_gl::globals::light_pos[1],
+        my_gl::globals::light_pos[2]
+    );
+    world_shader.set_uniform_value("u_view_pos",
+        my_gl::globals::camera.camera_pos[0],
+        my_gl::globals::camera.camera_pos[1],
+        my_gl::globals::camera.camera_pos[2]
+    );
     light_shader.set_uniform_value("u_color", 1.0f, 1.0f, 1.0f);
 
     while (!glfwWindowShouldClose(window.ptr_raw())) {

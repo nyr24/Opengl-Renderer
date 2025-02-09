@@ -8,12 +8,18 @@ out vec4 output_color;
 
 uniform vec3 u_light_pos;
 uniform vec3 u_light_color;
+uniform vec3 u_view_pos;
 // uniform float u_lerp;
 
 void main() {
     float ambient_coef       = 0.08;
+    float shininess          = 32;
+    float specular_intensity = 0.5;
     vec3  light_dir          = normalize(u_light_pos - passed_frag_pos);
+    vec3 view_dir           = normalize(u_view_pos - passed_frag_pos);
+    vec3 reflect_dir        = reflect(-light_dir, passed_normal);
     float diffuse_coef       = max(dot(light_dir, passed_normal), 0.0);
-    vec3  light_color_result = u_light_color * (ambient_coef + diffuse_coef);
+    float specular_coef      = pow(max(dot(reflect_dir, view_dir), 0.0), shininess) * specular_intensity;
+    vec3  light_color_result = u_light_color * (ambient_coef + diffuse_coef + specular_coef);
     output_color             = vec4(passed_color * light_color_result, 1.0);
 }

@@ -125,8 +125,10 @@ void my_gl::GeometryObjectPrimitive::render(const my_gl_math::Matrix44<float>& w
 
     const auto local_mat{ get_local_mat() };
     const auto mvp_mat{ world_matrix * local_mat };
-    shader.set_uniform_value("u_model", local_mat.data());
-    shader.set_uniform_value("u_mvp", mvp_mat.data());
+    shader.set_uniform_value("u_model_mat", local_mat.data());
+    // TODO: calculate inverse + transpose here and pass to shader
+    /*shader.set_uniform_value("u_normal_mat", local_mat.data());*/
+    shader.set_uniform_value("u_mvp_mat", mvp_mat.data());
     shader.set_uniform_value("u_lerp", time_0to1);
 
     draw();
