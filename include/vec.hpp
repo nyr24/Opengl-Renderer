@@ -8,7 +8,7 @@
 #include "math.hpp"
 
 namespace my_gl_math {
-    template<typename T, uint32_t N> requires std::floating_point<T>
+    template<std::floating_point T, uint32_t N>
     class VecBase {
     public:
         constexpr VecBase(): _data(N) {}
@@ -220,6 +220,40 @@ namespace my_gl_math {
         std::valarray<T> _data{};
     };
 
+// Vec3
+    template<typename T = float> requires std::floating_point<T>
+    class Vec3 : public VecBase<T, 3> {
+    public:
+        // ctors
+        using VecBase<T, 3>::VecBase;
+        Vec3(const VecBase<T, 3>& base_ref)
+            : VecBase<T, 3>{ base_ref }
+        {}
+        Vec3(VecBase<T, 3>&& base_ref)
+            : VecBase<T, 3>{ std::move(base_ref) }
+        {}
+        // assignment
+        Vec3<T>& operator=(const VecBase<T, 3>& base_ref) {
+            this->_data = base_ref._data;
+            return *this;
+        }
+        Vec3<T>& operator=(VecBase<T, 3>&& base_ref) {
+            this->_data = std::move(base_ref._data);
+            return *this;
+        }
+
+        constexpr T x() const { return this->_data[0]; }
+        constexpr T y() const { return this->_data[1]; }
+        constexpr T z() const { return this->_data[2]; }
+
+        Vec3<T> cross(const Vec3<T>& rhs) const {
+            return Vec3<T>{
+                y() * rhs.z() - z() * rhs.y(),
+                z() * rhs.x() - x() * rhs.z(),
+                x() * rhs.y() - y() * rhs.x(),
+            };
+        }
+    };
 
 // Vec4
     template<typename T = float> requires std::floating_point<T>
@@ -254,42 +288,6 @@ namespace my_gl_math {
                 z() * rhs.x() - x() * rhs.z(),
                 x() * rhs.y() - y() * rhs.x(),
                 0  // W component remains unchanged
-            };
-        }
-    };
-
-
-// Vec3
-    template<typename T = float> requires std::floating_point<T>
-    class Vec3 : public VecBase<T, 3> {
-    public:
-        // ctors
-        using VecBase<T, 3>::VecBase;
-        Vec3(const VecBase<T, 3>& base_ref)
-            : VecBase<T, 3>{ base_ref }
-        {}
-        Vec3(VecBase<T, 3>&& base_ref)
-            : VecBase<T, 3>{ std::move(base_ref) }
-        {}
-        // assignment
-        Vec3<T>& operator=(const VecBase<T, 3>& base_ref) {
-            this->_data = base_ref._data;
-            return *this;
-        }
-        Vec3<T>& operator=(VecBase<T, 3>&& base_ref) {
-            this->_data = std::move(base_ref._data);
-            return *this;
-        }
-
-        constexpr T x() const { return this->_data[0]; }
-        constexpr T y() const { return this->_data[1]; }
-        constexpr T z() const { return this->_data[2]; }
-
-        Vec3<T> cross(const Vec3<T>& rhs) const {
-            return Vec3<T>{
-                y() * rhs.z() - z() * rhs.y(),
-                z() * rhs.x() - x() * rhs.z(),
-                x() * rhs.y() - y() * rhs.x(),
             };
         }
     };

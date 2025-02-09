@@ -13,13 +13,23 @@ namespace my_gl {
 #define RIGHT_TOP_FAR       .5f, .5f, -.5f
 #define RIGHT_BOT_FAR       .5f, -.5f, -.5f
 
+        // normals
+#define NORMAL_TOP          0.0f, 1.0f, 0.0f
+#define NORMAL_BOTTOM       0.0f, -1.0f, 0.0f
+#define NORMAL_RIGHT        1.0f, 0.0f, 0.0f
+#define NORMAL_LEFT         -1.0f, 0.0f, 0.0f
+#define NORMAL_FORWARD      0.0f, 0.0f, 1.0f
+#define NORMAL_BACKWARD     0.0f, 0.0f, -1.0f
+
         // colors
-#define RED     1.0f, 0.0f, 0.0f, 1.0f
-#define GREEN   0.0f, 1.0f, 0.0f, 1.0f
-#define BLUE    0.0f, 0.0f, 1.0f, 1.0f
-#define ORANGE  1.0f, 0.5f, 0.1f, 1.0f
-#define PURPLE  0.5f, 0.0f, 0.5f, 1.0f
-#define YELLOW  1.0f, 1.0f, 0.0f, 1.0f
+#define WHITE   1.0f, 1.0f, 1.0f
+#define BLACK   0.0f, 0.0f, 0.0f
+#define RED     1.0f, 0.0f, 0.0f
+#define GREEN   0.0f, 1.0f, 0.0f
+#define BLUE    0.0f, 0.0f, 1.0f
+#define ORANGE  1.0f, 0.5f, 0.1f
+#define PURPLE  0.5f, 0.0f, 0.5f
+#define YELLOW  1.0f, 1.0f, 0.0f
 
         // textures
 #define TEX_LEFT_TOP       0.0f, 1.0f
@@ -32,17 +42,17 @@ namespace my_gl {
         std::vector<float> cube_vertices = {
             // POSITIONS
             // front
-            LEFT_TOP_NEAR, LEFT_BOT_NEAR, RIGHT_BOT_NEAR, RIGHT_TOP_NEAR,
+            LEFT_TOP_NEAR,  LEFT_BOT_NEAR,  RIGHT_BOT_NEAR, RIGHT_TOP_NEAR,
             // back
-            LEFT_TOP_FAR, LEFT_BOT_FAR, RIGHT_BOT_FAR, RIGHT_TOP_FAR,
+            LEFT_TOP_FAR,   LEFT_BOT_FAR,   RIGHT_BOT_FAR,  RIGHT_TOP_FAR,
             // right
-            RIGHT_TOP_NEAR, RIGHT_BOT_NEAR, RIGHT_TOP_FAR, RIGHT_BOT_FAR,
+            RIGHT_TOP_NEAR, RIGHT_BOT_NEAR, RIGHT_TOP_FAR,  RIGHT_BOT_FAR,
             // left
-            LEFT_TOP_NEAR, LEFT_BOT_NEAR, LEFT_TOP_FAR, LEFT_BOT_FAR,
+            LEFT_TOP_NEAR,  LEFT_BOT_NEAR,  LEFT_TOP_FAR,   LEFT_BOT_FAR,
             // top
-            LEFT_TOP_NEAR, RIGHT_TOP_NEAR, LEFT_TOP_FAR, RIGHT_TOP_FAR,
+            LEFT_TOP_NEAR,  RIGHT_TOP_NEAR, LEFT_TOP_FAR,   RIGHT_TOP_FAR,
             // bottom
-            LEFT_BOT_NEAR, RIGHT_BOT_NEAR, LEFT_BOT_FAR, RIGHT_BOT_FAR,
+            LEFT_BOT_NEAR,  RIGHT_BOT_NEAR, LEFT_BOT_FAR,   RIGHT_BOT_FAR,
 
             // TEXTURES
             // front
@@ -53,19 +63,21 @@ namespace my_gl {
             TEX_LEFT_TOP, TEX_LEFT_BOT, TEX_RIGHT_TOP, TEX_RIGHT_BOT,
             TEX_LEFT_TOP, TEX_LEFT_BOT, TEX_RIGHT_TOP, TEX_RIGHT_BOT,
 
-            // COLORS
-            // front
-            GREEN, GREEN, GREEN, GREEN,
-            // back
+            // WORLD COLORS
+            GREEN,  GREEN,  GREEN,  GREEN,
             YELLOW, YELLOW, YELLOW, YELLOW,
-            // right
-            BLUE, BLUE, BLUE, BLUE,
-            // left
-            RED, RED, RED, RED,
-            // top
+            BLUE,   BLUE,   BLUE,   BLUE,
+            RED,    RED,    RED,    RED,
             ORANGE, ORANGE, ORANGE, ORANGE,
-            // bottom
             PURPLE, PURPLE, PURPLE, PURPLE,
+
+            // NORMALS
+            NORMAL_FORWARD,     NORMAL_FORWARD,     NORMAL_FORWARD,     NORMAL_FORWARD,
+            NORMAL_BACKWARD,    NORMAL_BACKWARD,    NORMAL_BACKWARD,    NORMAL_BACKWARD,
+            NORMAL_RIGHT,       NORMAL_RIGHT,       NORMAL_RIGHT,       NORMAL_RIGHT,
+            NORMAL_LEFT,        NORMAL_LEFT,        NORMAL_LEFT,        NORMAL_LEFT,
+            NORMAL_TOP,         NORMAL_TOP,         NORMAL_TOP,         NORMAL_TOP,
+            NORMAL_BOTTOM,      NORMAL_BOTTOM,      NORMAL_BOTTOM,      NORMAL_BOTTOM,
         };
 
         std::vector<uint16_t> cube_indeces = {

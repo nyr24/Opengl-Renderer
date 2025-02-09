@@ -48,7 +48,7 @@ namespace my_gl {
                     {
                         my_gl::Animation_type::ROTATE3d,
                         3.0f,
-                        0.0f,
+                        5.0f,
                         { 0.0f, 0.0f, 0.0f },
                         { -90.0f, -45.0f, 0.0f },
                         my_gl::Bezier_curve_type::EASE_IN_OUT,
@@ -73,7 +73,7 @@ namespace my_gl {
                     {
                         my_gl::Animation_type::ROTATE3d,
                         3.0f,
-                        3.0f,
+                        5.0f,
                         { 0.0f, 0.0f, 0.0f },
                         { -90.0f, -45.0f, 0.0f },
                         my_gl::Bezier_curve_type::EASE_IN_OUT,

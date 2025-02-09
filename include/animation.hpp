@@ -142,7 +142,6 @@ namespace my_gl {
             : _anim_type{ anim_type }
             , _start_val{ std::move(start_val) }
             , _end_val{ std::move(end_val) }
-            //, _curr_val{ _start_val }
             , _duration{ duration }
             , _delay{ delay }
             , _loop{ loop }
@@ -168,14 +167,14 @@ namespace my_gl {
 
         // constructor for rotation around single axis
         Animation(
-            Val_type                 start_val,
-            Val_type                 end_val,
             float                    duration,
             float                    delay,
+            Val_type                 start_val,
+            Val_type                 end_val,
             my_gl_math::Global::AXIS axis,
             Bezier_curve_type        bezier_type = LINEAR,
             Loop_type                loop = Loop_type::NONE
-        ) 
+        )
             : _anim_type{ Animation_type::ROTATE }
             , _axis{ axis }
             , _duration{ duration }
@@ -218,12 +217,13 @@ namespace my_gl {
             Duration_sec passed_time{ _curr_time - _start_time };
 
             if (_delay.count() > 0.0f && !_is_delay_passed) {
-                if (passed_time >= _delay) {
+                if (passed_time.count() >= _delay.count()) {
                     _start_time = std::chrono::steady_clock::now();
                     _curr_time = _start_time;
                     _is_delay_passed = true;
                 }
                 else {
+                    std::cout << "delayed, passed time: " << passed_time.count() << '\n';
                     return _mat;
                 }
             }

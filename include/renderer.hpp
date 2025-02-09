@@ -31,14 +31,12 @@ namespace my_gl {
     class VertexArray {
     public:
         VertexArray(
-            std::vector<float>&& vbo_data,
-            std::vector<uint16_t>&& ibo_data,
-            const std::vector<const Program*>& programs
+            meshes::Mesh&& mesh,
+            const Program& program
         );
         VertexArray(
-            const std::vector<float>& vbo_data,
-            const std::vector<uint16_t>& ibo_data,
-            const std::vector<const Program*>& programs
+            const meshes::Mesh& mesh,
+            const Program& program
         );
         VertexArray(
             meshes::Mesh&& mesh,
@@ -63,6 +61,7 @@ namespace my_gl {
 
     private:
         void init(const std::vector<const Program*>& programs);
+        void init(const Program& program);
         void combine_meshes(const std::vector<meshes::Mesh>& meshes);
 
         std::vector<float>              _vbo_data;
@@ -93,9 +92,13 @@ namespace my_gl {
         const Attribute* const get_attrib(std::string_view attrib_name) const;
         const Uniform* const get_uniform(std::string_view unif_name) const;
         void  set_attrib(Attribute& attr);
-        void  set_uniform(Uniform& unif);
-        const std::unordered_map<std::string_view, Attribute>& get_attrs() const; 
-        const std::unordered_map<std::string_view, Uniform>& get_unifs() const; 
+        void  set_uniform_location(Uniform& unif);
+        void  set_uniform_value(std::string_view unif_name, int32_t val) const;
+        void  set_uniform_value(std::string_view unif_name, float val) const;
+        void  set_uniform_value(std::string_view unif_name, float val1, float val2, float val3) const;
+        void  set_uniform_value(std::string_view unif_name, const float* matrix_val) const;
+        const std::unordered_map<std::string_view, Attribute>& get_attrs() const;
+        const std::unordered_map<std::string_view, Uniform>& get_unifs() const;
         void  use() const { glUseProgram(_program_id); }
         void  un_use() const { glUseProgram(0); }
         uint32_t get_id() const { return _program_id; }

@@ -33,7 +33,7 @@ my_gl::Program::Program(
     }
 
     for (my_gl::Uniform& unif : unifs) {
-        this->set_uniform(unif);
+        this->set_uniform_location(unif);
     }
 }
 
@@ -74,13 +74,13 @@ void my_gl::Program::set_attrib(my_gl::Attribute& attr) {
         std::cerr << "attribute name: " << attr.name << " wasn't found for program: " << _program_id << "\nnothing was set\n";
         return;
     }
-    
+
     attr.location = attr_loc;
 
     _attrs[attr.name] = std::move(attr);
 }
 
-void my_gl::Program::set_uniform(my_gl::Uniform& unif) {
+void my_gl::Program::set_uniform_location(my_gl::Uniform& unif) {
     if (_program_id == 0) {
         std::cerr << "program is not initialized, uniform: " << unif.name << " can't be set\n";
         return;
@@ -95,7 +95,51 @@ void my_gl::Program::set_uniform(my_gl::Uniform& unif) {
 
     unif.location = unif_loc;
 
+#ifdef DEBUG
+    std::cout << "uniform " << unif.name << " location is assigned to " << unif_loc << '\n';
+#endif // DEBUG
+
     _unifs[unif.name] = std::move(unif);
+}
+
+void  my_gl::Program::set_uniform_value(std::string_view unif_name, int32_t val) const {
+    use();
+    const Uniform* unif{ get_uniform(unif_name) };
+    if (!unif) {
+        return;
+    }
+    glUniform1i(unif->location, val);
+    un_use();
+}
+
+void my_gl::Program::set_uniform_value(std::string_view unif_name, float val) const {
+    use();
+    const Uniform* unif{ get_uniform(unif_name) };
+    if (!unif) {
+        return;
+    }
+    glUniform1f(unif->location, val);
+    un_use();
+}
+
+void my_gl::Program::set_uniform_value(std::string_view unif_name, float val1, float val2, float val3) const {
+    use();
+    const Uniform* unif{ get_uniform(unif_name) };
+    if (!unif) {
+        return;
+    }
+    glUniform3f(unif->location, val1, val2, val3);
+    un_use();
+}
+
+void my_gl::Program::set_uniform_value(std::string_view unif_name, const float* matrix_val) const {
+    use();
+    const Uniform* unif{ get_uniform(unif_name) };
+    if (!unif) {
+        return;
+    }
+    glUniformMatrix4fv(unif->location, 1, true, matrix_val);
+    un_use();
 }
 
 const std::unordered_map<std::string_view, my_gl::Attribute>& my_gl::Program::get_attrs() const {
@@ -108,25 +152,23 @@ const std::unordered_map<std::string_view, my_gl::Uniform>& my_gl::Program::get_
 
 // VertexArray
 my_gl::VertexArray::VertexArray(
-    std::vector<float>&& vbo_data,
-    std::vector<uint16_t>&& ibo_data,
-    const std::vector<const Program*>& programs
+    meshes::Mesh&& mesh,
+    const Program& program
 )
-    : _vbo_data{ std::move(vbo_data) }
-    , _ibo_data{ std::move(ibo_data) }
+    : _vbo_data{ std::move(mesh.vertices) }
+    , _ibo_data{ std::move(mesh.indices) }
 {
-    init(programs);
+    init(program);
 }
 
 my_gl::VertexArray::VertexArray(
-    const std::vector<float>& vbo_data,
-    const std::vector<uint16_t>& ibo_data,
-    const std::vector<const Program*>& programs
+    const meshes::Mesh& mesh,
+    const Program&      program
 )
-    : _vbo_data{ vbo_data }
-    , _ibo_data{ ibo_data }
+    : _vbo_data{ mesh.vertices }
+    , _ibo_data{ mesh.indices }
 {
-    init(programs);
+    init(program);
 }
 
 my_gl::VertexArray::VertexArray(
@@ -182,6 +224,40 @@ my_gl::VertexArray::~VertexArray() {
     glDeleteBuffers(1, &_ibo_id);
 }
 
+void my_gl::VertexArray::init(const Program& program) {
+    // vao
+    glCreateVertexArrays(1, &_vao_id);
+    glBindVertexArray(_vao_id);
+
+    // vertex data
+    glCreateBuffers(1, &_vbo_id);
+    glBindBuffer(GL_ARRAY_BUFFER, _vbo_id);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * _vbo_data.size(), _vbo_data.data(), GL_STATIC_DRAW);
+
+    // indices
+    glCreateBuffers(1, &_ibo_id);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _ibo_id);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(uint16_t) * _ibo_data.size(), _ibo_data.data(), GL_STATIC_DRAW);
+
+    const auto& attrs{ program.get_attrs() };
+
+    for (auto it{ attrs.begin() }; it != attrs.end(); ++it) {
+        const my_gl::Attribute& attr_ref{ it->second };
+
+        glEnableVertexAttribArray(attr_ref.location);
+        glVertexAttribPointer(attr_ref.location, attr_ref.count, attr_ref.gl_type, false, attr_ref.byte_stride, reinterpret_cast<void*>(attr_ref.byte_offset));
+
+#ifdef DEBUG
+        printf("info: attribute '%s' successfully initialized, location: '%d'\n", attr_ref.name, attr_ref.location);
+#endif
+    }
+
+    // unbind
+    glBindVertexArray(0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+}
+
 void my_gl::VertexArray::init(const std::vector<const Program*>& programs) {
     // vao
     glCreateVertexArrays(1, &_vao_id);
@@ -206,7 +282,6 @@ void my_gl::VertexArray::init(const std::vector<const Program*>& programs) {
             glEnableVertexAttribArray(attr_ref.location);
             glVertexAttribPointer(attr_ref.location, attr_ref.count, attr_ref.gl_type, false, attr_ref.byte_stride, reinterpret_cast<void*>(attr_ref.byte_offset));
 
-            // TODO: add a macro wrapper for debug messages
 #ifdef DEBUG
             printf("info: attribute '%s' successfully initialized, location: '%d'\n", attr_ref.name, attr_ref.location);
 #endif

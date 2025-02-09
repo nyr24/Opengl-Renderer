@@ -66,13 +66,13 @@ my_gl::GeometryObjectPrimitive::GeometryObjectPrimitive(
 my_gl_math::Matrix44<float> my_gl::GeometryObjectPrimitive::get_local_mat() const {
     auto result_mat{ my_gl_math::Matrix44<float>::identity() };
 
-    if (_transforms.size() > 0) {
+    if (_transforms.size()) {
         for (const auto& transform : _transforms) {
             result_mat *= transform;
         }
     }
 
-    if (_animations.size() > 0) {
+    if (_animations.size()) {
         for (auto& curr_anim : _animations) {
             result_mat *= curr_anim.update();
         }
@@ -82,7 +82,7 @@ my_gl_math::Matrix44<float> my_gl::GeometryObjectPrimitive::get_local_mat() cons
 }
 
 void my_gl::GeometryObjectPrimitive::update_anims_time(Duration_sec frame_time) const {
-    if (_animations.size() > 0) {
+    if (_animations.size()) {
         for (auto& anim : _animations) {
             anim.update_time(frame_time);
         }
@@ -90,7 +90,7 @@ void my_gl::GeometryObjectPrimitive::update_anims_time(Duration_sec frame_time) 
 }
 
 void my_gl::GeometryObjectPrimitive::bind_state() const {
-    if (_textures.size() > 0) {
+    if (_textures.size()) {
         for (const auto* texture : _textures) {
             texture->bind();
         }
@@ -100,7 +100,7 @@ void my_gl::GeometryObjectPrimitive::bind_state() const {
 }
 
 void my_gl::GeometryObjectPrimitive::un_bind_state() const {
-    if (_textures.size() > 0) {
+    if (_textures.size()) {
         for (const auto* texture : _textures) {
             texture->un_bind();
         }
@@ -121,12 +121,13 @@ void my_gl::GeometryObjectPrimitive::draw() const {
 void my_gl::GeometryObjectPrimitive::render(const my_gl_math::Matrix44<float>& world_matrix, float time_0to1) const {
     bind_state();
 
-    if (const Uniform* u_lerp = get_program().get_uniform("u_lerp")) {
-        glUniform1f(u_lerp->location, time_0to1);
-    }
+    const Program& shader{ get_program() };
+
     const auto local_mat{ get_local_mat() };
     const auto mvp_mat{ world_matrix * local_mat };
-    glUniformMatrix4fv(get_program().get_uniform("u_mvp_mat")->location, 1, true, mvp_mat.data());
+    shader.set_uniform_value("u_model", local_mat.data());
+    shader.set_uniform_value("u_mvp", mvp_mat.data());
+    shader.set_uniform_value("u_lerp", time_0to1);
 
     draw();
     un_bind_state();

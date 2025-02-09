@@ -7,6 +7,7 @@ namespace my_gl {
     Camera camera{};
 
     namespace globals {
-        float delta_time{0.5f};
+        float                       delta_time{0.5f};
+        my_gl_math::Vec3<float>     light_pos{1.0f, 0.9f, 0.85f};
     }
 }
