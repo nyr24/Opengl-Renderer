@@ -1,5 +1,6 @@
 #pragma once
 #include <array>
+#include <concepts>
 #include <cstdlib>
 #include <utility>
 #include <iostream>
@@ -56,6 +57,26 @@ namespace my_gl_math {
             return _data[index];
         }
 
+        const T& at(int index) const {
+            assert((index >= 0 && index < (ROWS * COLS)) && "invalid indexing");
+            return _data[index];
+        }
+
+        T& at(int index) {
+            assert((index >= 0 && index < (ROWS * COLS)) && "invalid indexing");
+            return _data[index];
+        }
+
+        T& operator[](int index) {
+            assert((index >= 0 && index < (ROWS * COLS)) && "invalid indexing");
+            return _data[index];
+        }
+
+        const T& operator[](int index) const {
+            assert((index >= 0 && index < (ROWS * COLS)) && "invalid indexing");
+            return _data[index];
+        }
+
         MatrixBase<T, ROWS, COLS>& transpose() {
             for (int i = 0; i < ROWS; ++i) {
                 for (int j = i; j < COLS; ++j) {
@@ -64,13 +85,13 @@ namespace my_gl_math {
                     this->at(j, i) = temp;
                 }
             }
-            
+ 
             return *this;
         }
 
         friend MatrixBase<T, ROWS, COLS> operator*(const MatrixBase<T, ROWS, COLS>& lhs, const MatrixBase<T, ROWS, COLS>& rhs) {
             MatrixBase<T, ROWS, COLS> res;
-            
+
             for (int r = 0; r < ROWS; ++r) {
                 for (int c = 0; c < COLS; ++c) {
                     res.at(r, c) = 0;
@@ -138,7 +159,7 @@ namespace my_gl_math {
         MatrixBase<T, ROWS, COLS>& fill_col(const VecBase<T, N>& fill_with_vec, uint16_t col_index) {
             static_assert(N <= COLS && "incompatible vector to fill with");
             if (col_index >= COLS) {
-                assert(true && "col_index parameter has a larger value than maximum count of columns of the matrix");
+                assert(false && "col_index parameter has a larger value than maximum count of columns of the matrix");
             #ifdef NDEBUG
                 std::exit(EXIT_FAILURE);
             #endif
@@ -155,7 +176,7 @@ namespace my_gl_math {
         MatrixBase<T, ROWS, COLS>& fill_row(VecBase<T, N>&& fill_with_vec, uint16_t row_index) {
             static_assert(N <= ROWS && "incompatible vector to fill with");
             if (row_index >= ROWS) {
-                assert(true && "row_index parameter has a larger value than maximum count of rows of the matrix");
+                assert(false && "row_index parameter has a larger value than maximum count of rows of the matrix");
             #ifdef NDEBUG
                 std::exit(EXIT_FAILURE);
             #endif
@@ -172,7 +193,7 @@ namespace my_gl_math {
         MatrixBase<T, ROWS, COLS>& fill_col(VecBase<T, N>&& fill_with_vec, uint16_t col_index) {
             static_assert(N <= COLS && "incompatible vector to fill with");
             if (col_index >= COLS) {
-                assert(true && "col_index parameter has a larger value than maximum count of columns of the matrix");
+                assert(false && "col_index parameter has a larger value than maximum count of columns of the matrix");
             #ifdef NDEBUG
                 std::exit(EXIT_FAILURE);
             #endif
@@ -189,8 +210,91 @@ namespace my_gl_math {
         static constexpr uint16_t rows() { return ROWS; }
         static constexpr uint16_t cols() { return COLS; }
 
-        // same stuff as with VecBase type
         std::array<T, ROWS * COLS> _data{};
+
+    protected:
+        static constexpr float EPSILON{0.00001f};
+
+        T get_cofactor(T m0, T m1, T m2,
+                        T m3, T m4, T m5,
+                        T m6, T m7, T m8) const
+        {
+            return m0 * (m4 * m8 - m5 * m7) -
+                m1 * (m3 * m8 - m5 * m6) +
+                m2 * (m3 * m7 - m4 * m6);
+        }
+
+    };
+
+// Matrix 3x3
+    template<std::floating_point T>
+    class Matrix33 : public MatrixBase<T, 3, 3> {
+    public:
+        using MatrixBase<T, 3, 3>::MatrixBase;
+        // ctor derived from base
+        Matrix33(const MatrixBase<T, 3, 3>& base)
+            : MatrixBase<T, 3, 3>{ base }
+        {}
+        Matrix33(MatrixBase<T, 3, 3>&& base)
+            : MatrixBase<T, 3, 3>{ std::move(base) }
+        {}
+        // assigment
+        Matrix33<T>& operator=(const MatrixBase<T, 3, 3>& base_ref) {
+            this->_data = base_ref._data;
+            return *this;
+        }
+        Matrix33<T>& operator=(MatrixBase<T, 3, 3>&& base_ref) {
+            this->_data = std::move(base_ref._data);
+            return *this;
+        }
+
+        static constexpr Matrix33<T> identity() {
+            Matrix33<T> res;
+
+            for (int i = 0; i < 4; ++i) {
+                res.at(i, i) = static_cast<T>(1.0);
+            }
+
+            return res;
+        }
+
+        Matrix33<T>& invert()
+        {
+            T determinant, invDeterminant;
+            T tmp[9];
+
+            tmp[0] = this->at(4) * this->at(8) - this->at(5) * this->at(7);
+            tmp[1] = this->at(7) * this->at(2) - this->at(8) * this->at(1);
+            tmp[2] = this->at(1) * this->at(5) - this->at(2) * this->at(4);
+            tmp[3] = this->at(5) * this->at(6) - this->at(3) * this->at(8);
+            tmp[4] = this->at(0) * this->at(8) - this->at(2) * this->at(6);
+            tmp[5] = this->at(2) * this->at(3) - this->at(0) * this->at(5);
+            tmp[6] = this->at(3) * this->at(7) - this->at(4) * this->at(6);
+            tmp[7] = this->at(6) * this->at(1) - this->at(7) * this->at(0);
+            tmp[8] = this->at(0) * this->at(4) - this->at(1) * this->at(3);
+
+            // check determinant if it is 0
+            determinant = this->at(0) * tmp[0] + this->at(1) * tmp[3] + this->at(2) * tmp[6];
+            if(std::abs(determinant) <= this->EPSILON)
+            {
+                return this->identity(); // cannot inverse, make it idenety matrix
+            }
+
+            // divide by the determinant
+            invDeterminant = static_cast<T>(1.0) / determinant;
+            this->at(0) = invDeterminant * tmp[0];
+            this->at(1) = invDeterminant * tmp[1];
+            this->at(2) = invDeterminant * tmp[2];
+            this->at(3) = invDeterminant * tmp[3];
+            this->at(4) = invDeterminant * tmp[4];
+            this->at(5) = invDeterminant * tmp[5];
+            this->at(6) = invDeterminant * tmp[6];
+            this->at(7) = invDeterminant * tmp[7];
+            this->at(8) = invDeterminant * tmp[8];
+
+            return *this;
+        }
+
     };
 
 
@@ -198,7 +302,7 @@ namespace my_gl_math {
     template<std::floating_point T>
     class Matrix44 : public MatrixBase<T, 4, 4> {
     public:
-        using MatrixBase<T, 4 ,4>::MatrixBase;
+        using MatrixBase<T, 4, 4>::MatrixBase;
         // ctor derived from base
         Matrix44(const MatrixBase<T, 4, 4>& base)
             : MatrixBase<T, 4, 4>{ base }
@@ -256,7 +360,7 @@ namespace my_gl_math {
             return res;
         }
 
-    // symmetric
+        // symmetric
         static Matrix44<T> perspective_fov(T fov_y_deg, T aspect, T zNear, T zFar) {
             const T fov_y_rad{ my_gl_math::Global::degToRad(fov_y_deg) };
             const T top_to_near{ std::tan(fov_y_rad / 2) };
@@ -304,6 +408,120 @@ namespace my_gl_math {
         }
 
     // non-static
+        T get_determinant() const
+        {
+            auto& m{*this};
+            return  m[0] * this->get_cofactor(m[5],m[6],m[7],m[9],m[10],m[11],m[13],m[14],m[15]) -
+                m[1] * this->get_cofactor(m[4],m[6],m[7],m[8],m[10],m[11],m[12],m[14],m[15]) +
+                m[2] * this->get_cofactor(m[4],m[5],m[7],m[8],m[9],m[11],m[12],m[13],m[15]) -
+                m[3] * this->get_cofactor(m[4],m[5],m[6],m[8],m[9],m[10],m[12],m[13],m[14]);
+        }
+
+        Matrix44<T>& invert()
+        {
+            auto& m{*this};
+            // If the 4th row is [0,0,0,1] then it is affine matrix and
+            // it has no projective transformation.
+            if(m[3] == 0 && m[7] == 0 && m[11] == 0 && m[15] == 1)
+                this->invert_affine();
+            else
+            {
+                this->invert_general();
+                /*@@ invertProjective() is not optimized (slower than generic one)
+                if(fabs(m[0]*m[5] - m[1]*m[4]) > EPSILON)
+                    this->invertProjective();   // inverse using matrix partition
+                else
+                    this->invertGeneral();      // generalized inverse
+                */
+            }
+
+            return *this;
+        }
+
+
+        Matrix44<T>& invert_affine()
+        {
+            auto& m{*this};
+            // R^-1
+            Matrix33<T> r{ m[0],m[1],m[2],m[4],m[5],m[6],m[8],m[9],m[1] };
+            r.invert();
+            m[0] = r[0];  m[1] = r[1];  m[2] = r[2];
+            m[4] = r[3];  m[5] = r[4];  m[6] = r[5];
+            m[8] = r[6];  m[9] = r[7];  m[10]= r[8];
+
+            // -R^-1 * T
+            float x = m[12];
+            float y = m[13];
+            float z = m[14];
+            m[12] = -(r[0] * x + r[3] * y + r[6] * z);
+            m[13] = -(r[1] * x + r[4] * y + r[7] * z);
+            m[14] = -(r[2] * x + r[5] * y + r[8] * z);
+
+            // last row should be unchanged (0,0,0,1)
+            //m[3] = m[7] = m[11] = 0.0f;
+            //m[15] = 1.0f;
+
+            return m;
+        }
+
+        Matrix44<T>& invert_general()
+        {
+            auto& m{*this};
+            // get cofactors of minor matrices
+            T cofactor0 = this->get_cofactor(m[5],m[6],m[7], m[9],m[10],m[11], m[13],m[14],m[15]);
+            T cofactor1 = this->get_cofactor(m[4],m[6],m[7], m[8],m[10],m[11], m[12],m[14],m[15]);
+            T cofactor2 = this->get_cofactor(m[4],m[5],m[7], m[8],m[9], m[11], m[12],m[13],m[15]);
+            T cofactor3 = this->get_cofactor(m[4],m[5],m[6], m[8],m[9], m[10], m[12],m[13],m[14]);
+
+            // get determinant
+            T determinant = m[0] * cofactor0 - m[1] * cofactor1 + m[2] * cofactor2 - m[3] * cofactor3;
+            if(std::abs(determinant) <= this->EPSILON)
+            {
+                return identity();
+            }
+
+            // get rest of cofactors for adj(M)
+            T cofactor4 = this->get_cofactor(m[1],m[2],m[3], m[9],m[10],m[11], m[13],m[14],m[15]);
+            T cofactor5 = this->get_cofactor(m[0],m[2],m[3], m[8],m[10],m[11], m[12],m[14],m[15]);
+            T cofactor6 = this->get_cofactor(m[0],m[1],m[3], m[8],m[9], m[11], m[12],m[13],m[15]);
+            T cofactor7 = this->get_cofactor(m[0],m[1],m[2], m[8],m[9], m[10], m[12],m[13],m[14]);
+
+            T cofactor8 = this->get_cofactor(m[1],m[2],m[3], m[5],m[6], m[7],  m[13],m[14],m[15]);
+            T cofactor9 = this->get_cofactor(m[0],m[2],m[3], m[4],m[6], m[7],  m[12],m[14],m[15]);
+            T cofactor10= this->get_cofactor(m[0],m[1],m[3], m[4],m[5], m[7],  m[12],m[13],m[15]);
+            T cofactor11= this->get_cofactor(m[0],m[1],m[2], m[4],m[5], m[6],  m[12],m[13],m[14]);
+
+            T cofactor12= this->get_cofactor(m[1],m[2],m[3], m[5],m[6], m[7],  m[9], m[10],m[11]);
+            T cofactor13= this->get_cofactor(m[0],m[2],m[3], m[4],m[6], m[7],  m[8], m[10],m[11]);
+            T cofactor14= this->get_cofactor(m[0],m[1],m[3], m[4],m[5], m[7],  m[8], m[9], m[11]);
+            T cofactor15= this->get_cofactor(m[0],m[1],m[2], m[4],m[5], m[6],  m[8], m[9], m[10]);
+
+            // build inverse matrix = adj(M) / det(M)
+            // adjugate of M is the transpose of the cofactor matrix of M
+            T invDeterminant = 1.0f / determinant;
+            m[0] =  invDeterminant * cofactor0;
+            m[1] = -invDeterminant * cofactor4;
+            m[2] =  invDeterminant * cofactor8;
+            m[3] = -invDeterminant * cofactor12;
+
+            m[4] = -invDeterminant * cofactor1;
+            m[5] =  invDeterminant * cofactor5;
+            m[6] = -invDeterminant * cofactor9;
+            m[7] =  invDeterminant * cofactor13;
+
+            m[8] =  invDeterminant * cofactor2;
+            m[9] = -invDeterminant * cofactor6;
+            m[10]=  invDeterminant * cofactor10;
+            m[11]= -invDeterminant * cofactor14;
+
+            m[12]= -invDeterminant * cofactor3;
+            m[13]=  invDeterminant * cofactor7;
+            m[14]= -invDeterminant * cofactor11;
+            m[15]=  invDeterminant * cofactor15;
+
+            return m;
+        }
+
         Matrix44<T>& scale(const Vec3<T>& scaling_vec) {
             this->at(0, 0) = scaling_vec.x();
             this->at(1, 1) = scaling_vec.y();
@@ -382,4 +600,4 @@ namespace my_gl_math {
             return *this;
         }
     };
-} 
+}
