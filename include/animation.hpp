@@ -164,6 +164,7 @@ namespace my_gl {
                 ._delay{ Duration_sec{delay} },
                 ._anim_type = math::TransformationType::TRANSLATION,
                 ._loop = loop,
+                ._is_delay_passed = delay == 0.0f
             };
         }
 
@@ -185,6 +186,7 @@ namespace my_gl {
                 ._delay{ Duration_sec{delay} },
                 ._anim_type = math::TransformationType::SCALING,
                 ._loop = loop,
+                ._is_delay_passed = delay == 0.0f
             };
         }
 
@@ -206,6 +208,7 @@ namespace my_gl {
                 ._delay{ Duration_sec{delay} },
                 ._anim_type = math::TransformationType::ROTATION3d,
                 ._loop = loop,
+                ._is_delay_passed = delay == 0.0f
             };
         }
 
@@ -229,6 +232,7 @@ namespace my_gl {
                 ._axis = axis,
                 ._anim_type = math::TransformationType::ROTATION3d,
                 ._loop = loop,
+                ._is_delay_passed = delay == 0.0f
             };
         }
 
@@ -343,7 +347,7 @@ namespace my_gl {
 
             // prevent case where delay time can be more than duration
             // to not set erroneous flags
-            if (!_is_delay_passed) {
+            if (_delay.count() > 0.0f && !_is_delay_passed) {
                 return;
             }
 

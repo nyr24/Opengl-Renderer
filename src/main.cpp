@@ -139,7 +139,7 @@ int main() {
     my_gl::math::Vec3<float> light_pos_view_coords{ view_mat * my_gl::math::Vec4<float>{ my_gl::globals::light_pos } };
 
     my_gl::Renderer renderer{
-        std::vector<my_gl::GeometryObjectComplex>{},
+        std::vector<my_gl::GeometryObjectComplex>{ my_gl::create_cube_creature(world_shader, vertex_arr_world) },
         std::move(primitives),
         std::move(view_mat),
         std::move(proj_mat),

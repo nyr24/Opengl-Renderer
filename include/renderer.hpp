@@ -114,8 +114,8 @@ namespace my_gl {
         Renderer(
             std::vector<my_gl::GeometryObjectComplex>&&         complex_objs,
             std::vector<my_gl::GeometryObjectPrimitive>&&       primitives,
-            math::Matrix44<float>&&                       view_mat,
-            math::Matrix44<float>&&                       proj_mat
+            math::Matrix44<float>&&                             view_mat,
+            math::Matrix44<float>&&                             proj_mat
         );
 
         void render(float time_0to1);
@@ -124,7 +124,6 @@ namespace my_gl {
         void set_proj_mat(math::Matrix44<float>&& new_proj_mat);
         void set_start_time(Timepoint_sec start_time);
         Duration_sec get_curr_rendering_duration() const;
-        bool get_is_started() const { return _is_started; }
 
     private:
         std::vector<my_gl::GeometryObjectComplex>           _complex_objs;
@@ -133,7 +132,5 @@ namespace my_gl {
         math::Matrix44<float>                               _proj_mat;
         Timepoint_sec                                       _rendering_time_curr;
         Timepoint_sec                                       _rendering_time_start;
-        // move to render loop, local variable
-        bool                                                _is_started{false};
     };
 }
