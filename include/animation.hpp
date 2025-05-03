@@ -4,6 +4,8 @@
 #include <cassert>
 #include <cmath>
 #include <chrono>
+#include <variant>
+#include "math.hpp"
 #include "matrix.hpp"
 #include "sharedTypes.hpp"
 #include "vec.hpp"
@@ -12,13 +14,6 @@
 #endif
 
 namespace my_gl {
-    enum Animation_type {
-        TRANSLATE,
-        ROTATE,
-        ROTATE3d,
-        SCALE
-    };
-
     enum Bezier_curve_type {
         LINEAR,
         EASE_IN,
@@ -33,14 +28,14 @@ namespace my_gl {
         INVERT
     };
 
-    //template<std::floating_point Val_type>
+    //template<std::floating_point T>
     struct Bezier_curve_point_values {
-        my_gl_math::Vec4<float> x_vals;
-        my_gl_math::Vec4<float> y_vals;
+        math::Vec4<float> x_vals;
+        math::Vec4<float> y_vals;
     };
 
     // for easier array initalization
-    // template<std::floating_point Val_type = float>
+    // template<std::floating_point T = float>
     using Points = Bezier_curve_point_values;
 
     const std::array<Points, CURVE_COUNT> predefined_bezier_values = {
@@ -70,16 +65,16 @@ namespace my_gl {
             const Points&       init_values,
             Bezier_curve_type   type
         )
-            : _points{ init_values }
-            , _mat{ my_gl_math::Matrix44<float>::bezier_cubic_mat() }
+            : _mat{ math::Matrix44<float>::bezier_cubic_mat() }
+            , _points{ init_values }
             , _type{ type }
         {}
         Bezier_curve(
-            Points&&         init_values,
+            Points&&            init_values,
             Bezier_curve_type   type
         )
-            : _points{ std::move(init_values) }
-            , _mat{ my_gl_math::Matrix44<float>::bezier_cubic_mat() }
+            : _mat{ math::Matrix44<float>::bezier_cubic_mat() }
+            , _points{ std::move(init_values) }
             , _type{ type }
         {}
         Bezier_curve(const Bezier_curve<T>& rhs) = default;
@@ -91,19 +86,19 @@ namespace my_gl {
         // get current time from curve
         // maps linear 0 to 1 range to bezier curve 0 to 1 range
         T update(T time_from_0to1) const {
-            my_gl_math::Vec4<T> mon_basis_cubic{
-                my_gl_math::Global::monomial_basis_cube(time_from_0to1) 
+            math::Vec4<T> mon_basis_cubic{
+                math::Global::monomial_basis_cube(time_from_0to1) 
             };
 
-            my_gl_math::Vec4<T> coefs_for_points{ _mat * mon_basis_cubic };
+            math::Vec4<T> coefs_for_points{ _mat * mon_basis_cubic };
 
-            my_gl_math::VecBase<T, 2> curr_val = {
+            math::VecBase<T, 2> curr_val = {
                 _points.x_vals.dot(coefs_for_points),
                 _points.y_vals.dot(coefs_for_points)
             };
 
             // current distance between current and end point of the curve
-            my_gl_math::VecBase<T, 2> curr_distance = { curr_val - _vec_end };
+            math::VecBase<T, 2> curr_distance = { curr_val - _vec_end };
 
             // getting 1 at the end, and 0 at the start
             // signifying animation duration progress
@@ -114,96 +109,154 @@ namespace my_gl {
         Bezier_curve_type get_type() const { return _type; }
 
     private:
-        my_gl_math::Matrix44<T>                         _mat;
+        math::Matrix44<T>                               _mat;
         // x and y values of points a stored inside separate vectors to efficiently perform math operations
         Points                                          _points{ predefined_bezier_values[LINEAR] };
         Bezier_curve_type                               _type{ LINEAR };
         // utility
-        static inline const my_gl_math::VecBase<T, 2>   _vec_end{ T(1.0), T(1.0) };
+        static inline const math::VecBase<T, 2>         _vec_end{ T(1.0), T(1.0) };
         static inline const T                           _max_distance{ _vec_end.length() };
         static inline const T                           _unit_to_max_ratio{ T(1.0) / _max_distance };
     };
 
+    template<std::floating_point T>
+    struct AnimValue {
+        std::variant<math::Vec3<T>, math::VecBase<T, 2>, T> variant;
 
-    template<std::floating_point Val_type>
-    class Animation {
-    public:
-        // main ctor
-        // only supports predefined bezier values, dependent on passed 'bezier_type' 
-        Animation(
-            Animation_type                  anim_type,
-            float                           duration,
-            float                           delay,
-            my_gl_math::Vec3<Val_type>&&    start_val,
-            my_gl_math::Vec3<Val_type>&&    end_val,
-            Bezier_curve_type               bezier_type = LINEAR,
-            Loop_type                       loop = Loop_type::NONE
-        )
-            : _anim_type{ anim_type }
-            , _start_val{ std::move(start_val) }
-            , _end_val{ std::move(end_val) }
-            , _duration{ duration }
-            , _delay{ delay }
-            , _loop{ loop }
-        {
-
-            switch (anim_type) {
-            case Animation_type::TRANSLATE:
-                _mat = my_gl_math::Matrix44<Val_type>::translation(_start_val);
-                break;
-            case Animation_type::SCALE:
-                _mat = my_gl_math::Matrix44<Val_type>::scaling(_start_val);
-                break;
-            case Animation_type::ROTATE3d:
-                _mat = my_gl_math::Matrix44<Val_type>::rotation3d(_start_val);
-                break;
-            case Animation_type::ROTATE:
-                assert(false && "Can't use this ctor for rotate type animation"); 
-                break;
-            }
-
-            set_bezier_type(bezier_type);
+        template<typename SetVal>
+        void set(SetVal&& value) {
+            static_assert(sizeof(SetVal) == sizeof(math::Vec3<T>)
+                    || sizeof(SetVal) == sizeof(math::VecBase<T, 2>)
+                    || sizeof(SetVal) == sizeof(T), "Not a valid type to set");
+            variant = std::move(value);
         }
 
-        // constructor for rotation around single axis
-        Animation(
-            float                    duration,
-            float                    delay,
-            Val_type                 start_val,
-            Val_type                 end_val,
-            my_gl_math::Global::AXIS axis,
-            Bezier_curve_type        bezier_type = LINEAR,
-            Loop_type                loop = Loop_type::NONE
-        )
-            : _anim_type{ Animation_type::ROTATE }
-            , _axis{ axis }
-            , _duration{ duration }
-            , _delay{ delay }
-            , _loop{ loop }
-        {
-            switch (_axis) {
-            case my_gl_math::Global::X:
-                _start_val[0] = start_val;
-                _end_val[0] = end_val;
-                _mat = my_gl_math::Matrix44<Val_type>::rotation(_start_val.x(), _axis);
-                break;
-            case my_gl_math::Global::Y:
-                _start_val[1] = start_val;
-                _end_val[1] = end_val;
-                _mat = my_gl_math::Matrix44<Val_type>::rotation(_start_val.y(), _axis);
-                break;
-            case my_gl_math::Global::Z:
-                _start_val[2] = start_val;
-                _end_val[2] = end_val;
-                _mat = my_gl_math::Matrix44<Val_type>::rotation(_start_val.z(), _axis);
-                break;
-            }
+        const math::Vec3<T>* get_vec3() const {
+            return std::get_if<math::Vec3<T>>(&variant);
+        }
 
-            set_bezier_type(bezier_type);
+        const math::VecBase<T, 2u>* get_vec2() const {
+            return std::get_if<math::VecBase<T, 2>>(&variant);
+        }
+
+        const T* get_scalar() const {
+            return std::get_if<T>(&variant);
+        }
+    };
+
+    template<std::floating_point T>
+    struct Animation {
+        static Animation<T> translation(
+            float               duration,
+            float               delay,
+            math::Vec3<T>&&     start_val,
+            math::Vec3<T>&&     end_val,
+            Bezier_curve_type   bezier_type = LINEAR,
+            Loop_type           loop = Loop_type::NONE
+        )
+        {
+            return Animation<T>{
+                ._bezier_curve{ Bezier_curve<T>{ predefined_bezier_values[bezier_type], bezier_type }},
+                ._mat{ math::Matrix44<T>::translation(start_val) },
+                ._start_val{ start_val },
+                ._end_val{ end_val },
+                ._duration{ Duration_sec{duration} },
+                ._delay{ Duration_sec{delay} },
+                ._anim_type = math::TransformationType::TRANSLATION,
+                ._loop = loop,
+            };
+        }
+
+        static Animation<T> scaling(
+            float               duration,
+            float               delay,
+            math::Vec3<T>&&     start_val,
+            math::Vec3<T>&&     end_val,
+            Bezier_curve_type   bezier_type = LINEAR,
+            Loop_type           loop = Loop_type::NONE
+        )
+        {
+            return Animation<T>{
+                ._bezier_curve{ Bezier_curve<T>{ predefined_bezier_values[bezier_type], bezier_type }},
+                ._mat{ math::Matrix44<T>::scaling(start_val) },
+                ._start_val{ start_val },
+                ._end_val{ end_val },
+                ._duration{ Duration_sec{duration} },
+                ._delay{ Duration_sec{delay} },
+                ._anim_type = math::TransformationType::SCALING,
+                ._loop = loop,
+            };
+        }
+
+        static Animation<T> rotation3d(
+            float               duration,
+            float               delay,
+            math::Vec3<T>&&     start_val,
+            math::Vec3<T>&&     end_val,
+            Bezier_curve_type   bezier_type = LINEAR,
+            Loop_type           loop = Loop_type::NONE
+        )
+        {
+            return Animation<T>{
+                ._bezier_curve{ Bezier_curve<T>{ predefined_bezier_values[bezier_type], bezier_type }},
+                ._mat{ math::Matrix44<T>::rotation3d(start_val) },
+                ._start_val{ start_val },
+                ._end_val{ end_val },
+                ._duration{ Duration_sec{duration} },
+                ._delay{ Duration_sec{delay} },
+                ._anim_type = math::TransformationType::ROTATION3d,
+                ._loop = loop,
+            };
+        }
+
+        static Animation<T> rotation_single_axis(
+            float               duration,
+            float               delay,
+            T                   start_val,
+            T                   end_val,
+            math::Global::AXIS  axis,
+            Bezier_curve_type   bezier_type = LINEAR,
+            Loop_type           loop = Loop_type::NONE
+        )
+        {
+            return Animation<T>{
+                ._bezier_curve{ Bezier_curve<T>{ predefined_bezier_values[bezier_type], bezier_type }},
+                ._mat{ math::Matrix44<T>::rotation(start_val, axis) },
+                ._start_val{ start_val },
+                ._end_val{ end_val },
+                ._duration{ Duration_sec{duration} },
+                ._delay{ Duration_sec{delay} },
+                ._axis = axis,
+                ._anim_type = math::TransformationType::ROTATION3d,
+                ._loop = loop,
+            };
+        }
+
+        static Animation<T> shear(
+            float                   duration,
+            float                   delay,
+            math::VecBase<T, 2u>    start_val,
+            math::VecBase<T, 2u>    end_val,
+            math::Global::AXIS      axis,
+            Bezier_curve_type       bezier_type = LINEAR,
+            Loop_type               loop = Loop_type::NONE
+        )
+        {
+            return Animation<T>{
+                ._bezier_curve{ Bezier_curve<T>{ predefined_bezier_values[bezier_type], bezier_type }},
+                ._mat{ math::Matrix44<T>::shearing(start_val, axis) },
+                ._start_val{ start_val },
+                ._end_val{ end_val },
+                ._duration{ Duration_sec{duration} },
+                ._delay{ Duration_sec{delay} },
+                ._axis = axis,
+                ._anim_type = math::TransformationType::SHEAR,
+                ._loop = loop,
+            };
         }
 
         // updates inner matrix based on current time & interpolated value & choosen bezier curve type
-        my_gl_math::Matrix44<Val_type>& update() {
+        math::Matrix44<T>& update() {
             if (_loop == Loop_type::NONE && _is_ended) {
                 return _mat;
             }
@@ -233,12 +286,51 @@ namespace my_gl {
                 linear_0to1 = _bezier_curve.update(linear_0to1);
             }
 
-            auto _curr_val{
-                my_gl_math::Global::lerp(_start_val, _end_val, linear_0to1)
-            };
-
-            update_matrix(_curr_val);
-            return _mat;
+            switch (this->_anim_type) {
+                case math::TransformationType::TRANSLATION: {
+                    const math::Vec3<T>* start_unwrapped = _start_val.get_vec3();
+                    const math::Vec3<T>* end_unwrapped = _end_val.get_vec3();
+                    assert(start_unwrapped && end_unwrapped && "Vec3 expected from unwrapping");
+                    math::Vec3<T> lerp_val = math::Global::lerp(*start_unwrapped, *end_unwrapped, linear_0to1);
+                    _mat.translate(lerp_val);
+                    return _mat;
+                } break;
+                case math::TransformationType::SCALING: {
+                    const math::Vec3<T>* start_unwrapped = _start_val.get_vec3();
+                    const math::Vec3<T>* end_unwrapped = _end_val.get_vec3();
+                    assert(start_unwrapped && end_unwrapped && "Vec3 expected from unwrapping");
+                    math::Vec3<T> lerp_val = math::Global::lerp(*start_unwrapped, *end_unwrapped, linear_0to1);
+                    _mat.scale(lerp_val);
+                    return _mat;
+                } break;
+                case math::TransformationType::ROTATION3d: {
+                    const math::Vec3<T>* start_unwrapped = _start_val.get_vec3();
+                    const math::Vec3<T>* end_unwrapped = _end_val.get_vec3();
+                    assert(start_unwrapped && end_unwrapped && "Vec3 expected from unwrapping");
+                    math::Vec3<T> lerp_val = math::Global::lerp(*start_unwrapped, *end_unwrapped, linear_0to1);
+                    _mat.rotate3d(lerp_val);
+                    return _mat;
+                } break;
+                case math::TransformationType::ROTATION: {
+                    const T* start_unwrapped = _start_val.get_scalar();
+                    const T* end_unwrapped = _end_val.get_scalar();
+                    assert(start_unwrapped && end_unwrapped && "Scalar expected from unwrapping");
+                    T lerp_val = math::Global::lerp(*start_unwrapped, *end_unwrapped, linear_0to1);
+                    _mat.rotate(lerp_val, _axis);
+                    return _mat;
+                } break;
+                case math::TransformationType::SHEAR: {
+                    const math::VecBase<T, 2u>* start_unwrapped = _start_val.get_vec2();
+                    const math::VecBase<T, 2u>* end_unwrapped = _end_val.get_vec2();
+                    assert(start_unwrapped && end_unwrapped && "Vec2 expected from unwrapping");
+                    math::VecBase<T, 2u> lerp_val = math::Global::lerp(*start_unwrapped, *end_unwrapped, linear_0to1);
+                    _mat.shear(_axis, lerp_val);
+                    return _mat;
+                } break;
+                default:
+                    assert(false && "unreachable code reached");
+                    return _mat;
+            }
         }
 
         // should be called at the end of the current frame
@@ -271,81 +363,24 @@ namespace my_gl {
             }
         }
 
-    private:
-        my_gl_math::Matrix44<Val_type>      _mat;
-        Bezier_curve<float>                 _bezier_curve;
-        my_gl_math::Vec3<Val_type>          _start_val;
-        my_gl_math::Vec3<Val_type>          _end_val;
+        Bezier_curve<T>                     _bezier_curve;
+        math::Matrix44<T>                   _mat;
+        AnimValue<T>                        _start_val;
+        AnimValue<T>                        _end_val;
         // make sence only with pause / play system
-        //my_gl_math::Vec3<Val_type>          _curr_val;
+        //math::Vec3<T>              _curr_val;
         Timepoint_sec                       _start_time;
         Timepoint_sec                       _curr_time;
         Duration_sec                        _duration{1.0f};
         Duration_sec                        _delay{0.0f};
-        // only for single-axis rotation
-        my_gl_math::Global::AXIS            _axis{ my_gl_math::Global::Z };
-        Animation_type                      _anim_type;
+        math::Global::AXIS                  _axis;
+        math::TransformationType            _anim_type;
         Loop_type                           _loop{ Loop_type::NONE };
         bool                                _is_started{ false };
         bool                                _is_delay_passed{ false };
         bool                                _is_ended{ false };
         bool                                _is_reversed{ false };
-       // bool                                _is_paused{ false };
-
-        // input can be Vector or Scalar (single axis rotation)
-        template<typename T>
-        void update_matrix(const T& _curr_val) {
-            switch (_anim_type) {
-            case my_gl::TRANSLATE:
-                _mat.translate(_curr_val);
-                break;
-            case my_gl::ROTATE3d:
-                _mat.rotate3d(_curr_val);
-                break;
-            case my_gl::SCALE:
-                _mat.scale(_curr_val);
-                break;
-            case my_gl::ROTATE:
-                if (_axis == my_gl_math::Global::X)
-                    _mat.rotate(_curr_val.x(), _axis);
-                else if (_axis == my_gl_math::Global::Y)
-                    _mat.rotate(_curr_val.y(), _axis);
-                else
-                    _mat.rotate(_curr_val.z(), _axis);
-                break;
-            }
-        }
-
-        void set_bezier_type(Bezier_curve_type bezier_type) {
-            switch (bezier_type) {
-            case Bezier_curve_type::LINEAR:
-                _bezier_curve = {
-                    predefined_bezier_values[LINEAR],
-                    LINEAR
-                };
-                break;
-            case Bezier_curve_type::EASE_IN:
-                _bezier_curve = {
-                    predefined_bezier_values[EASE_IN],
-                    EASE_IN
-                };
-                break;
-            case Bezier_curve_type::EASE_OUT:
-                _bezier_curve = {
-                    predefined_bezier_values[EASE_OUT],
-                    EASE_IN_OUT
-                };
-                break;
-            case Bezier_curve_type::EASE_IN_OUT:
-                _bezier_curve = {
-                    predefined_bezier_values[EASE_IN_OUT],
-                    EASE_IN_OUT
-                };
-                break;
-            default:
-                assert(true && "invalid initialization bezier curve type"); 
-                break;
-            }
-        }
+        // make sence only with pause / play system
+        // bool                                _is_paused{ false };
     };
 }

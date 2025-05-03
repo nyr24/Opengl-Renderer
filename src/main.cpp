@@ -2,6 +2,7 @@
 #include <GLFW/glfw3.h>
 #include <chrono>
 #include <ctime>
+#include "animation.hpp"
 #include "math.hpp"
 #include "matrix.hpp"
 #include "sharedTypes.hpp"
@@ -33,7 +34,8 @@ int main() {
         },
         {
             { .name = "u_mvp_mat" },
-            { .name = "u_model_mat" },
+            { .name = "u_model_view_mat" },
+            { .name = "u_normal_mat" },
             { .name = "u_light_color" },
             { .name = "u_light_pos" },
             { .name = "u_view_pos" },
@@ -69,13 +71,42 @@ int main() {
         light_shader
     };
 
+    // transformations
+    std::vector<my_gl::TransformsByType> world_transforms = {
+        {
+            my_gl::math::TransformationType::TRANSLATION,
+            std::vector{
+                my_gl::math::Transformation<float>::scaling({0.85f, 0.85f, 0.85f})
+            },
+            {}
+        }
+    };
+
+    std::vector<my_gl::TransformsByType> light_transforms = {
+        {
+            my_gl::math::TransformationType::TRANSLATION,
+            {
+                my_gl::math::Transformation<float>::translation(my_gl::globals::light_pos),
+                my_gl::math::Transformation<float>::scaling({0.4f, 0.2f, 0.2f}),
+            },
+            {
+                my_gl::Animation<float>::translation(
+                    2.0f,
+                    0.0f,
+                    my_gl::math::Vec3<float>{ my_gl::globals::light_pos },
+                    my_gl::math::Vec3<float>{ my_gl::globals::light_pos[0] - 1.0f, my_gl::globals::light_pos[1], my_gl::globals::light_pos[2] },
+                    my_gl::Bezier_curve_type::LINEAR,
+                    my_gl::Loop_type::INVERT
+                )
+            },
+        }
+    };
+
     // primitives
     std::vector<my_gl::GeometryObjectPrimitive> primitives = {
         // world cube
         {
-            {
-                my_gl_math::Matrix44<float>::scaling({0.85f, 0.85f, 0.85f})
-            },
+            std::move(world_transforms),
             36,
             0,
             world_shader,
@@ -85,11 +116,7 @@ int main() {
         },
         // light
         {
-            {
-                my_gl_math::Matrix44<float>::translation(my_gl::globals::light_pos),
-                my_gl_math::Matrix44<float>::rotation3d({0.0f, -35.0f, 45.0f}),
-                my_gl_math::Matrix44<float>::scaling({0.4f, 0.2f, 0.2f}),
-            },
+            std::move(light_transforms),
             36,
             0,
             light_shader,
@@ -100,40 +127,46 @@ int main() {
     };
 
     // camera
-    auto view_mat{ my_gl_math::Matrix44<float>::look_at(
+    auto view_mat{ my_gl::math::Matrix44<float>::look_at(
         my_gl::globals::camera.camera_pos,
         my_gl::globals::camera.camera_pos + my_gl::globals::camera.camera_front,
         my_gl::globals::camera.camera_up
     )};
-    auto projection_mat{ my_gl_math::Matrix44<float>::perspective_fov(
-
+    auto proj_mat{ my_gl::math::Matrix44<float>::perspective_fov(
         my_gl::globals::camera.fov, my_gl::globals::camera.aspect, 0.1f, 50.0f
     )};
-
-    auto projection_view_mat{ projection_mat * view_mat };
+ 
+    my_gl::math::Vec3<float> light_pos_view_coords{ view_mat * my_gl::math::Vec4<float>{ my_gl::globals::light_pos } };
 
     my_gl::Renderer renderer{
         std::vector<my_gl::GeometryObjectComplex>{},
         std::move(primitives),
-        std::move(projection_view_mat),
+        std::move(view_mat),
+        std::move(proj_mat),
     };
 
     glfwSwapInterval(1);
 
-    bool is_rendering_started{false};
-
     world_shader.set_uniform_value("u_light_color", 1.0f, 1.0f, 1.0f);
     world_shader.set_uniform_value("u_light_pos",
+        /*light_pos_view_coords[0],*/
+        /*light_pos_view_coords[1],*/
+        /*light_pos_view_coords[2]*/
+        /* setting in world coords */
         my_gl::globals::light_pos[0],
         my_gl::globals::light_pos[1],
         my_gl::globals::light_pos[2]
     );
     world_shader.set_uniform_value("u_view_pos",
+        /*0.0f, 0.0f, 0.0f*/
+        /* setting in world coords */
         my_gl::globals::camera.camera_pos[0],
         my_gl::globals::camera.camera_pos[1],
         my_gl::globals::camera.camera_pos[2]
     );
     light_shader.set_uniform_value("u_color", 1.0f, 1.0f, 1.0f);
+
+    bool is_rendering_started{false};
 
     while (!glfwWindowShouldClose(window.ptr_raw())) {
         auto start_frame{ std::chrono::steady_clock::now() };
@@ -146,19 +179,35 @@ int main() {
         glClearDepth(1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        view_mat = my_gl_math::Matrix44<float>::look_at(
+        view_mat = my_gl::math::Matrix44<float>::look_at(
             my_gl::globals::camera.camera_pos,
             my_gl::globals::camera.camera_pos + my_gl::globals::camera.camera_front,
             my_gl::globals::camera.camera_up
         );
-        projection_mat = my_gl_math::Matrix44<float>::perspective_fov(
+        proj_mat = my_gl::math::Matrix44<float>::perspective_fov(
             my_gl::globals::camera.fov, my_gl::globals::camera.aspect, 0.1f, 50.0f
         );
 
-        projection_view_mat = projection_mat * view_mat;
-        renderer.set_world_matrix(projection_view_mat);
+        my_gl::math::Vec3<float> light_pos_view_coords{ view_mat * my_gl::math::Vec4<float>{ my_gl::globals::light_pos }};
+        world_shader.set_uniform_value("u_light_pos",
+            /*light_pos_view_coords[0],*/
+            /*light_pos_view_coords[1],*/
+            /*light_pos_view_coords[2]*/
+            /* setting in world coords  */
+            my_gl::globals::light_pos[0],
+            my_gl::globals::light_pos[1],
+            my_gl::globals::light_pos[2]
+        );
+        world_shader.set_uniform_value("u_view_pos",
+            my_gl::globals::camera.camera_pos[0],
+            my_gl::globals::camera.camera_pos[1],
+            my_gl::globals::camera.camera_pos[2]
+        );
 
-        float time_0to1 = my_gl_math::Global::map_duration_to01(renderer.get_curr_rendering_duration());
+        renderer.set_view_mat(std::move(view_mat));
+        renderer.set_proj_mat(std::move(proj_mat));
+
+        float time_0to1 = my_gl::math::Global::map_duration_to01(renderer.get_curr_rendering_duration());
         renderer.render(time_0to1);
 
         glfwSwapBuffers(window.ptr_raw());

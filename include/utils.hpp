@@ -1,6 +1,8 @@
 #pragma once
 #include <GLEW/glew.h>
 #include <GLFW/glfw3.h>
+#include <concepts>
+#include "vec.hpp"
 #include "window.hpp"
 
 namespace my_gl {
@@ -15,4 +17,23 @@ namespace my_gl {
     void          callback_mouse_move(GLFWwindow* window, double xpos, double ypos);
     void          callback_scroll(GLFWwindow* window, double xoffset, double yoffset);
     void          print_max_vert_attrs_supported();
+
+    template<typename Tag, typename Value>
+    struct TaggedUnion {
+        const TaggedUnion<Tag, Value>& get() {
+            return *this;
+        }
+
+        void set(Tag tag_, Value value_) {
+            this->tag = tag_;
+            this->value = value_;
+        }
+
+        bool is(Tag tag_) {
+            return this->tag == tag_;
+        }
+
+        Tag tag;
+        Value value;
+    };
 }

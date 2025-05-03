@@ -114,12 +114,14 @@ namespace my_gl {
         Renderer(
             std::vector<my_gl::GeometryObjectComplex>&&         complex_objs,
             std::vector<my_gl::GeometryObjectPrimitive>&&       primitives,
-            my_gl_math::Matrix44<float>&&                       projection_view_mat
+            math::Matrix44<float>&&                       view_mat,
+            math::Matrix44<float>&&                       proj_mat
         );
 
         void render(float time_0to1);
         void update_time(Duration_sec frame_time);
-        void set_world_matrix(my_gl_math::Matrix44<float>&& new_world_matrix);
+        void set_view_mat(math::Matrix44<float>&& new_view_mat);
+        void set_proj_mat(math::Matrix44<float>&& new_proj_mat);
         void set_start_time(Timepoint_sec start_time);
         Duration_sec get_curr_rendering_duration() const;
         bool get_is_started() const { return _is_started; }
@@ -127,7 +129,8 @@ namespace my_gl {
     private:
         std::vector<my_gl::GeometryObjectComplex>           _complex_objs;
         std::vector<my_gl::GeometryObjectPrimitive>         _primitives;
-        my_gl_math::Matrix44<float>                         _world_matrix;
+        math::Matrix44<float>                               _view_mat;
+        math::Matrix44<float>                               _proj_mat;
         Timepoint_sec                                       _rendering_time_curr;
         Timepoint_sec                                       _rendering_time_start;
         // move to render loop, local variable

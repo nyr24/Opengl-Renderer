@@ -13,7 +13,7 @@ namespace my_gl  {
 
         extern WindowProps                  window_props;
         extern float                        delta_time;
-        extern my_gl_math::Vec3<float>      light_pos;
+        extern math::Vec3<float>            light_pos;
         extern Camera camera;
     }
 

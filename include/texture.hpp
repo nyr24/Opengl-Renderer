@@ -20,7 +20,11 @@ namespace my_gl {
             GLenum min_filter_option = GL_LINEAR_MIPMAP_LINEAR,
             GLenum mag_filter_option = GL_LINEAR
         );
-        //~Texture();
+        Texture(const Texture& rhs) = default;
+        Texture(Texture&& rhs) = default;
+        Texture& operator=(const Texture& rhs) = default;
+        Texture& operator=(Texture&& rhs) = default;
+
         void        bind() const;
         void        un_bind() const;
         uint32_t    id() const { return _id; }

@@ -78,7 +78,7 @@ GLuint my_gl::create_program(const char* vertexShaderFilePath, const char* fragm
 
     std::vector<GLuint> shaders{ vertexShader, fragShader };
  
-    for (int i{ 0 }; i < shaders.size(); ++i) {
+    for (size_t i{ 0 }; i < shaders.size(); ++i) {
         glAttachShader(program, shaders[i]);
     }
 

@@ -298,24 +298,32 @@ void my_gl::VertexArray::init(const std::vector<const Program*>& programs) {
 my_gl::Renderer::Renderer(
     std::vector<my_gl::GeometryObjectComplex>&&         complex_objs,
     std::vector<my_gl::GeometryObjectPrimitive>&&       primitives,
-    my_gl_math::Matrix44<float>&&                       projection_view_mat
+    math::Matrix44<float>&&                       view_mat,
+    math::Matrix44<float>&&                       proj_mat
 )
     : _complex_objs{ std::move(complex_objs) }
     , _primitives{ std::move(primitives) }
-    , _world_matrix{ std::move(projection_view_mat) }
+    , _view_mat{ std::move(view_mat) }
+    , _proj_mat{ std::move(proj_mat) }
 {}
 
-void my_gl::Renderer::set_world_matrix(my_gl_math::Matrix44<float>&& new_world_matrix) {
-    _world_matrix = new_world_matrix;
+void my_gl::Renderer::set_view_mat(math::Matrix44<float>&& new_view_mat) {
+    _view_mat = new_view_mat;
+}
+
+void my_gl::Renderer::set_proj_mat(math::Matrix44<float>&& new_proj_mat) {
+    _proj_mat = new_proj_mat;
 }
 
 void my_gl::Renderer::render(float time_0to1) {
-    for (const auto& complex_obj : _complex_objs) {
-        complex_obj.render(_world_matrix, time_0to1);
+    auto view_proj_mat{ _proj_mat * _view_mat };
+
+    for (auto& complex_obj : _complex_objs) {
+        complex_obj.render(_view_mat, view_proj_mat, time_0to1);
     }
 
-    for (const auto& primitive : _primitives) {
-        primitive.render(_world_matrix, time_0to1);
+    for (auto& primitive : _primitives) {
+        primitive.render(_view_mat, view_proj_mat, time_0to1);
     }
 
 }
@@ -323,11 +331,11 @@ void my_gl::Renderer::render(float time_0to1) {
 void my_gl::Renderer::update_time(Duration_sec frame_duration) {
     _rendering_time_curr += frame_duration;
 
-    for (const auto& complex_obj : _complex_objs) {
+    for (auto& complex_obj : _complex_objs) {
         complex_obj.update_anims_time(frame_duration);
     }
 
-    for (const auto& primitive : _primitives) {
+    for (auto& primitive : _primitives) {
         primitive.update_anims_time(frame_duration);
     }
 }
