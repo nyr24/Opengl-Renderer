@@ -1,7 +1,7 @@
 #pragma once
 #include <unordered_map>
 #include <vector>
-#include <GLEW/glew.h>
+#include <GL/glew.h>
 #include <cstdint>
 #include <string_view>
 #include "geometryObject.hpp"
@@ -120,12 +120,8 @@ namespace my_gl {
 
         void render(float time_0to1);
         void update_time(Duration_sec frame_time);
-        void set_view_mat(math::Matrix44<float>&& new_view_mat);
-        void set_proj_mat(math::Matrix44<float>&& new_proj_mat);
-        void set_start_time(Timepoint_sec start_time);
         Duration_sec get_curr_rendering_duration() const;
 
-    private:
         std::vector<my_gl::GeometryObjectComplex>           _complex_objs;
         std::vector<my_gl::GeometryObjectPrimitive>         _primitives;
         math::Matrix44<float>                               _view_mat;

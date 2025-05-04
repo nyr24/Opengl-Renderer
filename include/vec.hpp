@@ -14,36 +14,68 @@ namespace my_gl {
         template<std::floating_point T, uint32_t N>
         class VecBase {
         public:
-            constexpr VecBase(): _data(N) {}
-            constexpr explicit VecBase(T val): _data(val, N) {}
-            VecBase(std::initializer_list<T> init): _data{ init } {
+            constexpr VecBase<T, N>(): _data(N) {}
+            constexpr explicit VecBase<T, N>(T val): _data(val, N) {}
+            VecBase<T, N>(std::initializer_list<T> init): _data{ init } {
                 assert(init.size() == N && "invalid initializer list size for this type");
             }
 
             // copy
-            VecBase(const VecBase<T, N>& src) = default;
-            VecBase<T, N>& operator=(const VecBase<T, N>& src) = default;
-            template<uint32_t N_SRC>
-            VecBase(const VecBase<T, N_SRC>& src): _data{ src._data } {}
-            template<uint32_t N_SRC>
-            VecBase<T, N>& operator=(const VecBase<T, N_SRC>& src)
+            template<uint32_t N_RHS>
+            VecBase<T, N>(const VecBase<T, N_RHS>& rhs): _data(N) {
+                constexpr uint32_t min_len = std::min(N, N_RHS);
+                for (uint32_t i = 0; i < min_len; ++i) {
+                    _data[i] = rhs._data[i];
+                }
+                if constexpr (N_RHS < N) {
+                    assign_default_to_rest<N_RHS>();
+                }
+            }
+
+            template<uint32_t N_RHS>
+            VecBase<T, N>& operator=(const VecBase<T, N_RHS>& rhs)
             {
-                _data = src._data;
+                constexpr uint32_t min_len = std::min(N, N_RHS);
+                for (uint32_t i = 0; i < N_RHS; ++i) {
+                    _data[i] = rhs._data[i];
+                }
+                if constexpr (N_RHS < N) {
+                    assign_default_to_rest<N_RHS>();
+                }
                 return *this;
             }
 
             // move
-            VecBase(VecBase<T, N>&& src) = default;
-            VecBase<T, N>& operator=(VecBase<T, N>&& src) = default;
-            template<uint32_t N_SRC>
-            VecBase(VecBase<T, N_SRC>&& src): _data{ std::move(src._data) } {}
-            template<uint32_t N_SRC>
-            VecBase<T, N>& operator=(VecBase<T, N_SRC>&& src)
+            template<uint32_t N_RHS>
+            VecBase<T, N>(VecBase<T, N_RHS>&& rhs) noexcept : _data(N) {
+                constexpr uint32_t min_len = std::min(N, N_RHS);
+                for (uint32_t i = 0; i < min_len; ++i) {
+                    _data[i] = rhs._data[i];
+                }
+                if constexpr (N_RHS < N) {
+                    assign_default_to_rest<N_RHS>();
+                }
+            }
+
+            template<uint32_t N_RHS>
+            VecBase<T, N>& operator=(VecBase<T, N_RHS>&& rhs) noexcept
             {
-                _data = std::move(src._data);
+                constexpr uint32_t min_len = std::min(N, N_RHS);
+                for (uint32_t i = 0; i < N_RHS; ++i) {
+                    _data[i] = rhs._data[i];
+                }
+                if constexpr (N_RHS < N) {
+                    assign_default_to_rest<N_RHS>();
+                }
                 return *this;
             }
 
+            template<uint32_t N_RHS>
+            void assign_default_to_rest() {
+                for (uint32_t i = N_RHS; i < N; ++i) {
+                    _data[i] = T(1.0);
+                }
+            }
 
             T length() const {
                 std::valarray<T> squared_data = _data.apply([](T el) {
@@ -83,8 +115,7 @@ namespace my_gl {
                 res._data *= static_cast<T>(-1.0);
                 return res;
             }
-        
-        // operators
+
             T& operator[](uint32_t i) {
                 assert((i >= 0 && i < N) && "invalid indexing");
                 return _data[i];
@@ -224,7 +255,7 @@ namespace my_gl {
                 std::cout << '\n';
             }
 
-            bool cmp(const VecBase<T, N>& rhs) {
+            bool cmp(const VecBase<T, N>& rhs) const {
                 for (int i = 0; i < N; ++i) {
                     if (!my_gl::math::Global::cmp_float<T>(_data[i], rhs._data[i]))
                         return false;
@@ -237,7 +268,7 @@ namespace my_gl {
             std::valarray<T> _data{};
         };
 
-    // Vec3
+        // Vec3
         template<typename T = float> requires std::floating_point<T>
         class Vec3 : public VecBase<T, 3> {
         public:

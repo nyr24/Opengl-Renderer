@@ -1,7 +1,7 @@
 #pragma once
 #include <stdint.h>
 #include <STB_IMG/stb_image.h>
-#include <GLEW/glew.h>
+#include <GL/glew.h>
 
 namespace my_gl {
     class Program;

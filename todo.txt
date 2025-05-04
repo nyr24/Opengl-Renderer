@@ -1,2 +1,0 @@
-* animation - add constructor for shearing
-* replace all private + getters and setters

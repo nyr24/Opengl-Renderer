@@ -4,9 +4,8 @@
 
 namespace my_gl {
     namespace globals {
-        // using default constructor;
-        Camera camera{};
+        Camera camera({ 0.0f, 0.0f, 3.0f }, {0.0f, 1.0f, 0.0f});
         float                           delta_time{0.5f};
-        my_gl::math::Vec3<float>        light_pos{1.0f, 0.9f, 0.85f};
+        my_gl::math::Vec4<float>        light_pos{1.0f, 1.0f, 1.0f, 1.0f};
     }
 }

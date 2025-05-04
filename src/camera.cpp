@@ -3,22 +3,22 @@
 #include "matrix.hpp"
 
 namespace my_gl {
-    Camera::Camera(my_gl::math::Vec3<float>&& pos, my_gl::math::Vec3<float>&& dir, my_gl::math::Vec3<float>&& up)
+    Camera::Camera(my_gl::math::Vec3<float>&& pos, my_gl::math::Vec3<float>&& up)
         : camera_pos{ std::move(pos) }
-        , camera_front{ std::move(dir) }
-        , camera_up{ std::move(up) }
         , world_up{ std::move(up) }
-    {}
+    {
+        update();
+    }
 
-    Camera::Camera(const my_gl::math::Vec3<float>& pos, const my_gl::math::Vec3<float>& dir, const my_gl::math::Vec3<float>& up)
+    Camera::Camera(const my_gl::math::Vec3<float>& pos, const my_gl::math::Vec3<float>& up)
         : camera_pos{ pos }
-        , camera_front{ dir }
-        , camera_up{ std::move(up) }
         , world_up{ up }
-    {}
+    {
+        update();
+    }
 
     my_gl::math::Matrix44<float> Camera::get_view_mat() {
-        return my_gl::math::Matrix44<float>::look_at(camera_pos, camera_pos + camera_front, camera_up);
+        return my_gl::math::Matrix44<float>::look_at(camera_pos, camera_pos + camera_front, world_up);
     }
 
     void Camera::process_keyboard_input(Camera_movement dir) {
@@ -82,6 +82,7 @@ namespace my_gl {
         camera_right = camera_front.cross(world_up);
         camera_right.normalize_inplace();
         // order of cross matters
-        camera_up = camera_right.cross(camera_front).normalize_inplace();
+        camera_up = camera_right.cross(camera_front);
+        camera_up.normalize_inplace();
     }
 }

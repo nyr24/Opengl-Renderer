@@ -7,7 +7,7 @@
 #include "globals.hpp"
 #include "camera.hpp"
 #include <STB_IMG/stb_image.h>
-#include <GLEW/glew.h>
+#include <GL/glew.h>
 #include <GLFW/glfw3.h>
 
 my_gl::Window my_gl::init_window() {

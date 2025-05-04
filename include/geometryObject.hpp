@@ -1,9 +1,7 @@
 #pragma once
-#include <GLEW/glew.h>
+#include <GL/glew.h>
 #include <cstddef>
 #include <vector>
-#include <unordered_map>
-#include <optional>
 #include "animation.hpp"
 #include "matrix.hpp"
 #include "texture.hpp"

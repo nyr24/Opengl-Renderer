@@ -36,7 +36,7 @@ namespace my_gl {
                     1.0f,   0.0f,   0.0f
                 };
             }
-    
+ 
             static constexpr MatrixBase<T, 4, 4> bezier_cubic_mat() {
                 return MatrixBase<T, 4, 4>{
                     -1.0f,  3.0f,   -3.0f,  1.0f,
@@ -266,7 +266,7 @@ namespace my_gl {
 
                 return *this;
             }
-    
+ 
             Matrix33<T>& invert()
             {
                 auto& m{*this};
@@ -411,22 +411,21 @@ namespace my_gl {
                 return res;
             }
 
-            static Matrix44<T> look_at(const Vec3<T>& cameraPos, const Vec3<T>& cameraTarget, const Vec3<T>& up) {
+            static Matrix44<T> look_at(const Vec3<T>& cameraPos, const Vec3<T>& cameraTarget, const Vec3<T>& worldUp) {
                 const Vec3<T> cameraDir{ my_gl::math::Vec3<T>{ cameraPos - cameraTarget }.normalize_inplace() };
-                const Vec3<T> cameraRight{ up.cross(cameraDir).normalize_inplace() };
+                const Vec3<T> cameraRight{ worldUp.cross(cameraDir).normalize_inplace() };
                 const Vec3<T> cameraUp{ cameraDir.cross(cameraRight).normalize_inplace() };
 
-                Matrix44<T> lhs{ Matrix44<T>::identity_new()
-                    .fill_row(cameraRight, 0)
-                    .fill_row(cameraUp, 1)
-                    .fill_row(cameraDir, 2)
-                };
+                Matrix44<T> lhs{ Matrix44<T>::identity_new() };
+                lhs.fill_row(cameraRight, 0);
+                lhs.fill_row(cameraUp, 1);
+                lhs.fill_row(cameraDir, 2);
 
                 Matrix44<T> rhs{ Matrix44<T>::translation(cameraPos.negate_new()) };
                 return lhs * rhs;
             }
 
-        // non-static
+            // non-static
             T get_determinant() const
             {
                 auto& m{*this};
@@ -446,12 +445,6 @@ namespace my_gl {
                 else
                 {
                     this->invert_general();
-                    /*@@ invertProjective() is not optimized (slower than generic one)
-                    if(fabs(m[0]*m[5] - m[1]*m[4]) > EPSILON)
-                        this->invertProjective();   // inverse using matrix partition
-                    else
-                        this->invertGeneral();      // generalized inverse
-                    */
                 }
 
                 return *this;

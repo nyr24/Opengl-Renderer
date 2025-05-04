@@ -12,9 +12,9 @@ uniform vec3 u_view_pos;
 // uniform float u_lerp;
 
 void main() {
-    float   ambient_coef        = 0.1;
+    float   ambient_coef        = 0.15;
     float   shininess           = 16;
-    float   specular_intensity  = 0.5;
+    float   specular_intensity  = 0.8;
 
     vec3    normal_normalized   = normalize(passed_normal);
     vec3    light_dir           = normalize(u_light_pos - passed_frag_pos);

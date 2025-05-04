@@ -307,14 +307,6 @@ my_gl::Renderer::Renderer(
     , _proj_mat{ std::move(proj_mat) }
 {}
 
-void my_gl::Renderer::set_view_mat(math::Matrix44<float>&& new_view_mat) {
-    _view_mat = new_view_mat;
-}
-
-void my_gl::Renderer::set_proj_mat(math::Matrix44<float>&& new_proj_mat) {
-    _proj_mat = new_proj_mat;
-}
-
 void my_gl::Renderer::render(float time_0to1) {
     auto view_proj_mat{ _proj_mat * _view_mat };
 
@@ -325,7 +317,6 @@ void my_gl::Renderer::render(float time_0to1) {
     for (auto& primitive : _primitives) {
         primitive.render(_view_mat, view_proj_mat, time_0to1);
     }
-
 }
 
 void my_gl::Renderer::update_time(Duration_sec frame_duration) {
@@ -342,8 +333,4 @@ void my_gl::Renderer::update_time(Duration_sec frame_duration) {
 
 my_gl::Duration_sec my_gl::Renderer::get_curr_rendering_duration() const {
     return _rendering_time_curr - _rendering_time_start;
-}
-
-void my_gl::Renderer::set_start_time(Timepoint_sec start_time) {
-    _rendering_time_start = start_time;
 }

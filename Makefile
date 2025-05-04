@@ -11,7 +11,7 @@ EXE=app
 DEBUG_EXE=$(DEBUG_DIR)/$(EXE)
 RELEASE_EXE=$(RELEASE_DIR)/$(EXE)
 CXX=clang++
-CFLAGS=-I$(INCLUDE_DIR) -Iglew.h -Iglfw3.h -std=c++20 -lGLEW -lGLU -lGL -lglfw -Wall -Wextra
+CFLAGS=-I$(INCLUDE_DIR) -I/usr/include/GLFW -I/usr/include/GL -Iglew.h -Iglfw3.h -std=c++20 -lGLEW -lGLU -lGL -lglfw -Wall -Wextra
 DEBUG_FLAGS=-g -O0 -DDEBUG
 RELEASE_FLAGS=-O3 -DNDEBUG
 

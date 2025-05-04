@@ -92,13 +92,13 @@ namespace my_gl {
 
             math::Vec4<T> coefs_for_points{ _mat * mon_basis_cubic };
 
-            math::VecBase<T, 2> curr_val = {
+            math::VecBase<T, 2u> curr_val = {
                 _points.x_vals.dot(coefs_for_points),
                 _points.y_vals.dot(coefs_for_points)
             };
 
             // current distance between current and end point of the curve
-            math::VecBase<T, 2> curr_distance = { curr_val - _vec_end };
+            math::VecBase<T, 2u> curr_distance = { curr_val - _vec_end };
 
             // getting 1 at the end, and 0 at the start
             // signifying animation duration progress
@@ -114,14 +114,14 @@ namespace my_gl {
         Points                                          _points{ predefined_bezier_values[LINEAR] };
         Bezier_curve_type                               _type{ LINEAR };
         // utility
-        static inline const math::VecBase<T, 2>         _vec_end{ T(1.0), T(1.0) };
+        static inline const math::VecBase<T, 2u>         _vec_end{ T(1.0), T(1.0) };
         static inline const T                           _max_distance{ _vec_end.length() };
         static inline const T                           _unit_to_max_ratio{ T(1.0) / _max_distance };
     };
 
     template<std::floating_point T>
     struct AnimValue {
-        std::variant<math::Vec3<T>, math::VecBase<T, 2>, T> variant;
+        std::variant<math::Vec3<T>, math::VecBase<T, 2u>, T> variant;
 
         template<typename SetVal>
         void set(SetVal&& value) {
@@ -136,7 +136,7 @@ namespace my_gl {
         }
 
         const math::VecBase<T, 2u>* get_vec2() const {
-            return std::get_if<math::VecBase<T, 2>>(&variant);
+            return std::get_if<math::VecBase<T, 2u>>(&variant);
         }
 
         const T* get_scalar() const {
@@ -230,7 +230,7 @@ namespace my_gl {
                 ._duration{ Duration_sec{duration} },
                 ._delay{ Duration_sec{delay} },
                 ._axis = axis,
-                ._anim_type = math::TransformationType::ROTATION3d,
+                ._anim_type = math::TransformationType::ROTATION,
                 ._loop = loop,
                 ._is_delay_passed = delay == 0.0f
             };
@@ -340,7 +340,7 @@ namespace my_gl {
         // should be called at the end of the current frame
         void update_time(Duration_sec frame_time) {
             if (_is_reversed) {
-                frame_time *= -1.0;
+                frame_time *= -1.0f;
             }
 
             _curr_time += frame_time;

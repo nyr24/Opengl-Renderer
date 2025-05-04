@@ -3,7 +3,6 @@
 #include "matrix.hpp"
 #include "renderer.hpp"
 #include "sharedTypes.hpp"
-#include <optional>
 
 my_gl::TransformsByType::TransformsByType(
     my_gl::math::TransformationType                 arg_type,
