@@ -1,6 +1,7 @@
 #pragma once
 #include <unordered_map>
 #include <vector>
+#include <span>
 #include <GL/glew.h>
 #include <cstdint>
 #include <string_view>
@@ -97,6 +98,8 @@ namespace my_gl {
         void  set_uniform_value(std::string_view unif_name, float val) const;
         void  set_uniform_value(std::string_view unif_name, float val1, float val2, float val3) const;
         void  set_uniform_value(std::string_view unif_name, const float* matrix_val) const;
+        void  set_uniform_value(std::string_view unif_name, const my_gl::math::Vec3<float>& vec3_val) const;
+        void  set_uniform_value(std::string_view unif_name, const my_gl::math::Vec4<float>& vec4_val) const;
         const std::unordered_map<std::string_view, Attribute>& get_attrs() const;
         const std::unordered_map<std::string_view, Uniform>& get_unifs() const;
         void  use() const { glUseProgram(_program_id); }
@@ -112,21 +115,21 @@ namespace my_gl {
     class Renderer {
     public:
         Renderer(
-            std::vector<my_gl::GeometryObjectComplex>&&         complex_objs,
-            std::vector<my_gl::GeometryObjectPrimitive>&&       primitives,
-            math::Matrix44<float>&&                             view_mat,
-            math::Matrix44<float>&&                             proj_mat
+            std::span<my_gl::GeometryObjectComplex>     complex_objs,
+            std::span<my_gl::GeometryObjectPrimitive>   primitives,
+            math::Matrix44<float>&&                     view_mat,
+            math::Matrix44<float>&&                     proj_mat
         );
 
         void render(float time_0to1);
         void update_time(Duration_sec frame_time);
         Duration_sec get_curr_rendering_duration() const;
 
-        std::vector<my_gl::GeometryObjectComplex>           _complex_objs;
-        std::vector<my_gl::GeometryObjectPrimitive>         _primitives;
-        math::Matrix44<float>                               _view_mat;
-        math::Matrix44<float>                               _proj_mat;
-        Timepoint_sec                                       _rendering_time_curr;
-        Timepoint_sec                                       _rendering_time_start;
+        std::span<my_gl::GeometryObjectComplex>     _complex_objs;
+        std::span<my_gl::GeometryObjectPrimitive>   _primitives;
+        math::Matrix44<float>                       _view_mat;
+        math::Matrix44<float>                       _proj_mat;
+        Timepoint_sec                               _rendering_time_curr;
+        Timepoint_sec                               _rendering_time_start;
     };
 }

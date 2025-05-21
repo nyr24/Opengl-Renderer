@@ -7,8 +7,7 @@ namespace my_gl {
     class Program;
     struct Uniform;
 
-    class Texture {
-    public:
+    struct Texture {
         Texture(
             const char* path,
             const Program& program,
@@ -27,14 +26,7 @@ namespace my_gl {
 
         void        bind() const;
         void        un_bind() const;
-        uint32_t    id() const { return _id; }
-        uint8_t*    data() const { return _data; }
-        int         width() const { return _width; }
-        int         height() const { return _height; }
-        int         depth() const { return _depth; }
-        int         color_channels() const { return _color_channels; }
 
-    private:
         uint8_t*    _data;
         uint32_t    _id;
         GLenum      _texture_unit;

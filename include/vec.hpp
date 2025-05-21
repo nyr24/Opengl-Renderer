@@ -1,6 +1,5 @@
 #pragma once
 #include <cmath>
-#include <cstring>
 #include <initializer_list>
 #include <concepts>
 #include <cstdint>

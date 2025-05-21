@@ -1,7 +1,8 @@
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #include <chrono>
-#include <ctime>
+#include <array>
+#include <span>
 #include "animation.hpp"
 #include "math.hpp"
 #include "matrix.hpp"
@@ -15,7 +16,6 @@
 #include "globals.hpp"
 #include "camera.hpp"
 #include "meshes.hpp"
-#include "userDefinedObjects.hpp"
 
 int main() {
     my_gl::Window window{ my_gl::init_window() };
@@ -25,8 +25,10 @@ int main() {
     constexpr uint16_t normal_offset{ color_offset + sizeof(float) * 3 * 4 * 6 };
 
     my_gl::Program world_shader{
-        "shaders/vertShader.glsl",
-        "shaders/fragShader.glsl",
+        // "shaders/vert_shader_material.glsl",
+        // "shaders/frag_shader_material.glsl",
+        "shaders/vert_shader.glsl",
+        "shaders/frag_shader.glsl",
         {
             { .name = "a_pos", .gl_type = GL_FLOAT, .count = 3, .byte_stride = 0, .byte_offset = 0 },
             { .name = "a_color", .gl_type = GL_FLOAT, .count = 3, .byte_stride = 0, .byte_offset = color_offset },
@@ -39,12 +41,16 @@ int main() {
             { .name = "u_light_color" },
             { .name = "u_light_pos" },
             { .name = "u_view_pos" },
+            // { .name = "u_material.ambient" },
+            // { .name = "u_material.diffuse" },
+            // { .name = "u_material.specular" },
+            // { .name = "u_material.shininess" },
         }
     };
 
     my_gl::Program light_shader{
-        "shaders/vertShaderLight.glsl",
-        "shaders/fragShaderLight.glsl",
+        "shaders/vert_shader_light.glsl",
+        "shaders/frag_shader_light.glsl",
         {
             { .name = "a_pos", .gl_type = GL_FLOAT, .count = 3, .byte_stride = 0, .byte_offset = 0 },
         },
@@ -54,12 +60,10 @@ int main() {
         }
     };
 
-// move this to object to dynamically assign uniform value,
-//this would be overwritten if specified more textures than uniforms
-    //std::vector<my_gl::Texture> textures = {*/
+    // std::array<my_gl::Texture, 2> textures = {
     //    { "res/mine_red.jpg", program2, program2.get_uniform("u_tex_data1"), 0, GL_TEXTURE0 },
     //    { "res/mine_green.jpg", program2, program2.get_uniform("u_tex_data2"), 1, GL_TEXTURE1 },
-    //};
+    // };
 
     my_gl::VertexArray vertex_arr_world{
         my_gl::meshes::cube_mesh,
@@ -72,33 +76,23 @@ int main() {
     };
 
     // transformations
-    std::vector<my_gl::TransformsByType> world_transforms = {
-        {
+    std::array<my_gl::TransformGroup, 3> world_transforms = {
+        my_gl::TransformGroup{
             my_gl::math::TransformationType::TRANSLATION,
-            std::vector{
-                my_gl::math::Transformation<float>::scaling({0.85f, 0.85f, 0.85f})
+            {
+                my_gl::math::Transformation<float>::translation({ 1.5f, 0.0f, 0.0f })
             },
             {}
         },
-        {
-            my_gl::math::TransformationType::ROTATION,
-            {},
+        my_gl::TransformGroup{
+            my_gl::math::TransformationType::TRANSLATION,
             {
-                my_gl::Animation<float>::rotation_single_axis(
-                    5.0f,
-                    0.0f,
-                    0.0f,
-                    360.0f,
-                    my_gl::math::Global::AXIS::X,
-                    my_gl::Bezier_curve_type::EASE_IN_OUT,
-                    my_gl::Loop_type::INVERT
-                )
-            }
-        }
-    };
-
-    std::vector<my_gl::TransformsByType> light_transforms = {
-        {
+                my_gl::math::Transformation<float>::translation({ -1.5f, 0.0f, 0.0f })
+            },
+            {}
+        },
+        // light
+        my_gl::TransformGroup{
             my_gl::math::TransformationType::TRANSLATION,
             {
                 my_gl::math::Transformation<float>::translation(my_gl::globals::light_pos),
@@ -119,26 +113,50 @@ int main() {
     };
 
     // primitives
-    std::vector<my_gl::GeometryObjectPrimitive> primitives = {
+    std::array<my_gl::GeometryObjectPrimitive, 4> primitives = {
         // world cube
-        {
-            std::move(world_transforms),
+        my_gl::GeometryObjectPrimitive{
+            std::span<my_gl::TransformGroup, std::dynamic_extent>{world_transforms.begin(), 1},
             36,
             0,
             world_shader,
             vertex_arr_world,
             GL_TRIANGLES,
-            {}
+            my_gl::Material::EMERALD,
+            nullptr
+        },
+        my_gl::GeometryObjectPrimitive{
+            {},
+            36,
+            0,
+            world_shader,
+            vertex_arr_world,
+            GL_TRIANGLES,
+            my_gl::Material::EMERALD,
+            // my_gl::Material::OBSIDIAN,
+            nullptr
+        },
+        my_gl::GeometryObjectPrimitive{
+            std::span<my_gl::TransformGroup, std::dynamic_extent>{world_transforms.begin() + 1, 1},
+            36,
+            0,
+            world_shader,
+            vertex_arr_world,
+            GL_TRIANGLES,
+            // my_gl::Material::RUBY,
+            my_gl::Material::EMERALD,
+            nullptr
         },
         // light
-        {
-            std::move(light_transforms),
+        my_gl::GeometryObjectPrimitive{
+            std::span<my_gl::TransformGroup, std::dynamic_extent>{world_transforms.begin() + 2, 1},
             36,
             0,
             light_shader,
             vertex_arr_light,
             GL_TRIANGLES,
-            {}
+            my_gl::Material::NO_MATERIAL,
+            nullptr
         }
     };
 
@@ -149,15 +167,16 @@ int main() {
     )};
 
     my_gl::Renderer renderer{
-        std::vector<my_gl::GeometryObjectComplex>{}, //my_gl::create_cube_creature(world_shader, vertex_arr_world) },
-        std::move(primitives),
+        // std::span<my_gl::GeometryObjectComplex, std::dynamic_extent>{primitives}, //my_gl::create_cube_creature(world_shader, vertex_arr_world) },
+        {},
+        std::span<my_gl::GeometryObjectPrimitive, std::dynamic_extent>(primitives),
         std::move(view_mat),
         std::move(proj_mat),
     };
 
     world_shader.set_uniform_value("u_light_color", 1.0f, 1.0f, 1.0f);
 
-    my_gl::math::Vec3<float> light_pos_view_coords{ renderer._view_mat * my_gl::globals::light_pos };
+    // my_gl::math::Vec3<float> light_pos_view_coords{ renderer._view_mat * my_gl::globals::light_pos };
 
     world_shader.set_uniform_value("u_light_pos",
         // view coords

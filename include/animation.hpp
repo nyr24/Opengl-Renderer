@@ -2,7 +2,6 @@
 #include <array>
 #include <concepts>
 #include <cassert>
-#include <cmath>
 #include <chrono>
 #include <variant>
 #include "math.hpp"
@@ -58,7 +57,7 @@ namespace my_gl {
     };
 
     template<std::floating_point T = float>
-    class Bezier_curve {
+    struct Bezier_curve {
     public:
         Bezier_curve() = default;
         Bezier_curve(
@@ -105,10 +104,6 @@ namespace my_gl {
             return (_max_distance - curr_distance.length()) * _unit_to_max_ratio;
         }
 
-        const Points&     get_points() const { return _points; }
-        Bezier_curve_type get_type() const { return _type; }
-
-    private:
         math::Matrix44<T>                               _mat;
         // x and y values of points a stored inside separate vectors to efficiently perform math operations
         Points                                          _points{ predefined_bezier_values[LINEAR] };
@@ -286,7 +281,7 @@ namespace my_gl {
             }
 
             float linear_0to1{ passed_time / _duration };
-            if (_bezier_curve.get_type() != Bezier_curve_type::LINEAR) {
+            if (_bezier_curve._type != Bezier_curve_type::LINEAR) {
                 linear_0to1 = _bezier_curve.update(linear_0to1);
             }
 

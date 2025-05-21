@@ -142,6 +142,28 @@ void my_gl::Program::set_uniform_value(std::string_view unif_name, const float* 
     un_use();
 }
 
+void my_gl::Program::set_uniform_value(std::string_view unif_name, const my_gl::math::Vec3<float>& vec3_val) const
+{
+    use();
+    const Uniform* unif{ get_uniform(unif_name) };
+    if (!unif) {
+        return;
+    }
+    glUniform3f(unif->location, vec3_val[0], vec3_val[1], vec3_val[2]);
+    un_use();
+}
+
+void my_gl::Program::set_uniform_value(std::string_view unif_name, const my_gl::math::Vec4<float>& vec4_val) const
+{
+    use();
+    const Uniform* unif{ get_uniform(unif_name) };
+    if (!unif) {
+        return;
+    }
+    glUniform4f(unif->location, vec4_val[0], vec4_val[1], vec4_val[2], vec4_val[3]);
+    un_use();
+}
+
 const std::unordered_map<std::string_view, my_gl::Attribute>& my_gl::Program::get_attrs() const {
     return _attrs;
 }
@@ -296,13 +318,13 @@ void my_gl::VertexArray::init(const std::vector<const Program*>& programs) {
 
 // Renderer
 my_gl::Renderer::Renderer(
-    std::vector<my_gl::GeometryObjectComplex>&&         complex_objs,
-    std::vector<my_gl::GeometryObjectPrimitive>&&       primitives,
-    math::Matrix44<float>&&                       view_mat,
-    math::Matrix44<float>&&                       proj_mat
+    std::span<my_gl::GeometryObjectComplex>     complex_objs,
+    std::span<my_gl::GeometryObjectPrimitive>   primitives,
+    math::Matrix44<float>&&                     view_mat,
+    math::Matrix44<float>&&                     proj_mat
 )
-    : _complex_objs{ std::move(complex_objs) }
-    , _primitives{ std::move(primitives) }
+    : _complex_objs{ complex_objs }
+    , _primitives{ primitives }
     , _view_mat{ std::move(view_mat) }
     , _proj_mat{ std::move(proj_mat) }
 {}
