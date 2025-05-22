@@ -38,13 +38,15 @@ int main() {
             { .name = "u_mvp_mat" },
             { .name = "u_model_view_mat" },
             { .name = "u_normal_mat" },
-            { .name = "u_light_color" },
-            { .name = "u_light_pos" },
             { .name = "u_view_pos" },
             { .name = "u_material.ambient" },
             { .name = "u_material.diffuse" },
             { .name = "u_material.specular" },
             { .name = "u_material.shininess" },
+            { .name = "u_light.position" },
+            { .name = "u_light.ambient" },
+            { .name = "u_light.diffuse" },
+            { .name = "u_light.specular" },
         }
     };
 
@@ -95,19 +97,9 @@ int main() {
         my_gl::TransformGroup{
             my_gl::math::TransformationType::TRANSLATION,
             {
-                my_gl::math::Transformation<float>::translation(my_gl::globals::light_pos),
+                my_gl::math::Transformation<float>::translation(my_gl::globals::light.position),
                 my_gl::math::Transformation<float>::scaling({0.4f, 0.2f, 0.2f}),
             },
-            // {
-            //     my_gl::Animation<float>::translation(
-            //         10.0f,
-            //         0.0f,
-            //         my_gl::math::Vec3<float>{ my_gl::globals::light_pos },
-            //         my_gl::math::Vec3<float>{ my_gl::globals::light_pos[0] - 10.0f, my_gl::globals::light_pos[1], my_gl::globals::light_pos[2] },
-            //         my_gl::Bezier_curve_type::LINEAR,
-            //         my_gl::Loop_type::INVERT
-            //     )
-            // },
             {}
         }
     };
@@ -174,27 +166,25 @@ int main() {
         std::move(proj_mat),
     };
 
-    world_shader.set_uniform_value("u_light_color", 1.0f, 1.0f, 1.0f);
-
     // my_gl::math::Vec3<float> light_pos_view_coords{ renderer._view_mat * my_gl::globals::light_pos };
 
-    world_shader.set_uniform_value("u_light_pos",
+    world_shader.set_uniform_value("u_light.position",
         // view coords
         // light_pos_view_coords[0],
         // light_pos_view_coords[1],
         // light_pos_view_coords[2]
         // world coords
-        my_gl::globals::light_pos[0],
-        my_gl::globals::light_pos[1],
-        my_gl::globals::light_pos[2]
+        my_gl::globals::light.position
     );
+    world_shader.set_uniform_value("u_light.ambient", my_gl::globals::light.ambient);
+    world_shader.set_uniform_value("u_light.diffuse", my_gl::globals::light.diffuse);
+    world_shader.set_uniform_value("u_light.specular", my_gl::globals::light.specular);
+
     world_shader.set_uniform_value("u_view_pos",
         // view coords
         // 0.0f, 0.0f, 0.0f
         // world coords
-        my_gl::globals::camera.camera_pos[0],
-        my_gl::globals::camera.camera_pos[1],
-        my_gl::globals::camera.camera_pos[2]
+        my_gl::globals::camera.camera_pos
     );
     light_shader.set_uniform_value("u_color", 1.0f, 1.0f, 1.0f);
 
@@ -217,25 +207,21 @@ int main() {
             my_gl::globals::camera.fov, my_gl::globals::camera.aspect, 0.1f, 50.0f
         );
 
-        my_gl::math::Vec3<float> light_pos_view_coords{ renderer._view_mat * my_gl::globals::light_pos };
+        // my_gl::math::Vec3<float> light_pos_view_coords{ renderer._view_mat * my_gl::globals::light.position };
 
-        world_shader.set_uniform_value("u_light_pos",
+        world_shader.set_uniform_value("u_light.position",
             // view coords
             // light_pos_view_coords[0],
             // light_pos_view_coords[1],
             // light_pos_view_coords[2]
             // world coords
-            my_gl::globals::light_pos[0],
-            my_gl::globals::light_pos[1],
-            my_gl::globals::light_pos[2]
+            my_gl::globals::light.position
         );
         world_shader.set_uniform_value("u_view_pos",
             // view coords:
             // 0.0f, 0.0f, 0.0f
             // world coords:
-            my_gl::globals::camera.camera_pos[0],
-            my_gl::globals::camera.camera_pos[1],
-            my_gl::globals::camera.camera_pos[2]
+            my_gl::globals::camera.camera_pos
         );
 
         float time_0to1 = my_gl::math::Global::map_duration_to01(renderer.get_curr_rendering_duration());
