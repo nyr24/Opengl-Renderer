@@ -25,13 +25,13 @@ int main() {
     constexpr uint16_t normal_offset{ color_offset + sizeof(float) * 3 * 4 * 6 };
 
     my_gl::Program world_shader{
-        // "shaders/vert_shader_material.glsl",
-        // "shaders/frag_shader_material.glsl",
-        "shaders/vert_shader.glsl",
-        "shaders/frag_shader.glsl",
+        "shaders/vert_shader_material.glsl",
+        "shaders/frag_shader_material.glsl",
+        // "shaders/vert_shader.glsl",
+        // "shaders/frag_shader.glsl",
         {
             { .name = "a_pos", .gl_type = GL_FLOAT, .count = 3, .byte_stride = 0, .byte_offset = 0 },
-            { .name = "a_color", .gl_type = GL_FLOAT, .count = 3, .byte_stride = 0, .byte_offset = color_offset },
+            // { .name = "a_color", .gl_type = GL_FLOAT, .count = 3, .byte_stride = 0, .byte_offset = color_offset },
             { .name = "a_normal", .gl_type = GL_FLOAT, .count = 3, .byte_stride = 0, .byte_offset = normal_offset },
         },
         {
@@ -41,10 +41,10 @@ int main() {
             { .name = "u_light_color" },
             { .name = "u_light_pos" },
             { .name = "u_view_pos" },
-            // { .name = "u_material.ambient" },
-            // { .name = "u_material.diffuse" },
-            // { .name = "u_material.specular" },
-            // { .name = "u_material.shininess" },
+            { .name = "u_material.ambient" },
+            { .name = "u_material.diffuse" },
+            { .name = "u_material.specular" },
+            { .name = "u_material.shininess" },
         }
     };
 
@@ -116,7 +116,7 @@ int main() {
     std::array<my_gl::GeometryObjectPrimitive, 4> primitives = {
         // world cube
         my_gl::GeometryObjectPrimitive{
-            std::span<my_gl::TransformGroup, std::dynamic_extent>{world_transforms.begin(), 1},
+            std::span<my_gl::TransformGroup>{world_transforms.begin(), 1},
             36,
             0,
             world_shader,
@@ -132,24 +132,24 @@ int main() {
             world_shader,
             vertex_arr_world,
             GL_TRIANGLES,
-            my_gl::Material::EMERALD,
+            my_gl::Material::OBSIDIAN,
             // my_gl::Material::OBSIDIAN,
             nullptr
         },
         my_gl::GeometryObjectPrimitive{
-            std::span<my_gl::TransformGroup, std::dynamic_extent>{world_transforms.begin() + 1, 1},
+            std::span<my_gl::TransformGroup>{world_transforms.begin() + 1, 1},
             36,
             0,
             world_shader,
             vertex_arr_world,
             GL_TRIANGLES,
             // my_gl::Material::RUBY,
-            my_gl::Material::EMERALD,
+            my_gl::Material::RUBY,
             nullptr
         },
         // light
         my_gl::GeometryObjectPrimitive{
-            std::span<my_gl::TransformGroup, std::dynamic_extent>{world_transforms.begin() + 2, 1},
+            std::span<my_gl::TransformGroup>{world_transforms.begin() + 2, 1},
             36,
             0,
             light_shader,
@@ -169,7 +169,7 @@ int main() {
     my_gl::Renderer renderer{
         // std::span<my_gl::GeometryObjectComplex, std::dynamic_extent>{primitives}, //my_gl::create_cube_creature(world_shader, vertex_arr_world) },
         {},
-        std::span<my_gl::GeometryObjectPrimitive, std::dynamic_extent>(primitives),
+        std::span<my_gl::GeometryObjectPrimitive>{primitives},
         std::move(view_mat),
         std::move(proj_mat),
     };

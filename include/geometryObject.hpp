@@ -46,9 +46,9 @@ namespace my_gl {
             NO_MATERIAL
         };
 
-        my_gl::math::Vec3<float>    ambient = { 1.0f, 1.0f, 1.0f, 1.0f };
-        my_gl::math::Vec3<float>    diffuse = { 1.0f, 1.0f, 1.0f, 1.0f };
-        my_gl::math::Vec3<float>    specular = { 1.0f, 1.0f, 1.0f, 1.0f };
+        my_gl::math::Vec3<float>    ambient = { 1.0f, 1.0f, 1.0f };
+        my_gl::math::Vec3<float>    diffuse = { 1.0f, 1.0f, 1.0f };
+        my_gl::math::Vec3<float>    specular = { 1.0f, 1.0f, 1.0f };
         float                       shininess = 32.0f;
 
         Material(
