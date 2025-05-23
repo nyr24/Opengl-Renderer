@@ -159,20 +159,18 @@ int main() {
     )};
 
     my_gl::Renderer renderer{
-        // std::span<my_gl::GeometryObjectComplex, std::dynamic_extent>{primitives}, //my_gl::create_cube_creature(world_shader, vertex_arr_world) },
+        // std::span<my_gl::GeometryObjectComplex>{primitives}, //my_gl::create_cube_creature(world_shader, vertex_arr_world) },
         {},
         std::span<my_gl::GeometryObjectPrimitive>{primitives},
         std::move(view_mat),
         std::move(proj_mat),
     };
 
-    // my_gl::math::Vec3<float> light_pos_view_coords{ renderer._view_mat * my_gl::globals::light_pos };
+    my_gl::math::Vec3<float> light_pos_view_coords{ renderer._view_mat * my_gl::math::Vec4<float>(my_gl::globals::light.position) };
 
     world_shader.set_uniform_value("u_light.position",
         // view coords
-        // light_pos_view_coords[0],
-        // light_pos_view_coords[1],
-        // light_pos_view_coords[2]
+        // light_pos_view_coords
         // world coords
         my_gl::globals::light.position
     );
@@ -207,13 +205,11 @@ int main() {
             my_gl::globals::camera.fov, my_gl::globals::camera.aspect, 0.1f, 50.0f
         );
 
-        // my_gl::math::Vec3<float> light_pos_view_coords{ renderer._view_mat * my_gl::globals::light.position };
+        my_gl::math::Vec3<float> light_pos_view_coords{ renderer._view_mat * my_gl::math::Vec4<float>(my_gl::globals::light.position) };
 
         world_shader.set_uniform_value("u_light.position",
             // view coords
-            // light_pos_view_coords[0],
-            // light_pos_view_coords[1],
-            // light_pos_view_coords[2]
+            // light_pos_view_coords
             // world coords
             my_gl::globals::light.position
         );

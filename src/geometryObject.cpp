@@ -98,7 +98,7 @@ void my_gl::GeometryObjectPrimitive::render(
     _program.set_uniform_value("u_model_view_mat", model_view_mat.data());
     _program.set_uniform_value("u_normal_mat", normal_mat.data());
     _program.set_uniform_value("u_mvp_mat", mvp_mat.data());
-    _program.set_uniform_value("u_lerp", time_0to1);
+    // _program.set_uniform_value("u_lerp", time_0to1);
 
     if (_material_type != Material::NO_MATERIAL) {
         const my_gl::Material& material = my_gl::Material::get_from_table(_material_type);

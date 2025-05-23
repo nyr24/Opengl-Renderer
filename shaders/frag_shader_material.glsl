@@ -5,11 +5,6 @@ smooth in vec3 passed_frag_pos;
 
 out vec4 output_color;
 
-uniform vec3 u_light_pos;
-uniform vec3 u_light_color;
-uniform vec3 u_view_pos;
-// uniform float u_lerp;
-
 struct Light {
     vec3 position;
     vec3 ambient;
@@ -24,8 +19,10 @@ struct Material {
     float shininess;
 };
 
+uniform vec3 u_view_pos;
 uniform Material u_material;
 uniform Light u_light;
+// uniform float u_lerp;
 
 void main() {
     // ambient

@@ -1,4 +1,3 @@
-#include <math.h>
 #include "globals.hpp"
 #include "camera.hpp"
 
