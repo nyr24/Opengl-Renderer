@@ -68,12 +68,12 @@ int main() {
     // };
 
     my_gl::VertexArray vertex_arr_world{
-        my_gl::meshes::cube_mesh,
+        my_gl::meshes::get_cube_mesh(),
         world_shader
     };
 
     my_gl::VertexArray vertex_arr_light{
-        my_gl::meshes::cube_mesh,
+        my_gl::meshes::get_cube_mesh(),
         light_shader
     };
 
@@ -82,33 +82,38 @@ int main() {
         my_gl::TransformGroup{
             my_gl::math::TransformationType::TRANSLATION,
             {
-                my_gl::math::Transformation<float>::translation({ 1.5f, 0.0f, 0.0f })
+                my_gl::math::Matrix44<float>::translation({ 0.8f, 0.0f, 0.0f })
             },
-            {}
+            {
+                //my_gl::Animation<float>::translation(3.5f, 0.0f, { 0.0f, 0.0f, 0.0f }, { -2.0f, 0.0f, 0.0f })
+            }
         },
         my_gl::TransformGroup{
             my_gl::math::TransformationType::TRANSLATION,
             {
-                my_gl::math::Transformation<float>::translation({ -1.5f, 0.0f, 0.0f })
+                my_gl::math::Matrix44<float>::translation({ -0.8f, 0.0f, 0.0f })
             },
-            {}
+            {
+                //my_gl::Animation<float>::translation(3.5f, 0.0f, { 0.0f, 0.0f, 0.0f }, { 2.0f, 0.0f, 0.0f })
+            }
         },
         // light
         my_gl::TransformGroup{
             my_gl::math::TransformationType::TRANSLATION,
             {
-                my_gl::math::Transformation<float>::translation(my_gl::globals::light.position),
-                my_gl::math::Transformation<float>::scaling({0.4f, 0.2f, 0.2f}),
+                my_gl::math::Matrix44<float>::translation(my_gl::globals::light.position),
+                my_gl::math::Matrix44<float>::scaling({0.4f, 0.2f, 0.2f}),
             },
             {}
         }
     };
 
     // primitives
-    std::array<my_gl::GeometryObjectPrimitive, 4> primitives = {
+    std::array primitives = {
         // world cube
         my_gl::GeometryObjectPrimitive{
             std::span<my_gl::TransformGroup>{world_transforms.begin(), 1},
+            my_gl::Velocity<float>{ {-0.2f, 0.0f, 0.0f} },
             36,
             0,
             world_shader,
@@ -117,31 +122,31 @@ int main() {
             my_gl::Material::EMERALD,
             nullptr
         },
-        my_gl::GeometryObjectPrimitive{
-            {},
-            36,
-            0,
-            world_shader,
-            vertex_arr_world,
-            GL_TRIANGLES,
-            my_gl::Material::OBSIDIAN,
-            // my_gl::Material::OBSIDIAN,
-            nullptr
-        },
+        // my_gl::GeometryObjectPrimitive{
+        //     {},
+        //     36,
+        //     0,
+        //     world_shader,
+        //     vertex_arr_world,
+        //     GL_TRIANGLES,
+        //     my_gl::Material::OBSIDIAN,
+        //     nullptr
+        // },
         my_gl::GeometryObjectPrimitive{
             std::span<my_gl::TransformGroup>{world_transforms.begin() + 1, 1},
+            my_gl::Velocity<float>{ {0.2f, 0.0f, 0.0f} },
             36,
             0,
             world_shader,
             vertex_arr_world,
             GL_TRIANGLES,
-            // my_gl::Material::RUBY,
             my_gl::Material::RUBY,
             nullptr
         },
         // light
         my_gl::GeometryObjectPrimitive{
             std::span<my_gl::TransformGroup>{world_transforms.begin() + 2, 1},
+            my_gl::Velocity<float>{ { 0.0f, 0.0f, 0.0f } },
             36,
             0,
             light_shader,
@@ -187,6 +192,7 @@ int main() {
     light_shader.set_uniform_value("u_color", 1.0f, 1.0f, 1.0f);
 
     bool is_rendering_started{false};
+    my_gl::Duration_sec frame_duration{};
     glfwSwapInterval(1);
 
     while (!glfwWindowShouldClose(window.ptr_raw())) {
@@ -221,12 +227,12 @@ int main() {
         );
 
         float time_0to1 = my_gl::math::Global::map_duration_to01(renderer.get_curr_rendering_duration());
-        renderer.render(time_0to1);
+        renderer.render(frame_duration, time_0to1);
 
         glfwSwapBuffers(window.ptr_raw());
         glfwPollEvents();
 
-        my_gl::Duration_sec frame_duration{ std::chrono::steady_clock::now() - start_frame };
+        frame_duration = std::chrono::steady_clock::now() - start_frame;
         renderer.update_time(frame_duration);
         my_gl::globals::delta_time = frame_duration.count();
     }

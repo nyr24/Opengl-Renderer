@@ -1,5 +1,7 @@
 #include "meshes.hpp"
-#include <vector>
+#include "matrix.hpp"
+#include <array>
+#include <cstdint>
 
 namespace my_gl {
     namespace meshes {
@@ -39,7 +41,13 @@ namespace my_gl {
 #define TEX_MIDDLE_BOT     0.5f, 0.0f
 #define TEX_RIGHT_BOT      1.0f, 0.0f
 
-        std::vector<float> cube_vertices = {
+        constexpr uint16_t position_count = 3 * 4 * 6;
+        constexpr uint16_t texture_count = 2 * 4 * 6;
+        constexpr uint16_t color_count = position_count;
+        constexpr uint16_t normal_count = position_count;
+        constexpr uint16_t vertice_count = position_count + texture_count + color_count + normal_count;
+
+        std::array<float, vertice_count> cube_vertices = {
             // POSITIONS
             // front
             LEFT_TOP_NEAR,  LEFT_BOT_NEAR,  RIGHT_BOT_NEAR, RIGHT_TOP_NEAR,
@@ -80,7 +88,7 @@ namespace my_gl {
             NORMAL_BOTTOM,      NORMAL_BOTTOM,      NORMAL_BOTTOM,      NORMAL_BOTTOM,
         };
 
-        std::vector<uint16_t> cube_indeces = {
+        std::array<uint16_t, 6 * 6> cube_indeces = {
             0, 1, 2,        0, 2, 3,
             4, 6, 5,        4, 7, 6,
             8, 9, 10,       9, 11, 10,
@@ -89,6 +97,36 @@ namespace my_gl {
             20, 22, 21,     21, 22, 23
         };
 
-        Mesh cube_mesh{ std::move(cube_vertices), std::move(cube_indeces) };
+        Boundaries cube_boundaries = {
+            .ltn = { LEFT_TOP_NEAR },
+            .ltf = { LEFT_TOP_FAR },
+            .rtn = { RIGHT_TOP_NEAR },
+            .rtf = { RIGHT_TOP_FAR },
+            .lbn = { LEFT_BOT_NEAR },
+            .lbf = { LEFT_BOT_FAR },
+            .rbn = { RIGHT_BOT_NEAR },
+            .rbf = { RIGHT_BOT_FAR },
+        };
+
+        Mesh get_cube_mesh() {
+            return Mesh{
+                .vertices = std::span{cube_vertices},
+                .indices = std::span{cube_indeces},
+                .boundaries = &cube_boundaries,
+            };
+        };
+
+        Boundaries Mesh::transform_boundaries(const my_gl::math::Matrix44<float>& mat) const {
+            return Boundaries{
+                .ltn = mat * my_gl::math::Vec4<float>(boundaries->ltf),
+                .ltf = mat * my_gl::math::Vec4<float>(boundaries->ltf),
+                .rtn = mat * my_gl::math::Vec4<float>(boundaries->rtn),
+                .rtf = mat * my_gl::math::Vec4<float>(boundaries->rtf),
+                .lbn = mat * my_gl::math::Vec4<float>(boundaries->lbn),
+                .lbf = mat * my_gl::math::Vec4<float>(boundaries->lbf),
+                .rbn = mat * my_gl::math::Vec4<float>(boundaries->rbn),
+                .rbf = mat * my_gl::math::Vec4<float>(boundaries->rbf),
+            };
+        }
     }
 }

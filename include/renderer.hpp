@@ -32,24 +32,12 @@ namespace my_gl {
     class VertexArray {
     public:
         VertexArray(
-            meshes::Mesh&& mesh,
-            const Program& program
+            meshes::Mesh&&  mesh,
+            const Program&  program
         );
         VertexArray(
             const meshes::Mesh& mesh,
-            const Program& program
-        );
-        VertexArray(
-            meshes::Mesh&& mesh,
-            const std::vector<const Program*>& programs
-        );
-        VertexArray(
-            const meshes::Mesh& mesh,
-            const std::vector<const Program*>& programs
-        );
-        VertexArray(
-            const std::vector<meshes::Mesh>& meshes,
-            const std::vector<const Program*>& programs
+            const Program&      program
         );
         VertexArray(const VertexArray& rhs) = default;
         VertexArray(VertexArray&& rhs) = default;
@@ -57,16 +45,13 @@ namespace my_gl {
 
         void bind() const { glBindVertexArray(_vao_id); }
         void un_bind() const { glBindVertexArray(0); }
-        std::size_t get_ibo_size() const { return _ibo_data.size(); }
-        const uint16_t* get_ibo_data() const { return _ibo_data.data(); }
 
     private:
         void init(const std::vector<const Program*>& programs);
         void init(const Program& program);
-        void combine_meshes(const std::vector<meshes::Mesh>& meshes);
 
-        std::vector<float>              _vbo_data;
-        std::vector<uint16_t>           _ibo_data;
+    public:
+        meshes::Mesh                    _mesh;
         uint32_t                        _vao_id;
         uint32_t                        _vbo_id;
         uint32_t                        _ibo_id;
@@ -121,7 +106,7 @@ namespace my_gl {
             math::Matrix44<float>&&                     proj_mat
         );
 
-        void render(float time_0to1);
+        void render(Duration_sec frame_time, float time_0to1);
         void update_time(Duration_sec frame_time);
         Duration_sec get_curr_rendering_duration() const;
 

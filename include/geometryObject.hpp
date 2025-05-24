@@ -8,6 +8,7 @@
 #include "matrix.hpp"
 #include "texture.hpp"
 #include "sharedTypes.hpp"
+#include "vec.hpp"
 
 namespace my_gl {
     class Program;
@@ -17,7 +18,7 @@ namespace my_gl {
     struct TransformGroup {
         TransformGroup(
             math::TransformationType                        arg_type,
-            std::vector<math::Transformation<float>>&&      arg_transforms,
+            std::vector<math::Matrix44<float>>&&            arg_transforms,
             std::vector<my_gl::Animation<float>>&&          arg_anims
         );
         TransformGroup(TransformGroup&& rhs) = default;
@@ -25,9 +26,9 @@ namespace my_gl {
         TransformGroup(const TransformGroup& rhs) = default;
         TransformGroup& operator=(const TransformGroup& rhs) = default;
 
-        math::TransformationType                            type;
-        std::vector<math::Transformation<float>>            transforms;
-        std::vector<my_gl::Animation<float>>                anims;
+        math::TransformationType                type;
+        std::vector<math::Matrix44<float>>      transforms;
+        std::vector<my_gl::Animation<float>>    anims;
     };
 
     struct Material {
@@ -70,28 +71,34 @@ namespace my_gl {
     class GeometryObjectPrimitive {
     public:
         GeometryObjectPrimitive(
-            std::span<my_gl::TransformGroup>                    transforms,
-            std::size_t                                         vertices_count,
-            std::size_t                                         buffer_byte_offset,
-            const Program&                                      program,
-            const VertexArray&                                  vao,
-            GLenum                                              draw_type,
-            Material::Type                                      material_type,
-            const Texture* const                                texture
+            std::span<my_gl::TransformGroup>    transforms,
+            Velocity<float>&&                   velocity,
+            std::size_t                         vertices_count,
+            std::size_t                         buffer_byte_offset,
+            const Program&                      program,
+            const VertexArray&                  vao,
+            GLenum                              draw_type,
+            Material::Type                      material_type,
+            const Texture* const                texture
         );
 
         GeometryObjectPrimitive(GeometryObjectPrimitive&& rhs) = default;
         GeometryObjectPrimitive(const GeometryObjectPrimitive& rhs) = default;
         ~GeometryObjectPrimitive() = default;
 
-        math::Matrix44<float>       get_model_mat();
+        void                        calc_model_mat_frame(Duration_sec frame_time);
+        // void                        update_physics(float delta_time);
+        bool                        check_collision(GeometryObjectPrimitive& second);
+        void                        handle_collision(GeometryObjectPrimitive& second);
         void                        bind_state() const;
         void                        un_bind_state() const;
         void                        draw() const;
         void                        update_anims_time(Duration_sec frame_time);
-        void                        render(const math::Matrix44<float>& view_mat, const math::Matrix44<float>& view_proj_mat, float time_0to1);
+        void                        render(const math::Matrix44<float>& view_mat, const math::Matrix44<float>& view_proj_mat, Duration_sec frame_time, float time_0to1);
 
         std::span<TransformGroup>   _transforms;
+        math::Matrix44<float>       _model_mat{ my_gl::math::Matrix44<float>::identity_new() };
+        Velocity<float>             _velocity;
         const Texture* const        _texture;
         const Program&              _program;
         const VertexArray&          _vao;
@@ -99,6 +106,8 @@ namespace my_gl {
         std::size_t                 _buffer_byte_offset;
         GLenum                      _draw_type;
         Material::Type              _material_type;
+        bool                        _is_colliding{ false };
+        bool                        _was_colliding{ false };
     };
 
     class GeometryObjectComplex {
@@ -106,7 +115,7 @@ namespace my_gl {
         GeometryObjectComplex(std::vector<GeometryObjectPrimitive>&& primitives);
         GeometryObjectComplex(const std::vector<GeometryObjectPrimitive>& primitives);
 
-        void render(const math::Matrix44<float>& view_mat, const math::Matrix44<float>& view_proj_mat, float time_0to1);
+        void render(const math::Matrix44<float>& view_mat, const math::Matrix44<float>& view_proj_mat, Duration_sec frame_time, float time_0to1);
         void update_anims_time(Duration_sec frame_time);
     private:
         std::vector<GeometryObjectPrimitive> _primitives;

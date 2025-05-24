@@ -2,12 +2,16 @@
 #include "geometryObject.hpp"
 #include "animation.hpp"
 #include "matrix.hpp"
+#include "meshes.hpp"
 #include "renderer.hpp"
 #include "sharedTypes.hpp"
+#ifdef DEBUG
+#include <iostream>
+#endif
 
 my_gl::TransformGroup::TransformGroup(
     my_gl::math::TransformationType                 arg_type,
-    std::vector<math::Transformation<float>>&&      arg_transforms,
+    std::vector<math::Matrix44<float>>&&            arg_transforms,
     std::vector<my_gl::Animation<float>>&&          arg_anims
 )
     : type{ arg_type }
@@ -16,16 +20,18 @@ my_gl::TransformGroup::TransformGroup(
 {}
 
 my_gl::GeometryObjectPrimitive::GeometryObjectPrimitive(
-    std::span<my_gl::TransformGroup, std::dynamic_extent>   transforms,
-    std::size_t                                             vertices_count,
-    std::size_t                                             buffer_byte_offset,
-    const Program&                                          program,
-    const VertexArray&                                      vao,
-    GLenum                                                  draw_type,
-    Material::Type                                          material_type,
-    const Texture* const                                    texture
+    std::span<my_gl::TransformGroup>    transforms,
+    Velocity<float>&&                   velocity,
+    std::size_t                         vertices_count,
+    std::size_t                         buffer_byte_offset,
+    const Program&                      program,
+    const VertexArray&                  vao,
+    GLenum                              draw_type,
+    Material::Type                      material_type,
+    const Texture* const                texture
 )
     : _transforms{ transforms }
+    , _velocity(std::move(velocity))
     , _texture{ texture }
     , _program{ program }
     , _vao{ vao }
@@ -35,19 +41,31 @@ my_gl::GeometryObjectPrimitive::GeometryObjectPrimitive(
     , _material_type{ material_type }
 {}
 
-my_gl::math::Matrix44<float> my_gl::GeometryObjectPrimitive::get_model_mat() {
+void my_gl::GeometryObjectPrimitive::calc_model_mat_frame(Duration_sec frame_time) {
     auto result_mat{ my_gl::math::Matrix44<float>::identity_new() };
 
-    for (my_gl::TransformGroup& transforms_by_type : _transforms) {
-        for (const auto& transform : transforms_by_type.transforms) {
-            result_mat *= transform._inner_mat;
-        }
-        for (my_gl::Animation<float>& animation : transforms_by_type.anims) {
-            result_mat *= animation.update();
+    if (_transforms.size()) {
+        for (my_gl::TransformGroup& transforms_by_type : _transforms) {
+            if (transforms_by_type.type == math::TransformationType::TRANSLATION) {
+                for (const auto& transform : transforms_by_type.transforms) {
+                    result_mat *= transform;
+                }
+                result_mat *= _velocity.update(frame_time.count());
+                for (my_gl::Animation<float>& animation : transforms_by_type.anims) {
+                    result_mat *= animation.update();
+                }
+            } else {
+                for (const auto& transform : transforms_by_type.transforms) {
+                    result_mat *= transform;
+                }
+                for (my_gl::Animation<float>& animation : transforms_by_type.anims) {
+                    result_mat *= animation.update();
+                }
+            }
         }
     }
 
-    return result_mat;
+    _model_mat = std::move(result_mat);
 }
 
 void my_gl::GeometryObjectPrimitive::update_anims_time(Duration_sec frame_time) {
@@ -86,14 +104,17 @@ void my_gl::GeometryObjectPrimitive::draw() const {
 void my_gl::GeometryObjectPrimitive::render(
     const my_gl::math::Matrix44<float>& view_mat,
     const my_gl::math::Matrix44<float>& view_proj_mat,
-    float time_0to1)
+    Duration_sec frame_time,
+    float time_0to1
+)
 {
     bind_state();
 
-    my_gl::math::Matrix44<float> model_mat{ get_model_mat() };
-    my_gl::math::Matrix44<float> model_view_mat{ view_mat * model_mat };
+    this->calc_model_mat_frame(frame_time);
+    // my_gl::math::Matrix44<float> model_mat{ get_model_mat(delta_time) };
+    my_gl::math::Matrix44<float> model_view_mat{ view_mat * _model_mat };
     my_gl::math::Matrix44<float> normal_mat{ model_view_mat.invert().transpose() };
-    my_gl::math::Matrix44<float> mvp_mat{ view_proj_mat * model_mat };
+    my_gl::math::Matrix44<float> mvp_mat{ view_proj_mat * _model_mat };
 
     _program.set_uniform_value("u_model_view_mat", model_view_mat.data());
     _program.set_uniform_value("u_normal_mat", normal_mat.data());
@@ -112,6 +133,58 @@ void my_gl::GeometryObjectPrimitive::render(
     un_bind_state();
 }
 
+// void my_gl::GeometryObjectPrimitive::update_physics(float delta_time) {
+//       _curr_frame_matrix *= _velocity.update(delta_time);
+// }
+//
+bool my_gl::GeometryObjectPrimitive::check_collision(GeometryObjectPrimitive& second) {
+    if (this == &second) {
+        return false;
+    }
+
+    meshes::Boundaries first_transformed_boundaries{ this->_vao._mesh.transform_boundaries(_model_mat) };
+    meshes::Boundaries second_transformed_boundaries{ second._vao._mesh.transform_boundaries(second._model_mat) };
+
+    // TODO: checking if the sides were reversed by rotations
+    // float first_left = first_transformed_boundaries.ltn[0] < first_transformed_boundaries.rtn[0]
+    //     ? first_transformed_boundaries.ltn[0] : first_transformed_boundaries.rtn[0];
+    // float first_top = first_transformed_boundaries.ltn[1] < first_transformed_boundaries.rtn[1]
+    //     ? first_transformed_boundaries.ltn[1] : first_transformed_boundaries.rtn[1];
+    // float first_near = first_transformed_boundaries.ltn[2] < first_transformed_boundaries.rtn[2]
+    //     ? first_transformed_boundaries.ltn[2] : first_transformed_boundaries.rtn[2];
+    //
+    // float second_left = second_transformed_boundaries.ltn[0] < second_transformed_boundaries.rtn[0]
+    //     ? second_transformed_boundaries.ltn[0] : second_transformed_boundaries.rtn[0];
+    // float second_top = second_transformed_boundaries.ltn[1] < second_transformed_boundaries.rtn[1]
+    //     ? second_transformed_boundaries.ltn[1] : second_transformed_boundaries.rtn[1];
+    // float second_near = second_transformed_boundaries.ltn[2] < second_transformed_boundaries.rtn[2]
+    //     ? second_transformed_boundaries.ltn[2] : second_transformed_boundaries.rtn[2];
+
+    // determine which object is left, top, near
+    meshes::Boundaries& left_object = first_transformed_boundaries.ltn[0] < second_transformed_boundaries.ltn[0] ? first_transformed_boundaries : second_transformed_boundaries;
+    meshes::Boundaries& right_object = first_transformed_boundaries.ltn[0] > second_transformed_boundaries.ltn[0] ? first_transformed_boundaries : second_transformed_boundaries;
+    meshes::Boundaries& top_object = first_transformed_boundaries.ltn[1] > second_transformed_boundaries.ltn[1] ? first_transformed_boundaries : second_transformed_boundaries;
+    meshes::Boundaries& bottom_object = first_transformed_boundaries.ltn[1] < second_transformed_boundaries.ltn[1] ? first_transformed_boundaries : second_transformed_boundaries;
+    meshes::Boundaries& near_object = first_transformed_boundaries.ltn[2] < second_transformed_boundaries.ltn[2] ? first_transformed_boundaries : second_transformed_boundaries;
+    meshes::Boundaries& far_object = first_transformed_boundaries.ltn[2] > second_transformed_boundaries.ltn[2] ? first_transformed_boundaries : second_transformed_boundaries;
+
+    bool have_collision = left_object.rtn[0] >= right_object.ltn[0] && bottom_object.rtn[1] >= top_object.rbn[1] && near_object.ltf[2] >= far_object.ltn[2];
+    this->_was_colliding = this->_is_colliding;
+    this->_is_colliding = have_collision;
+    second._was_colliding = second._is_colliding;
+    second._is_colliding = have_collision;
+
+    return have_collision;
+}
+
+void my_gl::GeometryObjectPrimitive::handle_collision(my_gl::GeometryObjectPrimitive& second) {
+    if (_is_colliding && !_was_colliding) {
+        // std::cout << "velocity invert\n";
+        this->_velocity._velocity *= -1.0f;
+        second._velocity._velocity *= -1.0f;
+    }
+}
+
 // GeometryObjectComplex
 my_gl::GeometryObjectComplex::GeometryObjectComplex(
     std::vector<my_gl::GeometryObjectPrimitive>&& primitives
@@ -128,11 +201,12 @@ my_gl::GeometryObjectComplex::GeometryObjectComplex(
 void my_gl::GeometryObjectComplex::render(
     const my_gl::math::Matrix44<float>& view_mat,
     const my_gl::math::Matrix44<float>& view_proj_mat,
+    Duration_sec frame_time,
     float time_0to1
 )
 {
     for (auto& primitive : _primitives) {
-        primitive.render(view_mat, view_proj_mat, time_0to1);
+        primitive.render(view_mat, view_proj_mat, frame_time, time_0to1);
     }
 }
 

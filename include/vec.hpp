@@ -34,7 +34,6 @@ namespace my_gl {
             template<uint32_t N_RHS>
             VecBase<T, N>& operator=(const VecBase<T, N_RHS>& rhs)
             {
-                constexpr uint32_t min_len = std::min(N, N_RHS);
                 for (uint32_t i = 0; i < N_RHS; ++i) {
                     _data[i] = rhs._data[i];
                 }
@@ -59,7 +58,6 @@ namespace my_gl {
             template<uint32_t N_RHS>
             VecBase<T, N>& operator=(VecBase<T, N_RHS>&& rhs) noexcept
             {
-                constexpr uint32_t min_len = std::min(N, N_RHS);
                 for (uint32_t i = 0; i < N_RHS; ++i) {
                     _data[i] = rhs._data[i];
                 }
@@ -178,6 +176,10 @@ namespace my_gl {
             VecBase<T, N>& operator%=(const VecBase<T, N>& rhs) {
                 _data %= rhs._data;
                 return *this;
+            }
+
+            bool cmp(const VecBase<T, N>& rhs) {
+                return (*this == rhs);
             }
 
         // operations with primitives

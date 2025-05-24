@@ -1,7 +1,7 @@
 {
     "tasks": [
         {
-            "type": "cppbuild",
+            "type": "process",
             "label": "c++ all files clang debug",
             "command": "C:/msys64/ucrt64/bin/clang++.exe",
             "args": [
@@ -27,7 +27,7 @@
             "group": "build"
         },
         {
-            "type": "cppbuild",
+            "type": "process",
             "label": "c++ all files clang release",
             "command": "C:/msys64/ucrt64/bin/clang++.exe",
             "args": [

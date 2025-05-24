@@ -169,70 +169,21 @@ const std::unordered_map<std::string_view, my_gl::Uniform>& my_gl::Program::get_
 
 // VertexArray
 my_gl::VertexArray::VertexArray(
-    meshes::Mesh&& mesh,
-    const Program& program
-)
-    : _vbo_data{ std::move(mesh.vertices) }
-    , _ibo_data{ std::move(mesh.indices) }
-{
-    init(program);
-}
-
-my_gl::VertexArray::VertexArray(
     const meshes::Mesh& mesh,
     const Program&      program
 )
-    : _vbo_data{ mesh.vertices }
-    , _ibo_data{ mesh.indices }
+    : _mesh{ mesh }
 {
     init(program);
 }
 
 my_gl::VertexArray::VertexArray(
-    meshes::Mesh&& mesh,
-    const std::vector<const Program*>& programs
+    meshes::Mesh&&  mesh,
+    const Program&  program
 )
-    : _vbo_data{ std::move(mesh.vertices) }
-    , _ibo_data{ std::move(mesh.indices) }
+    : _mesh{ std::move(mesh) }
 {
-    init(programs);
-}
-
-my_gl::VertexArray::VertexArray(
-    const meshes::Mesh& mesh,
-    const std::vector<const Program*>& programs
-)
-    : _vbo_data{ mesh.vertices }
-    , _ibo_data{ mesh.indices }
-{
-    init(programs);
-}
-
-my_gl::VertexArray::VertexArray(
-    const std::vector<meshes::Mesh>& meshes,
-    const std::vector<const Program*>& programs
-)
-{
-    combine_meshes(meshes);
-    init(programs);
-}
-
-void my_gl::VertexArray::combine_meshes(const std::vector<meshes::Mesh>& meshes) {
-    size_t vbo_data_size{0};
-    size_t ibo_data_size{0};
-
-    for (const meshes::Mesh& mesh : meshes) {
-        vbo_data_size += mesh.vertices.size();
-        ibo_data_size += mesh.indices.size();
-    }
-
-    _vbo_data.reserve(vbo_data_size);
-    _ibo_data.reserve(ibo_data_size);
-
-    for (const meshes::Mesh& mesh : meshes) {
-        _vbo_data.insert(_vbo_data.end(), mesh.vertices.begin(), mesh.vertices.end());
-        _ibo_data.insert(_ibo_data.end(), mesh.indices.begin(), mesh.indices.end());
-    }
+    init(program);
 }
 
 my_gl::VertexArray::~VertexArray() {
@@ -249,12 +200,12 @@ void my_gl::VertexArray::init(const Program& program) {
     // vertex data
     glCreateBuffers(1, &_vbo_id);
     glBindBuffer(GL_ARRAY_BUFFER, _vbo_id);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * _vbo_data.size(), _vbo_data.data(), GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * _mesh.vertices.size(), _mesh.vertices.data(), GL_STATIC_DRAW);
 
     // indices
     glCreateBuffers(1, &_ibo_id);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _ibo_id);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(uint16_t) * _ibo_data.size(), _ibo_data.data(), GL_STATIC_DRAW);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(uint16_t) * _mesh.indices.size(), _mesh.indices.data(), GL_STATIC_DRAW);
 
     const auto& attrs{ program.get_attrs() };
 
@@ -267,42 +218,6 @@ void my_gl::VertexArray::init(const Program& program) {
 #ifdef DEBUG
         printf("info: attribute '%s' successfully initialized, location: '%d'\n", attr_ref.name, attr_ref.location);
 #endif
-    }
-
-    // unbind
-    glBindVertexArray(0);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-}
-
-void my_gl::VertexArray::init(const std::vector<const Program*>& programs) {
-    // vao
-    glCreateVertexArrays(1, &_vao_id);
-    glBindVertexArray(_vao_id);
-
-    // vertex data
-    glCreateBuffers(1, &_vbo_id);
-    glBindBuffer(GL_ARRAY_BUFFER, _vbo_id);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * _vbo_data.size(), _vbo_data.data(), GL_STATIC_DRAW);
-
-    // indices
-    glCreateBuffers(1, &_ibo_id);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _ibo_id);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(uint16_t) * _ibo_data.size(), _ibo_data.data(), GL_STATIC_DRAW);
-
-    for (const auto* program : programs) {
-        const auto& attrs = program->get_attrs();
-
-        for (auto it = attrs.begin(); it != attrs.end(); ++it) {
-            const my_gl::Attribute& attr_ref{ it->second };
-
-            glEnableVertexAttribArray(attr_ref.location);
-            glVertexAttribPointer(attr_ref.location, attr_ref.count, attr_ref.gl_type, false, attr_ref.byte_stride, reinterpret_cast<void*>(attr_ref.byte_offset));
-
-#ifdef DEBUG
-            printf("info: attribute '%s' successfully initialized, location: '%d'\n", attr_ref.name, attr_ref.location);
-#endif
-        }
     }
 
     // unbind
@@ -324,15 +239,23 @@ my_gl::Renderer::Renderer(
     , _proj_mat{ std::move(proj_mat) }
 {}
 
-void my_gl::Renderer::render(float time_0to1) {
+void my_gl::Renderer::render(my_gl::Duration_sec frame_time, float time_0to1) {
     auto view_proj_mat{ _proj_mat * _view_mat };
 
     for (auto& complex_obj : _complex_objs) {
-        complex_obj.render(_view_mat, view_proj_mat, time_0to1);
+        complex_obj.render(_view_mat, view_proj_mat, frame_time, time_0to1);
     }
 
     for (auto& primitive : _primitives) {
-        primitive.render(_view_mat, view_proj_mat, time_0to1);
+        primitive.render(_view_mat, view_proj_mat, frame_time, time_0to1);
+    }
+
+    for (uint32_t i = 0; i < _primitives.size() - 1; ++i) {
+        for (uint32_t j = i + 1; j < _primitives.size(); ++j) {
+            if (_primitives[i].check_collision(_primitives[j])) {
+                _primitives[i].handle_collision(_primitives[j]);
+            }
+        }
     }
 }
 

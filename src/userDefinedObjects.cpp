@@ -21,21 +21,21 @@ namespace my_gl {
         my_gl::TransformGroup{
             math::TransformationType::TRANSLATION,
             {
-                math::Transformation<float>::translation({0.0f, 1.3f, 0.0f})
+                math::Matrix44<float>::translation({0.0f, 1.3f, 0.0f})
             },
             {}
         },
         my_gl::TransformGroup{
             math::TransformationType::ROTATION,
             {
-                math::Transformation<float>::rotation(180.0f, math::Global::AXIS::Y)
+                math::Matrix44<float>::rotation(180.0f, math::Global::AXIS::Y)
             },
             {}
         },
         my_gl::TransformGroup{
             math::TransformationType::SCALING,
             {
-                math::Transformation<float>::scaling({0.8f, 0.5f, 0.4f})
+                math::Matrix44<float>::scaling({0.8f, 0.5f, 0.4f})
             },
             {}
         }
@@ -48,6 +48,7 @@ namespace my_gl {
             // head
             GeometryObjectPrimitive{
                 std::span{transforms.begin(), 3},
+                Velocity<float>{ {} },
                 cube_creature_vert_count,
                 0,
                 program,
@@ -62,19 +63,20 @@ namespace my_gl {
             //         {
             //             math::TransformationType::ROTATION,
             //             {
-            //                 math::Transformation<float>::rotation(270.0f, math::Global::AXIS::Y)
+            //                 math::Matrix44<float>::rotation(270.0f, math::Global::AXIS::Y)
             //             },
             //             {}
             //         },
             //         {
             //             math::TransformationType::SCALING,
             //             {
-            //                 math::Transformation<float>::scaling({1.0f, 2.25f, 1.0f})
+            //                 math::Matrix44<float>::scaling({1.0f, 2.25f, 1.0f})
             //             },
             //             {}
             //         },
             //     },
             //     cube_creature_vert_count,
+            //      {},
             //     0,
             //     program,
             //     vertex_array,
@@ -88,21 +90,21 @@ namespace my_gl {
             //         {
             //             math::TransformationType::TRANSLATION,
             //             {
-            //                 math::Transformation<float>::translation({-0.8f, 0.3f, 0.0f})
+            //                 math::Matrix44<float>::translation({-0.8f, 0.3f, 0.0f})
             //             },
             //             {}
             //         },
             //         {
             //             math::TransformationType::ROTATION,
             //             {
-            //                 math::Transformation<float>::rotation(-55.0f, math::Global::AXIS::Z)
+            //                 math::Matrix44<float>::rotation(-55.0f, math::Global::AXIS::Z)
             //             },
             //             {}
             //         },
             //         {
             //             math::TransformationType::SCALING,
             //             {
-            //                 math::Transformation<float>::scaling({0.3f, 1.5f, 0.3f})
+            //                 math::Matrix44<float>::scaling({0.3f, 1.5f, 0.3f})
             //             },
             //             {}
             //         },
@@ -121,14 +123,14 @@ namespace my_gl {
             //         {
             //             math::TransformationType::TRANSLATION,
             //             {
-            //                 math::Transformation<float>::translation({0.8f, 0.3f, 0.0f})
+            //                 math::Matrix44<float>::translation({0.8f, 0.3f, 0.0f})
             //             },
             //             {}
             //         },
             //         {
             //             math::TransformationType::ROTATION3d,
             //             {
-            //                 math::Transformation<float>::rotation3d({0.0f, 0.0f, 55.0f})
+            //                 math::Matrix44<float>::rotation3d({0.0f, 0.0f, 55.0f})
             //             },
             //             {
             //                 Animation<float>::rotation3d(
@@ -144,7 +146,7 @@ namespace my_gl {
             //         {
             //             math::TransformationType::SCALING,
             //             {
-            //                 math::Transformation<float>::scaling({0.3f, 1.5f, 0.3f})
+            //                 math::Matrix44<float>::scaling({0.3f, 1.5f, 0.3f})
             //             },
             //             {}
             //         },
@@ -163,21 +165,21 @@ namespace my_gl {
             //         {
             //             math::TransformationType::TRANSLATION,
             //             {
-            //                 math::Transformation<float>::translation({-0.25f, -1.5f, 0.0f})
+            //                 math::Matrix44<float>::translation({-0.25f, -1.5f, 0.0f})
             //             },
             //             {}
             //         },
             //         {
             //             math::TransformationType::ROTATION,
             //             {
-            //                 math::Transformation<float>::rotation(-20.0f, math::Global::AXIS::Z)
+            //                 math::Matrix44<float>::rotation(-20.0f, math::Global::AXIS::Z)
             //             },
             //             {}
             //         },
             //         {
             //             math::TransformationType::SCALING,
             //             {
-            //                 math::Transformation<float>::scaling({0.5f, 2.7f, 0.5f})
+            //                 math::Matrix44<float>::scaling({0.5f, 2.7f, 0.5f})
             //             },
             //             {}
             //         },
@@ -196,21 +198,21 @@ namespace my_gl {
             //         {
             //             math::TransformationType::TRANSLATION,
             //             {
-            //                 math::Transformation<float>::translation({0.25f, -1.5f, 0.0f})
+            //                 math::Matrix44<float>::translation({0.25f, -1.5f, 0.0f})
             //             },
             //             {}
             //         },
             //         {
             //             math::TransformationType::ROTATION,
             //             {
-            //                 math::Transformation<float>::rotation(20.0f, math::Global::AXIS::Z)
+            //                 math::Matrix44<float>::rotation(20.0f, math::Global::AXIS::Z)
             //             },
             //             {}
             //         },
             //         {
             //             math::TransformationType::SCALING,
             //             {
-            //                 math::Transformation<float>::scaling({0.5f, 2.7f, 0.5f})
+            //                 math::Matrix44<float>::scaling({0.5f, 2.7f, 0.5f})
             //             },
             //             {}
             //         },
