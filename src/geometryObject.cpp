@@ -133,10 +133,6 @@ void my_gl::GeometryObjectPrimitive::render(
     un_bind_state();
 }
 
-// void my_gl::GeometryObjectPrimitive::update_physics(float delta_time) {
-//       _curr_frame_matrix *= _velocity.update(delta_time);
-// }
-//
 bool my_gl::GeometryObjectPrimitive::check_collision(GeometryObjectPrimitive& second) {
     if (this == &second) {
         return false;
@@ -168,21 +164,12 @@ bool my_gl::GeometryObjectPrimitive::check_collision(GeometryObjectPrimitive& se
     meshes::Boundaries& near_object = first_transformed_boundaries.ltn[2] < second_transformed_boundaries.ltn[2] ? first_transformed_boundaries : second_transformed_boundaries;
     meshes::Boundaries& far_object = first_transformed_boundaries.ltn[2] > second_transformed_boundaries.ltn[2] ? first_transformed_boundaries : second_transformed_boundaries;
 
-    bool have_collision = left_object.rtn[0] >= right_object.ltn[0] && bottom_object.rtn[1] >= top_object.rbn[1] && near_object.ltf[2] >= far_object.ltn[2];
-    this->_was_colliding = this->_is_colliding;
-    this->_is_colliding = have_collision;
-    second._was_colliding = second._is_colliding;
-    second._is_colliding = have_collision;
-
-    return have_collision;
+    return left_object.rtn[0] >= right_object.ltn[0] && bottom_object.rtn[1] >= top_object.rbn[1] && near_object.ltf[2] >= far_object.ltn[2];
 }
 
 void my_gl::GeometryObjectPrimitive::handle_collision(my_gl::GeometryObjectPrimitive& second) {
-    if (_is_colliding && !_was_colliding) {
-        // std::cout << "velocity invert\n";
-        this->_velocity._velocity *= -1.0f;
-        second._velocity._velocity *= -1.0f;
-    }
+    this->_velocity._velocity *= -1.0f;
+    second._velocity._velocity *= -1.0f;
 }
 
 // GeometryObjectComplex

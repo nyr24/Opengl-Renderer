@@ -393,10 +393,8 @@ namespace my_gl {
         {}
 
         math::Matrix44<T>& update(float delta_time) {
-            _mat.translate(_curr_val);
             _curr_val += _velocity * delta_time;
-            // NOTE: debug
-            // std::cout << "curr val: " << _curr_val;
+            _mat.translate(_curr_val);
             return _mat;
         }
 
