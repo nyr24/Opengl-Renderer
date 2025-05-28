@@ -73,6 +73,7 @@ namespace my_gl {
         GeometryObjectPrimitive(
             std::span<my_gl::TransformGroup>    transforms,
             Velocity<float>&&                   velocity,
+            float                               mass,
             std::size_t                         vertices_count,
             std::size_t                         buffer_byte_offset,
             const Program&                      program,
@@ -104,6 +105,7 @@ namespace my_gl {
         const VertexArray&          _vao;
         std::size_t                 _vertices_count;
         std::size_t                 _buffer_byte_offset;
+        float                       _mass;
         GLenum                      _draw_type;
         Material::Type              _material_type;
         bool                        _is_colliding{ false };

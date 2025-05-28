@@ -49,6 +49,7 @@ namespace my_gl {
             GeometryObjectPrimitive{
                 std::span{transforms.begin(), 3},
                 Velocity<float>{ {} },
+                1.0f,
                 cube_creature_vert_count,
                 0,
                 program,

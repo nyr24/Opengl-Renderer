@@ -22,6 +22,7 @@ my_gl::TransformGroup::TransformGroup(
 my_gl::GeometryObjectPrimitive::GeometryObjectPrimitive(
     std::span<my_gl::TransformGroup>    transforms,
     Velocity<float>&&                   velocity,
+    float                               mass,
     std::size_t                         vertices_count,
     std::size_t                         buffer_byte_offset,
     const Program&                      program,
@@ -37,6 +38,7 @@ my_gl::GeometryObjectPrimitive::GeometryObjectPrimitive(
     , _vao{ vao }
     , _vertices_count{ vertices_count }
     , _buffer_byte_offset{ buffer_byte_offset }
+    , _mass{ mass }
     , _draw_type{ draw_type }
     , _material_type{ material_type }
 {}
@@ -168,8 +170,8 @@ bool my_gl::GeometryObjectPrimitive::check_collision(GeometryObjectPrimitive& se
 }
 
 void my_gl::GeometryObjectPrimitive::handle_collision(my_gl::GeometryObjectPrimitive& second) {
-    this->_velocity._velocity *= -1.0f;
-    second._velocity._velocity *= -1.0f;
+    // this->_velocity._velocity = ((this->_mass - second._mass) * this->_velocity._velocity + 2 * second._mass * second._velocity._velocity) / (this->_mass + second._mass);
+    // second._velocity._velocity = ((second._mass - this->_mass) * second._velocity._velocity + 2 * this->_mass * this->_velocity._velocity) / (this->_mass + second._mass);
 }
 
 // GeometryObjectComplex

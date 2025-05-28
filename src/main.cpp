@@ -82,7 +82,7 @@ int main() {
         my_gl::TransformGroup{
             my_gl::math::TransformationType::TRANSLATION,
             {
-                my_gl::math::Matrix44<float>::translation({ 0.8f, 0.0f, 0.0f })
+                my_gl::math::Matrix44<float>::translation({ 0.8f, 0.8f, 0.0f })
             },
             {
                 //my_gl::Animation<float>::translation(3.5f, 0.0f, { 0.0f, 0.0f, 0.0f }, { -2.0f, 0.0f, 0.0f })
@@ -91,7 +91,7 @@ int main() {
         my_gl::TransformGroup{
             my_gl::math::TransformationType::TRANSLATION,
             {
-                my_gl::math::Matrix44<float>::translation({ -0.8f, 0.0f, 0.0f })
+                my_gl::math::Matrix44<float>::translation({ -0.8f, -0.8f, 0.0f })
             },
             {
                 //my_gl::Animation<float>::translation(3.5f, 0.0f, { 0.0f, 0.0f, 0.0f }, { 2.0f, 0.0f, 0.0f })
@@ -113,7 +113,8 @@ int main() {
         // world cube
         my_gl::GeometryObjectPrimitive{
             std::span<my_gl::TransformGroup>{world_transforms.begin(), 1},
-            my_gl::Velocity<float>{ {-0.2f, 0.0f, 0.0f} },
+            my_gl::Velocity<float>{ {-0.1f, -0.1f, 0.0f} },
+            4.0f,
             36,
             0,
             world_shader,
@@ -134,7 +135,8 @@ int main() {
         // },
         my_gl::GeometryObjectPrimitive{
             std::span<my_gl::TransformGroup>{world_transforms.begin() + 1, 1},
-            my_gl::Velocity<float>{ {0.2f, 0.0f, 0.0f} },
+            my_gl::Velocity<float>{ {0.1f, 0.1f, 0.0f} },
+            2.0f,
             36,
             0,
             world_shader,
@@ -147,6 +149,7 @@ int main() {
         my_gl::GeometryObjectPrimitive{
             std::span<my_gl::TransformGroup>{world_transforms.begin() + 2, 1},
             my_gl::Velocity<float>{ { 0.0f, 0.0f, 0.0f } },
+            1.0f,
             36,
             0,
             light_shader,
@@ -171,12 +174,7 @@ int main() {
         std::move(proj_mat),
     };
 
-    my_gl::math::Vec3<float> light_pos_view_coords{ renderer._view_mat * my_gl::math::Vec4<float>(my_gl::globals::light.position) };
-
     world_shader.set_uniform_value("u_light.position",
-        // view coords
-        // light_pos_view_coords
-        // world coords
         my_gl::globals::light.position
     );
     world_shader.set_uniform_value("u_light.ambient", my_gl::globals::light.ambient);
@@ -211,12 +209,7 @@ int main() {
             my_gl::globals::camera.fov, my_gl::globals::camera.aspect, 0.1f, 50.0f
         );
 
-        my_gl::math::Vec3<float> light_pos_view_coords{ renderer._view_mat * my_gl::math::Vec4<float>(my_gl::globals::light.position) };
-
         world_shader.set_uniform_value("u_light.position",
-            // view coords
-            // light_pos_view_coords
-            // world coords
             my_gl::globals::light.position
         );
         world_shader.set_uniform_value("u_view_pos",

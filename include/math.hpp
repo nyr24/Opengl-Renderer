@@ -54,7 +54,7 @@ namespace my_gl {
             }
 
             template<typename T>
-            static constexpr Spherical_coords<T> cart_to_spher(const Vec3<T>& cart_coords) {
+            static constexpr Spherical_coords<T> cart_to_spher(Vec3<T>& cart_coords) {
                 Spherical_coords spher_coords{ .length = cart_coords.length() };
 
                 auto normalized_vec{ cart_coords.normalize_new() };
@@ -66,12 +66,12 @@ namespace my_gl {
             }
 
             template<typename T>
-            static constexpr T spher_theta(const Vec3<T>& cart_coords) {
+            static constexpr T spher_theta(Vec3<T>& cart_coords) {
                 return std::acos(std::clamp<T>(cart_coords[2], -1, 1));
             }
 
             template<typename T>
-            static constexpr T spher_phi(const Vec3<T>& cart_coords) {
+            static constexpr T spher_phi(Vec3<T>& cart_coords) {
                 T phi_res = std::atan2(cart_coords[1], cart_coords[0]);
                 return (phi_res < 0) ? phi_res + 2 * PI : phi_res;
             }
@@ -84,7 +84,7 @@ namespace my_gl {
             }
 
             template<typename T, std::floating_point N>
-            static T lerp(const T& start, const T& end, N coefficient) {
+            static T lerp(T start, T end, N coefficient) {
                 return (start * (1 - coefficient)) + (end * coefficient);
             }
 
