@@ -194,9 +194,9 @@ int main() {
     glfwSwapInterval(1);
 
     while (!glfwWindowShouldClose(window.ptr_raw())) {
-        auto start_frame{ std::chrono::steady_clock::now() };
+        auto frame_start{ std::chrono::steady_clock::now() };
         if (!is_rendering_started) {
-            renderer._rendering_time_start = start_frame;
+            renderer._rendering_time_start = frame_start;
             is_rendering_started = true;
         }
 
@@ -225,7 +225,7 @@ int main() {
         glfwSwapBuffers(window.ptr_raw());
         glfwPollEvents();
 
-        frame_duration = std::chrono::steady_clock::now() - start_frame;
+        frame_duration = std::chrono::steady_clock::now() - frame_start;
         renderer.update_time(frame_duration);
         my_gl::globals::delta_time = frame_duration.count();
     }

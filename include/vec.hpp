@@ -183,16 +183,6 @@ namespace my_gl {
             }
 
         // operations with primitives
-            friend VecBase<T, N>& operator+(VecBase<T, N>& vec, T s) {
-                vec._data += s;
-                return vec;
-            }
-
-            friend VecBase<T, N>& operator+(T s, VecBase<T, N>& vec) {
-                vec._data += s;
-                return vec;
-            }
-
             friend VecBase<T, N> operator+(const VecBase<T, N>& vec, T s) {
                 VecBase<T, N> res{ vec };
                 res._data += s;
@@ -205,40 +195,10 @@ namespace my_gl {
                 return res;
             }
 
-            friend VecBase<T, N> operator+(VecBase<T, N>&& vec, T s) {
-                vec._data += s;
-                return std::move(vec);
-            }
- 
-            friend VecBase<T, N> operator+(T s, VecBase<T, N>&& vec) {
-                vec._data += s;
-                return std::move(vec);
-            }
-
-            friend VecBase<T, N>& operator-(VecBase<T, N>& vec, T s) {
-                vec._data -= s;
-                return vec;
-            }
-
             friend VecBase<T, N> operator-(const VecBase<T, N>& vec, T s) {
                 VecBase<T, N> res{ vec };
                 res._data -= s;
                 return res;
-            }
-
-            friend VecBase<T, N> operator-(VecBase<T, N>&& vec, T s) {
-                vec._data -= s;
-                return std::move(vec);
-            }
-
-            friend VecBase<T, N>& operator*(VecBase<T, N>& vec, T s) {
-                vec._data *= s;
-                return vec;
-            }
-
-            friend VecBase<T, N>& operator*(T s, VecBase<T, N>& vec) {
-                vec._data *= s;
-                return vec;
             }
 
             friend VecBase<T, N> operator*(const VecBase<T, N>& vec, T s) {
@@ -253,46 +213,16 @@ namespace my_gl {
                 return res;
             }
 
-            friend VecBase<T, N> operator*(VecBase<T, N>&& vec, T s) {
-                vec._data *= s;
-                return std::move(vec);
-            }
- 
-            friend VecBase<T, N> operator*(T s, VecBase<T, N>&& vec) {
-                vec._data *= s;
-                return std::move(vec);
-            }
-
-            friend VecBase<T, N>& operator/(VecBase<T, N>& vec, T s) {
-                vec._data /= s;
-                return vec;
-            }
-
             friend VecBase<T, N> operator/(const VecBase<T, N>& vec, T s) {
                 VecBase<T, N> res{ vec };
                 res._data /= s;
                 return res;
             }
 
-            friend VecBase<T, N> operator/(VecBase<T, N>&& vec, T s) {
-                vec._data /= s;
-                return std::move(vec);
-            }
-
-            friend VecBase<T, N>& operator%(VecBase<T, N>& vec, T s) {
-                vec._data %= s;
-                return vec;
-            }
-
             friend VecBase<T, N> operator%(const VecBase<T, N>& vec, T s) {
                 VecBase<T, N> res{ vec };
                 res._data %= s;
                 return res;
-            }
-
-            friend VecBase<T, N> operator%(VecBase<T, N>&& vec, T s) {
-                vec._data %= s;
-                return std::move(vec);
             }
 
             VecBase<T, N>& operator+=(T val) {
