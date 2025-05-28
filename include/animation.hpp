@@ -131,7 +131,7 @@ namespace my_gl {
         }
 
         const math::VecBase<T, 2u>* get_vec2() const {
-            return const_cast<math::VecBase<T, 2u>*>(std::get_if<math::VecBase<T, 2u>>(&variant));
+            return std::get_if<math::VecBase<T, 2u>>(&variant);
         }
 
         const T* get_scalar() const {

@@ -113,7 +113,6 @@ void my_gl::GeometryObjectPrimitive::render(
     bind_state();
 
     this->calc_model_mat_frame(frame_time);
-    // my_gl::math::Matrix44<float> model_mat{ get_model_mat(delta_time) };
     my_gl::math::Matrix44<float> model_view_mat{ view_mat * _model_mat };
     my_gl::math::Matrix44<float> normal_mat{ model_view_mat.invert().transpose() };
     my_gl::math::Matrix44<float> mvp_mat{ view_proj_mat * _model_mat };
@@ -170,8 +169,8 @@ bool my_gl::GeometryObjectPrimitive::check_collision(GeometryObjectPrimitive& se
 }
 
 void my_gl::GeometryObjectPrimitive::handle_collision(my_gl::GeometryObjectPrimitive& second) {
-    // this->_velocity._velocity = ((this->_mass - second._mass) * this->_velocity._velocity + 2 * second._mass * second._velocity._velocity) / (this->_mass + second._mass);
-    // second._velocity._velocity = ((second._mass - this->_mass) * second._velocity._velocity + 2 * this->_mass * this->_velocity._velocity) / (this->_mass + second._mass);
+    this->_velocity._velocity = ((this->_mass - second._mass) * this->_velocity._velocity + 2 * second._mass * second._velocity._velocity) / (this->_mass + second._mass);
+    second._velocity._velocity = ((second._mass - this->_mass) * second._velocity._velocity + 2 * this->_mass * this->_velocity._velocity) / (this->_mass + second._mass);
 }
 
 // GeometryObjectComplex
