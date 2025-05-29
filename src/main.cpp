@@ -82,20 +82,18 @@ int main() {
         my_gl::TransformGroup{
             my_gl::math::TransformationType::TRANSLATION,
             {
+                my_gl::math::Matrix44<float>::scaling({ 1.2f, 1.4f, 1.0f }),
                 my_gl::math::Matrix44<float>::translation({ 0.8f, 0.8f, 0.0f })
             },
-            {
-                //my_gl::Animation<float>::translation(3.5f, 0.0f, { 0.0f, 0.0f, 0.0f }, { -2.0f, 0.0f, 0.0f })
-            }
+            {}
         },
         my_gl::TransformGroup{
             my_gl::math::TransformationType::TRANSLATION,
             {
+                my_gl::math::Matrix44<float>::scaling({ 0.6f, 0.8f, 1.0f }),
                 my_gl::math::Matrix44<float>::translation({ -0.8f, -0.8f, 0.0f })
             },
-            {
-                //my_gl::Animation<float>::translation(3.5f, 0.0f, { 0.0f, 0.0f, 0.0f }, { 2.0f, 0.0f, 0.0f })
-            }
+            {}
         },
         // light
         my_gl::TransformGroup{
@@ -114,7 +112,7 @@ int main() {
         my_gl::GeometryObjectPrimitive{
             std::span<my_gl::TransformGroup>{world_transforms.begin(), 1},
             my_gl::Velocity<float>{ {-0.1f, -0.1f, 0.0f} },
-            4.0f,
+            6.0f,
             36,
             0,
             world_shader,

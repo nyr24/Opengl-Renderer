@@ -1,3 +1,4 @@
+#include <cstdio>
 #include <span>
 #include "geometryObject.hpp"
 #include "animation.hpp"
@@ -169,8 +170,8 @@ bool my_gl::GeometryObjectPrimitive::check_collision(GeometryObjectPrimitive& se
 }
 
 void my_gl::GeometryObjectPrimitive::handle_collision(my_gl::GeometryObjectPrimitive& second) {
-    this->_velocity._velocity = ((this->_mass - second._mass) * this->_velocity._velocity + 2 * second._mass * second._velocity._velocity) / (this->_mass + second._mass);
-    second._velocity._velocity = ((second._mass - this->_mass) * second._velocity._velocity + 2 * this->_mass * this->_velocity._velocity) / (this->_mass + second._mass);
+    this->_velocity._velocity *= -1.0f * second._mass / this->_mass;
+    second._velocity._velocity *= -1.0f * this->_mass / second._mass;
 }
 
 // GeometryObjectComplex
