@@ -149,7 +149,7 @@ public:
         for (uint16_t i{0}; i < N; ++i) {
             res[i] += rhs[i];
         }
-        return *this;
+        return res;
     }
 
     VecBase<T, N> operator-(const VecBase<T, N>& rhs) const {
@@ -157,7 +157,7 @@ public:
         for (uint16_t i{0}; i < N; ++i) {
             res[i] -= rhs[i];
         }
-        return *this;
+        return res;
     }
 
     VecBase<T, N> operator*(const VecBase<T, N>& rhs) const {
@@ -165,7 +165,7 @@ public:
         for (uint16_t i{0}; i < N; ++i) {
             res[i] *= rhs[i];
         }
-        return *this;
+        return res;
     }
 
     VecBase<T, N> operator/(const VecBase<T, N>& rhs) const {
@@ -173,7 +173,7 @@ public:
         for (uint16_t i{0}; i < N; ++i) {
             res[i] /= rhs[i];
         }
-        return *this;
+        return res;
     }
 
     VecBase<T, N> operator%(const VecBase<T, N>& rhs) const {
@@ -181,7 +181,7 @@ public:
         for (uint16_t i{0}; i < N; ++i) {
             res[i] %= rhs[i];
         }
-        return *this;
+        return res;
     }
 
     VecBase<T, N>& operator+=(const VecBase<T, N>& rhs) {
