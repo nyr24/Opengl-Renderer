@@ -78,25 +78,39 @@ int main() {
     };
 
     // transformations
-    std::array<my_gl::TransformGroup, 3> world_transforms = {
-        my_gl::TransformGroup{
+    std::array<my_gl::TransformData, 5> world_transforms = {
+        // object 1
+        my_gl::TransformData{
             my_gl::math::TransformationType::TRANSLATION,
             {
-                my_gl::math::Matrix44<float>::scaling({ 1.2f, 1.4f, 1.0f }),
                 my_gl::math::Matrix44<float>::translation({ 0.8f, 0.8f, 0.0f })
             },
             {}
         },
-        my_gl::TransformGroup{
+        my_gl::TransformData{
+            my_gl::math::TransformationType::SCALING,
+            {
+                my_gl::math::Matrix44<float>::scaling({ 1.2f, 1.4f, 1.0f }),
+            },
+            {}
+        },
+        // object 2
+        my_gl::TransformData{
             my_gl::math::TransformationType::TRANSLATION,
             {
-                my_gl::math::Matrix44<float>::scaling({ 0.6f, 0.8f, 1.0f }),
                 my_gl::math::Matrix44<float>::translation({ -0.8f, -0.8f, 0.0f })
             },
             {}
         },
+        my_gl::TransformData{
+            my_gl::math::TransformationType::SCALING,
+            {
+                my_gl::math::Matrix44<float>::scaling({ 0.8f, 0.8f, 1.0f }),
+            },
+            {}
+        },
         // light
-        my_gl::TransformGroup{
+        my_gl::TransformData{
             my_gl::math::TransformationType::TRANSLATION,
             {
                 my_gl::math::Matrix44<float>::translation(my_gl::globals::light.position),
@@ -106,13 +120,26 @@ int main() {
         }
     };
 
+    // physics
+    std::array<my_gl::Physics<float>, 2> physics = {
+        my_gl::Physics<float>{
+            {-0.1f, -0.1f, 0.0f},
+            {0.05f, 0.05f, 0.0f},
+            2.0f
+        },
+        my_gl::Physics<float>{
+            {0.1f, 0.1f, 0.0f},
+            {-0.05f, -0.05f, 0.0f},
+            2.0f
+        },
+    };
+
     // primitives
     std::array primitives = {
         // world cube
         my_gl::GeometryObjectPrimitive{
-            std::span<my_gl::TransformGroup>{world_transforms.begin(), 1},
-            my_gl::Velocity<float>{ {-0.1f, -0.1f, 0.0f} },
-            6.0f,
+            std::span<my_gl::TransformData>{world_transforms.begin(), 2},
+            &physics[0],
             36,
             0,
             world_shader,
@@ -132,9 +159,8 @@ int main() {
         //     nullptr
         // },
         my_gl::GeometryObjectPrimitive{
-            std::span<my_gl::TransformGroup>{world_transforms.begin() + 1, 1},
-            my_gl::Velocity<float>{ {0.1f, 0.1f, 0.0f} },
-            2.0f,
+            std::span<my_gl::TransformData>{world_transforms.begin() + 2, 2},
+            &physics[1],
             36,
             0,
             world_shader,
@@ -145,9 +171,8 @@ int main() {
         },
         // light
         my_gl::GeometryObjectPrimitive{
-            std::span<my_gl::TransformGroup>{world_transforms.begin() + 2, 1},
-            my_gl::Velocity<float>{ { 0.0f, 0.0f, 0.0f } },
-            1.0f,
+            std::span<my_gl::TransformData>{world_transforms.begin() + 4, 1},
+            nullptr,
             36,
             0,
             light_shader,

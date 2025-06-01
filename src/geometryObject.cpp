@@ -10,7 +10,7 @@
 #include <iostream>
 #endif
 
-my_gl::TransformGroup::TransformGroup(
+my_gl::TransformData::TransformData(
     my_gl::math::TransformationType                 arg_type,
     std::vector<math::Matrix44<float>>&&            arg_transforms,
     std::vector<my_gl::Animation<float>>&&          arg_anims
@@ -21,9 +21,8 @@ my_gl::TransformGroup::TransformGroup(
 {}
 
 my_gl::GeometryObjectPrimitive::GeometryObjectPrimitive(
-    std::span<my_gl::TransformGroup>    transforms,
-    Velocity<float>&&                   velocity,
-    float                               mass,
+    std::span<my_gl::TransformData>     transform_data,
+    Physics<float>* const               physics,
     std::size_t                         vertices_count,
     std::size_t                         buffer_byte_offset,
     const Program&                      program,
@@ -32,14 +31,13 @@ my_gl::GeometryObjectPrimitive::GeometryObjectPrimitive(
     Material::Type                      material_type,
     const Texture* const                texture
 )
-    : _transforms{ transforms }
-    , _velocity(std::move(velocity))
+    : _transform_data{ transform_data }
+    , _physics{ physics }
     , _texture{ texture }
     , _program{ program }
     , _vao{ vao }
     , _vertices_count{ vertices_count }
     , _buffer_byte_offset{ buffer_byte_offset }
-    , _mass{ mass }
     , _draw_type{ draw_type }
     , _material_type{ material_type }
 {}
@@ -47,13 +45,13 @@ my_gl::GeometryObjectPrimitive::GeometryObjectPrimitive(
 void my_gl::GeometryObjectPrimitive::calc_model_mat_frame(Duration_sec frame_time) {
     auto result_mat{ my_gl::math::Matrix44<float>::identity_new() };
 
-    if (_transforms.size()) {
-        for (my_gl::TransformGroup& transforms_by_type : _transforms) {
-            if (transforms_by_type.type == math::TransformationType::TRANSLATION) {
+    if (_transform_data.size()) {
+        for (my_gl::TransformData& transforms_by_type : _transform_data) {
+            if (transforms_by_type.type == math::TransformationType::TRANSLATION && _physics) {
                 for (const auto& transform : transforms_by_type.transforms) {
                     result_mat *= transform;
                 }
-                result_mat *= _velocity.update(frame_time.count());
+                result_mat *= _physics->update(frame_time.count());
                 for (my_gl::Animation<float>& animation : transforms_by_type.anims) {
                     result_mat *= animation.update();
                 }
@@ -72,7 +70,7 @@ void my_gl::GeometryObjectPrimitive::calc_model_mat_frame(Duration_sec frame_tim
 }
 
 void my_gl::GeometryObjectPrimitive::update_anims_time(Duration_sec frame_time) {
-    for (auto& transform_by_type : _transforms) {
+    for (auto& transform_by_type : _transform_data) {
         for (my_gl::Animation<float>& anim : transform_by_type.anims) {
             anim.update_time(frame_time);
         }
@@ -170,8 +168,13 @@ bool my_gl::GeometryObjectPrimitive::check_collision(GeometryObjectPrimitive& se
 }
 
 void my_gl::GeometryObjectPrimitive::handle_collision(my_gl::GeometryObjectPrimitive& second) {
-    this->_velocity._velocity *= -1.0f * second._mass / this->_mass;
-    second._velocity._velocity *= -1.0f * this->_mass / second._mass;
+    if (!_physics || !second._physics) {
+        return;
+    }
+    this->_physics->_velocity *= -1.0f * second._physics->_mass / this->_physics->_mass;
+    this->_physics->_acceleration *= -1.0f;
+    second._physics->_velocity *= -1.0f * this->_physics->_mass / second._physics->_mass;
+    second._physics->_acceleration *= -1.0f;
 }
 
 // GeometryObjectComplex

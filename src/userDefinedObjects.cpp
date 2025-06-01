@@ -16,23 +16,23 @@ namespace my_gl {
     // CubeCreature
     constexpr int cube_creature_vert_count{ 36 };
 
-    std::array<my_gl::TransformGroup, 3> transforms = {
+    std::array<my_gl::TransformData, 3> transforms = {
         // head
-        my_gl::TransformGroup{
+        my_gl::TransformData{
             math::TransformationType::TRANSLATION,
             {
                 math::Matrix44<float>::translation({0.0f, 1.3f, 0.0f})
             },
             {}
         },
-        my_gl::TransformGroup{
+        my_gl::TransformData{
             math::TransformationType::ROTATION,
             {
                 math::Matrix44<float>::rotation(180.0f, math::Global::AXIS::Y)
             },
             {}
         },
-        my_gl::TransformGroup{
+        my_gl::TransformData{
             math::TransformationType::SCALING,
             {
                 math::Matrix44<float>::scaling({0.8f, 0.5f, 0.4f})
@@ -48,8 +48,7 @@ namespace my_gl {
             // head
             GeometryObjectPrimitive{
                 std::span{transforms.begin(), 3},
-                Velocity<float>{ {} },
-                1.0f,
+                nullptr,
                 cube_creature_vert_count,
                 0,
                 program,
