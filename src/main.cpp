@@ -78,7 +78,7 @@ int main() {
     };
 
     // transformations
-    std::array<my_gl::TransformData, 5> world_transforms = {
+    std::array world_transforms = {
         // object 1
         my_gl::TransformData{
             my_gl::math::TransformationType::TRANSLATION,
@@ -109,6 +109,21 @@ int main() {
             },
             {}
         },
+        // object 3
+        my_gl::TransformData{
+            my_gl::math::TransformationType::TRANSLATION,
+            {
+                my_gl::math::Matrix44<float>::translation({ -0.7f, 1.3f, 0.0f })
+            },
+            {}
+        },
+        my_gl::TransformData{
+            my_gl::math::TransformationType::SCALING,
+            {
+                my_gl::math::Matrix44<float>::scaling({ 1.4f, 0.7f, 1.0f }),
+            },
+            {}
+        },
         // light
         my_gl::TransformData{
             my_gl::math::TransformationType::TRANSLATION,
@@ -121,16 +136,21 @@ int main() {
     };
 
     // physics
-    std::array<my_gl::Physics<float>, 2> physics = {
+    std::array physics = {
         my_gl::Physics<float>{
             {-0.1f, -0.1f, 0.0f},
-            {0.05f, 0.05f, 0.0f},
-            2.0f
+            {},
+            4.0f
         },
         my_gl::Physics<float>{
             {0.1f, 0.1f, 0.0f},
-            {-0.05f, -0.05f, 0.0f},
+            {},
             2.0f
+        },
+        my_gl::Physics<float>{
+            {0.1f, -0.2f, 0.0f},
+            {},
+            3.0f
         },
     };
 
@@ -148,16 +168,6 @@ int main() {
             my_gl::Material::EMERALD,
             nullptr
         },
-        // my_gl::GeometryObjectPrimitive{
-        //     {},
-        //     36,
-        //     0,
-        //     world_shader,
-        //     vertex_arr_world,
-        //     GL_TRIANGLES,
-        //     my_gl::Material::OBSIDIAN,
-        //     nullptr
-        // },
         my_gl::GeometryObjectPrimitive{
             std::span<my_gl::TransformData>{world_transforms.begin() + 2, 2},
             &physics[1],
@@ -169,9 +179,20 @@ int main() {
             my_gl::Material::RUBY,
             nullptr
         },
+        my_gl::GeometryObjectPrimitive{
+            std::span<my_gl::TransformData>{world_transforms.begin() + 4, 2},
+            &physics[2],
+            36,
+            0,
+            world_shader,
+            vertex_arr_world,
+            GL_TRIANGLES,
+            my_gl::Material::OBSIDIAN,
+            nullptr
+        },
         // light
         my_gl::GeometryObjectPrimitive{
-            std::span<my_gl::TransformData>{world_transforms.begin() + 4, 1},
+            std::span<my_gl::TransformData>{world_transforms.begin() + 6, 1},
             nullptr,
             36,
             0,
