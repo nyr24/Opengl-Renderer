@@ -77,9 +77,14 @@ int main() {
         light_shader
     };
 
+    const float WALL_WIDTH = 5.0f;
+    const float WALL_HEIGHT = 1.0f;
+    const float WALL_Y_OFFSET = 2.8f;
+    const float WALL_X_OFFSET = 3.0f;
+
     // transformations
     std::array world_transforms = {
-        // object 1
+        // main object
         my_gl::TransformData{
             my_gl::math::TransformationType::TRANSLATION,
             {
@@ -90,37 +95,67 @@ int main() {
         my_gl::TransformData{
             my_gl::math::TransformationType::SCALING,
             {
-                my_gl::math::Matrix44<float>::scaling({ 1.2f, 1.4f, 1.0f }),
+                my_gl::math::Matrix44<float>::scaling({ 1.0f, 1.0f, 1.0f }),
             },
             {}
         },
-        // object 2
+        // top wall
         my_gl::TransformData{
             my_gl::math::TransformationType::TRANSLATION,
             {
-                my_gl::math::Matrix44<float>::translation({ -0.8f, -0.8f, 0.0f })
+                my_gl::math::Matrix44<float>::translation({ 0.0f, WALL_Y_OFFSET, 0.0f })
             },
             {}
         },
         my_gl::TransformData{
             my_gl::math::TransformationType::SCALING,
             {
-                my_gl::math::Matrix44<float>::scaling({ 0.8f, 0.8f, 1.0f }),
+                my_gl::math::Matrix44<float>::scaling({ WALL_WIDTH, WALL_HEIGHT, 1.0f }),
             },
             {}
         },
-        // object 3
+        // bottom wall
         my_gl::TransformData{
             my_gl::math::TransformationType::TRANSLATION,
             {
-                my_gl::math::Matrix44<float>::translation({ -0.7f, 1.3f, 0.0f })
+                my_gl::math::Matrix44<float>::translation({ 0.0f, -WALL_Y_OFFSET, 0.0f })
             },
             {}
         },
         my_gl::TransformData{
             my_gl::math::TransformationType::SCALING,
             {
-                my_gl::math::Matrix44<float>::scaling({ 1.4f, 0.7f, 1.0f }),
+                my_gl::math::Matrix44<float>::scaling({ WALL_WIDTH, WALL_HEIGHT, 1.0f }),
+            },
+            {}
+        },
+        // left wall
+        my_gl::TransformData{
+            my_gl::math::TransformationType::TRANSLATION,
+            {
+                my_gl::math::Matrix44<float>::translation({ -WALL_X_OFFSET, 0.0f, 0.0f })
+            },
+            {}
+        },
+        my_gl::TransformData{
+            my_gl::math::TransformationType::SCALING,
+            {
+                my_gl::math::Matrix44<float>::scaling({ WALL_HEIGHT, WALL_WIDTH, 1.0f }),
+            },
+            {}
+        },
+        // right wall
+        my_gl::TransformData{
+            my_gl::math::TransformationType::TRANSLATION,
+            {
+                my_gl::math::Matrix44<float>::translation({ WALL_X_OFFSET, 0.0f, 0.0f })
+            },
+            {}
+        },
+        my_gl::TransformData{
+            my_gl::math::TransformationType::SCALING,
+            {
+                my_gl::math::Matrix44<float>::scaling({ WALL_HEIGHT, WALL_WIDTH, 1.0f }),
             },
             {}
         },
@@ -137,26 +172,23 @@ int main() {
 
     // physics
     std::array physics = {
+        // main object
         my_gl::Physics<float>{
-            {-0.1f, -0.1f, 0.0f},
+            {1.8f, 1.2f, 0.0f},
             {},
             4.0f
         },
+        // walls
         my_gl::Physics<float>{
-            {0.1f, 0.1f, 0.0f},
             {},
-            2.0f
-        },
-        my_gl::Physics<float>{
-            {0.1f, -0.2f, 0.0f},
             {},
-            3.0f
+            4.0f
         },
     };
 
     // primitives
     std::array primitives = {
-        // world cube
+        // main object
         my_gl::GeometryObjectPrimitive{
             std::span<my_gl::TransformData>{world_transforms.begin(), 2},
             &physics[0],
@@ -166,8 +198,11 @@ int main() {
             vertex_arr_world,
             GL_TRIANGLES,
             my_gl::Material::EMERALD,
-            nullptr
+            nullptr,
+            {-1.0f, -1.0f, 1.0f},
+            false
         },
+        // top wall
         my_gl::GeometryObjectPrimitive{
             std::span<my_gl::TransformData>{world_transforms.begin() + 2, 2},
             &physics[1],
@@ -176,32 +211,65 @@ int main() {
             world_shader,
             vertex_arr_world,
             GL_TRIANGLES,
-            my_gl::Material::RUBY,
-            nullptr
+            my_gl::Material::GOLD,
+            nullptr,
+            {1.0f, -1.0f, 1.0f},
+            true,
         },
+        // bottom wall
         my_gl::GeometryObjectPrimitive{
             std::span<my_gl::TransformData>{world_transforms.begin() + 4, 2},
-            &physics[2],
+            &physics[1],
             36,
             0,
             world_shader,
             vertex_arr_world,
             GL_TRIANGLES,
-            my_gl::Material::OBSIDIAN,
-            nullptr
-        },
-        // light
-        my_gl::GeometryObjectPrimitive{
-            std::span<my_gl::TransformData>{world_transforms.begin() + 6, 1},
+            my_gl::Material::GOLD,
             nullptr,
+            {1.0f, -1.0f, 1.0f},
+            true,
+        },
+        // left wall
+        my_gl::GeometryObjectPrimitive{
+            std::span<my_gl::TransformData>{world_transforms.begin() + 6, 2},
+            &physics[1],
             36,
             0,
-            light_shader,
-            vertex_arr_light,
+            world_shader,
+            vertex_arr_world,
             GL_TRIANGLES,
-            my_gl::Material::NO_MATERIAL,
-            nullptr
-        }
+            my_gl::Material::GOLD,
+            nullptr,
+            {-1.0f, 1.0f, 1.0f},
+            true,
+        },
+        // right wall
+        my_gl::GeometryObjectPrimitive{
+            std::span<my_gl::TransformData>{world_transforms.begin() + 8, 2},
+            &physics[1],
+            36,
+            0,
+            world_shader,
+            vertex_arr_world,
+            GL_TRIANGLES,
+            my_gl::Material::GOLD,
+            nullptr,
+            {-1.0f, 1.0f, 1.0f},
+            true,
+        },
+        // light
+        // my_gl::GeometryObjectPrimitive{
+        //     std::span<my_gl::TransformData>{world_transforms.begin() + 6, 1},
+        //     nullptr,
+        //     36,
+        //     0,
+        //     light_shader,
+        //     vertex_arr_light,
+        //     GL_TRIANGLES,
+        //     my_gl::Material::NO_MATERIAL,
+        //     nullptr
+        // }
     };
 
     // camera
