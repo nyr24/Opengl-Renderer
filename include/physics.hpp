@@ -5,6 +5,14 @@ namespace my_gl {
 template<std::floating_point T>
 struct Physics {
 public:
+    Physics(float mass)
+        : _mat{}
+        , _curr_val{}
+        , _velocity{}
+        , _acceleration{}
+        , _mass{ mass }
+    {}
+
     Physics(
         math::Vec3<T>&& velocity,
         math::Vec3<T>&& acceleration,

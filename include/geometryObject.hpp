@@ -5,6 +5,7 @@
 #include <array>
 #include <span>
 #include "animation.hpp"
+#include "math.hpp"
 #include "physics.hpp"
 #include "matrix.hpp"
 #include "texture.hpp"
@@ -79,7 +80,9 @@ namespace my_gl {
             const VertexArray&          vao,
             GLenum                      draw_type,
             Material::Type              material_type,
-            const Texture* const        texture
+            const Texture* const        texture,
+            my_gl::math::Vec3<float>&&  change_collision_vec,
+            bool                        is_static
         );
 
         GeometryObjectPrimitive(GeometryObjectPrimitive&& rhs) = default;
@@ -97,6 +100,7 @@ namespace my_gl {
         void                        render(const math::Matrix44<float>& view_mat, const math::Matrix44<float>& view_proj_mat, Duration_sec frame_time, float time_0to1);
 
         std::span<TransformData>    _transform_data;
+        my_gl::math::Vec3<float>    _change_collision_vec;
         Physics<float>* const       _physics;
         const Texture* const        _texture;
         const Program&              _program;
@@ -106,6 +110,7 @@ namespace my_gl {
         math::Matrix44<float>       _model_mat{ my_gl::math::Matrix44<float>::identity_new() };
         GLenum                      _draw_type;
         Material::Type              _material_type;
+        bool                        _is_static;
     };
 
     class GeometryObjectComplex {

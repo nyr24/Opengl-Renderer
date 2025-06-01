@@ -29,9 +29,12 @@ my_gl::GeometryObjectPrimitive::GeometryObjectPrimitive(
     const VertexArray&                  vao,
     GLenum                              draw_type,
     Material::Type                      material_type,
-    const Texture* const                texture
+    const Texture* const                texture,
+    my_gl::math::Vec3<float>&&          change_collision_vec,
+    bool                                is_static
 )
     : _transform_data{ transform_data }
+    , _change_collision_vec{ std::move(change_collision_vec) }
     , _physics{ physics }
     , _texture{ texture }
     , _program{ program }
@@ -40,6 +43,7 @@ my_gl::GeometryObjectPrimitive::GeometryObjectPrimitive(
     , _buffer_byte_offset{ buffer_byte_offset }
     , _draw_type{ draw_type }
     , _material_type{ material_type }
+    , _is_static{ is_static }
 {}
 
 void my_gl::GeometryObjectPrimitive::calc_model_mat_frame(Duration_sec frame_time) {
@@ -47,7 +51,7 @@ void my_gl::GeometryObjectPrimitive::calc_model_mat_frame(Duration_sec frame_tim
 
     if (_transform_data.size()) {
         for (my_gl::TransformData& transforms_by_type : _transform_data) {
-            if (transforms_by_type.type == math::TransformationType::TRANSLATION && _physics) {
+            if (transforms_by_type.type == math::TransformationType::TRANSLATION && _physics && !_is_static) {
                 for (const auto& transform : transforms_by_type.transforms) {
                     result_mat *= transform;
                 }
@@ -171,10 +175,15 @@ void my_gl::GeometryObjectPrimitive::handle_collision(my_gl::GeometryObjectPrimi
     if (!_physics || !second._physics) {
         return;
     }
-    this->_physics->_velocity *= -1.0f * second._physics->_mass / this->_physics->_mass;
-    this->_physics->_acceleration *= -1.0f;
-    second._physics->_velocity *= -1.0f * this->_physics->_mass / second._physics->_mass;
-    second._physics->_acceleration *= -1.0f;
+
+    if (!this->_is_static) {
+        this->_physics->_velocity *= second._change_collision_vec * second._physics->_mass / this->_physics->_mass;
+        this->_physics->_acceleration *= -1.0f;
+    }
+    if (!second._is_static) {
+        second._physics->_velocity *= this->_change_collision_vec * this->_physics->_mass / second._physics->_mass;
+        second._physics->_acceleration *= -1.0f;
+    }
 }
 
 // GeometryObjectComplex

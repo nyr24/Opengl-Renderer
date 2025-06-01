@@ -43,7 +43,7 @@ $(DEBUG_DIR)/%.o: $(SRC_DIR)/%.cpp
 
 # release
 $(RELEASE_EXE): $(RELEASE_OBJS)
-	$(CXX) $(CFLAGS) $(RELEASE_FLAGS) -o $@ $^
+	$(CXX) $(CXXFLAGS) $(RELEASE_FLAGS) -o $@ $^
 	echo "release build completed!"
 
 $(RELEASE_DIR)/%.o: $(SRC_DIR)/%.cpp

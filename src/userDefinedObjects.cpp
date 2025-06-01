@@ -46,17 +46,17 @@ namespace my_gl {
     GeometryObjectComplex create_cube_creature(const Program& program, const VertexArray& vertex_array) {
         return std::vector<GeometryObjectPrimitive>{
             // head
-            GeometryObjectPrimitive{
-                std::span{transforms.begin(), 3},
-                nullptr,
-                cube_creature_vert_count,
-                0,
-                program,
-                vertex_array,
-                GL_TRIANGLES,
-                my_gl::Material::EMERALD,
-                nullptr
-            },
+            // GeometryObjectPrimitive{
+            //     std::span{transforms.begin(), 3},
+            //     nullptr,
+            //     cube_creature_vert_count,
+            //     0,
+            //     program,
+            //     vertex_array,
+            //     GL_TRIANGLES,
+            //     my_gl::Material::EMERALD,
+            //     nullptr
+            // },
             // body
             // GeometryObjectPrimitive{
             //     std::vector<TransformGroup>{
