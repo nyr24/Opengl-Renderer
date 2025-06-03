@@ -1,21 +1,19 @@
+#include <GL/glew.h>
+#include <GLFW/glfw3.h>
 #include <iostream>
 #include <fstream>
-#include <memory>
 #include <sstream>
 #include <vector>
 #include "utils.hpp"
 #include "globals.hpp"
+#include "appCode.hpp"
 #include "camera.hpp"
 #include <STB_IMG/stb_image.h>
-#include <GL/glew.h>
-#include <GLFW/glfw3.h>
 
 my_gl::Window my_gl::init_window() {
-    std::cout << "Starting GLFW context, OpenGL 3.3\n";
-
     my_gl::init_GLFW();
-
-    my_gl::Window window{ globals::window_props.width, globals::window_props.height, "nyr_window", nullptr, nullptr };
+    my_gl::Window window{ globals::window_props.width, globals::window_props.height, "BREAKOUT!", nullptr, nullptr };
+    glfwMakeContextCurrent(window.ptr);
 
     my_gl::init_GLEW();
 
@@ -34,16 +32,13 @@ my_gl::Window my_gl::init_window() {
     glDepthRange(0.0f, 1.0f);
 
     // user input && callbacks
-    glfwSetFramebufferSizeCallback(window.ptr_raw(), my_gl::callback_framebuffer_size);
-    glfwSetKeyCallback(window.ptr_raw(), my_gl::callback_keyboard);
-    glfwSetCursorPosCallback(window.ptr_raw(), my_gl::callback_mouse_move);
-    glfwSetScrollCallback(window.ptr_raw(), my_gl::callback_scroll);
-    glfwSetInputMode(window.ptr_raw(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    glfwSetFramebufferSizeCallback(window.ptr, my_gl::callback_framebuffer_size);
+    glfwSetKeyCallback(window.ptr, my_gl::callback_keyboard);
+    glfwSetCursorPosCallback(window.ptr, my_gl::callback_mouse_move);
+    glfwSetScrollCallback(window.ptr, my_gl::callback_scroll);
+    glfwSetInputMode(window.ptr, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
-    // points drawing
     glEnable(GL_PROGRAM_POINT_SIZE);
-
-    // other
     stbi_set_flip_vertically_on_load(true);
  
     return window;
@@ -51,7 +46,7 @@ my_gl::Window my_gl::init_window() {
 
 void my_gl::init_GLFW() {
     if (!glfwInit()) {
-        std::cout << "Failed to initialize GLFW" << std::endl;
+        std::cerr << "Failed to initialize GLFW" << '\n';
         std::exit(EXIT_FAILURE);
     }
  
@@ -63,11 +58,16 @@ void my_gl::init_GLFW() {
 
 void my_gl::init_GLEW() {
     glewExperimental = GL_TRUE;
-    if (glewInit() != GLEW_OK)
+    GLenum glew_init_res = glewInit();
+    if (glew_init_res != GLEW_OK)
     {
-        std::cout << "Failed to initialize GLEW" << std::endl;
+        std::cerr << "Failed to initialize GLEW: " << (glewGetErrorString(glew_init_res)) << '\n';
         std::exit(EXIT_FAILURE);
     }
+}
+
+void my_gl::init_user_state(GLFWwindow* window, GameState *game_state) {
+    glfwSetWindowUserPointer(window, game_state);
 }
 
 GLuint my_gl::create_program(const char* vertexShaderFilePath, const char* fragmentShaderFilePath) {
@@ -76,7 +76,7 @@ GLuint my_gl::create_program(const char* vertexShaderFilePath, const char* fragm
     GLuint vertexShader{ my_gl::create_shader(GL_VERTEX_SHADER, vertexShaderFilePath) };
     GLuint fragShader{ my_gl::create_shader(GL_FRAGMENT_SHADER, fragmentShaderFilePath) };
 
-    std::vector<GLuint> shaders{ vertexShader, fragShader };
+    std::vector<GLuint> shaders = { vertexShader, fragShader };
  
     for (size_t i{ 0 }; i < shaders.size(); ++i) {
         glAttachShader(program, shaders[i]);
@@ -95,7 +95,7 @@ GLuint my_gl::create_program(const char* vertexShaderFilePath, const char* fragm
         buffer.reserve(infoLogLength + 1);
         glGetProgramInfoLog(program, infoLogLength, nullptr, buffer.data());
 
-        std::cout << "Error when linking a program:\n" << buffer << '\n';
+        std::cerr << "Error when linking a program:\n" << buffer << '\n';
     }
 
     for (const auto shaderId : shaders) {
@@ -106,8 +106,7 @@ GLuint my_gl::create_program(const char* vertexShaderFilePath, const char* fragm
     return program;
 }
 
-
-GLuint my_gl::create_shader(GLenum shaderType, const char* filePath) {        
+GLuint my_gl::create_shader(GLenum shaderType, const char* filePath) {
     std::ifstream shaderFile{ filePath, std::ios_base::binary };
 
     if (!shaderFile.is_open()) {
@@ -149,7 +148,7 @@ GLuint my_gl::create_shader(GLenum shaderType, const char* filePath) {
             break;
         }
 
-        std::cout << "Error when compiling a shader:\n" << shaderTypeStr << '\n' 
+        std::cerr << "Error when compiling a shader:\n" << shaderTypeStr << '\n' 
         << infoLogBuffer << '\n';
     }
 
@@ -180,6 +179,14 @@ void my_gl::callback_keyboard(GLFWwindow* window, int key, int scancode, int act
         my_gl::globals::camera.process_keyboard_input(my_gl::Camera_movement::RIGHT);
         break;
     }
+
+    if (action != GLFW_PRESS)
+    {
+        return;
+    }
+
+    GameState* game_state = static_cast<GameState*>(glfwGetWindowUserPointer(window));
+    process_keyboard_input(game_state, key);
 }
 
 void my_gl::callback_mouse_move(GLFWwindow *window, double xpos, double ypos) {
@@ -285,12 +292,12 @@ void my_gl::callback_debug_message(GLenum source, GLenum type, GLuint id, GLenum
         break;
     }
 
-    printf("[Open gl note]%d: %s of %s severity, raised from %s: %s\n",
+    fprintf(stderr, "[OpenGL error]%d: %s of %s severity, raised from %s: %s\n",
         id, _type, _severity, _source, msg);
 }
 
 void my_gl::print_max_vert_attrs_supported() {
-    int nrAttributes;
+    int32_t nrAttributes;
     glGetIntegerv(GL_MAX_VERTEX_ATTRIBS, &nrAttributes);
-    std::cout << "Maximum nr of vertex attributes supported: " << nrAttributes << std::endl;
+    std::cout << "Maximum nr of vertex attributes supported: " << nrAttributes << '\n';
 }

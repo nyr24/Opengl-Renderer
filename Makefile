@@ -18,8 +18,6 @@ CXXFLAGS=-I$(INCLUDE_DIR) -Iglew.h -Iglfw3.h -std=c++20 -lGLEW -lGLU -lGL -lglfw
 DEBUG_FLAGS=-g -O0 -DDEBUG
 RELEASE_FLAGS=-O3 -DNDEBUG
 
-$(info NEW = $(SRCS))
-
 all: debug
 
 rebuild_dbg: clean_dbg debug

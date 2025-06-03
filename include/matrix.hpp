@@ -86,7 +86,7 @@ namespace my_gl {
                         this->at(j, i) = temp;
                     }
                 }
-    
+ 
                 return *this;
             }
 
@@ -541,10 +541,24 @@ namespace my_gl {
                 return *this;
             }
 
+            Matrix44<T>& scale_acc(const Vec3<T>& scaling_vec) {
+                this->at(0, 0) += scaling_vec.x();
+                this->at(1, 1) += scaling_vec.y();
+                this->at(2, 2) += scaling_vec.z();
+                return *this;
+            }
+
             Matrix44<T>& translate(const Vec3<T>& translation_vec) {
                 this->at(0, 3) = translation_vec.x();
                 this->at(1, 3) = translation_vec.y();
                 this->at(2, 3) = translation_vec.z();
+                return *this;
+            }
+
+            Matrix44<T>& translate_acc(const Vec3<T>& translation_vec) {
+                this->at(0, 3) += translation_vec.x();
+                this->at(1, 3) += translation_vec.y();
+                this->at(2, 3) += translation_vec.z();
                 return *this;
             }
 
@@ -571,6 +585,35 @@ namespace my_gl {
                     this->at(0, 1) = -angle_sin;
                     this->at(1, 0) = angle_sin;
                     this->at(1, 1) = angle_cos;
+                    break;
+                }
+
+                return *this;
+            }
+
+            Matrix44<T>& rotate_acc(T angle_deg, Global::AXIS axis) {
+                const T angle_rad{ Global::degToRad(angle_deg) };
+                const T angle_sin{ std::sin(angle_rad) };
+                const T angle_cos{ std::cos(angle_rad) };
+
+                switch (axis) {
+                case Global::AXIS::X:
+                    this->at(1, 1) += angle_cos;
+                    this->at(1, 2) += -angle_sin;
+                    this->at(2, 1) += angle_sin;
+                    this->at(2, 2) += angle_cos;
+                    break;
+                case Global::AXIS::Y:
+                    this->at(0, 0) += angle_cos;
+                    this->at(0, 2) += angle_sin;
+                    this->at(2, 0) += -angle_sin;
+                    this->at(2, 2) += angle_cos;
+                    break;
+                case Global::AXIS::Z:
+                    this->at(0, 0) += angle_cos;
+                    this->at(0, 1) += -angle_sin;
+                    this->at(1, 0) += angle_sin;
+                    this->at(1, 1) += angle_cos;
                     break;
                 }
 

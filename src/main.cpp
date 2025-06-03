@@ -1,18 +1,13 @@
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #include <chrono>
-#include <array>
-#include <span>
-#include "animation.hpp"
 #include "math.hpp"
 #include "matrix.hpp"
 #include "sharedTypes.hpp"
-#include "vec.hpp"
 #include "utils.hpp"
 #include "window.hpp"
 #include "renderer.hpp"
-#include "geometryObject.hpp"
-#include "texture.hpp"
+#include "appCode.hpp"
 #include "globals.hpp"
 #include "camera.hpp"
 #include "meshes.hpp"
@@ -27,11 +22,8 @@ int main() {
     my_gl::Program world_shader{
         "shaders/vert_shader_material.glsl",
         "shaders/frag_shader_material.glsl",
-        // "shaders/vert_shader.glsl",
-        // "shaders/frag_shader.glsl",
         {
             { .name = "a_pos", .gl_type = GL_FLOAT, .count = 3, .byte_stride = 0, .byte_offset = 0 },
-            // { .name = "a_color", .gl_type = GL_FLOAT, .count = 3, .byte_stride = 0, .byte_offset = color_offset },
             { .name = "a_normal", .gl_type = GL_FLOAT, .count = 3, .byte_stride = 0, .byte_offset = normal_offset },
         },
         {
@@ -77,28 +69,40 @@ int main() {
         light_shader
     };
 
-    const float WALL_WIDTH = 5.0f;
-    const float WALL_HEIGHT = 1.0f;
-    const float WALL_Y_OFFSET = 2.8f;
-    const float WALL_X_OFFSET = 3.0f;
-
     // transformations
-    std::array world_transforms = {
-        // main object
+    std::array transforms = {
+        // ball
         my_gl::TransformData{
             my_gl::math::TransformationType::TRANSLATION,
             {
-                my_gl::math::Matrix44<float>::translation({ 0.8f, 0.8f, 0.0f })
+                my_gl::math::Matrix44<float>::translation({ 0.0f, 0.0f, 0.0f }),
             },
             {}
         },
         my_gl::TransformData{
             my_gl::math::TransformationType::SCALING,
             {
-                my_gl::math::Matrix44<float>::scaling({ 1.0f, 1.0f, 1.0f }),
+                my_gl::math::Matrix44<float>::scaling({ 1.3f, 0.6f, 1.0f }),
             },
             {}
         },
+
+        // paddle
+        my_gl::TransformData{
+            my_gl::math::TransformationType::TRANSLATION,
+            {
+                my_gl::math::Matrix44<float>::translation({ 0.0f, -WALL_Y_OFFSET + 1.3f, 0.0f }),
+            },
+            {}
+        },
+        my_gl::TransformData{
+            my_gl::math::TransformationType::SCALING,
+            {
+                my_gl::math::Matrix44<float>::scaling({ 1.0f, 0.3f, 1.0f }),
+            },
+            {}
+        },
+
         // top wall
         my_gl::TransformData{
             my_gl::math::TransformationType::TRANSLATION,
@@ -114,6 +118,7 @@ int main() {
             },
             {}
         },
+
         // bottom wall
         my_gl::TransformData{
             my_gl::math::TransformationType::TRANSLATION,
@@ -129,6 +134,7 @@ int main() {
             },
             {}
         },
+
         // left wall
         my_gl::TransformData{
             my_gl::math::TransformationType::TRANSLATION,
@@ -144,6 +150,7 @@ int main() {
             },
             {}
         },
+
         // right wall
         my_gl::TransformData{
             my_gl::math::TransformationType::TRANSLATION,
@@ -159,6 +166,7 @@ int main() {
             },
             {}
         },
+
         // light
         my_gl::TransformData{
             my_gl::math::TransformationType::TRANSLATION,
@@ -172,25 +180,31 @@ int main() {
 
     // physics
     std::array physics = {
-        // main object
+        // ball
         my_gl::Physics<float>{
             {1.8f, 1.2f, 0.0f},
             {},
-            4.0f
+            1.0f
+        },
+        // paddle
+        my_gl::Physics<float>{
+            {},
+            {},
+            1.0f
         },
         // walls
         my_gl::Physics<float>{
             {},
             {},
-            4.0f
+            1.0f
         },
     };
 
     // primitives
     std::array primitives = {
-        // main object
+        // ball
         my_gl::GeometryObjectPrimitive{
-            std::span<my_gl::TransformData>{world_transforms.begin(), 2},
+            std::span<my_gl::TransformData>{transforms.begin(), 2},
             &physics[0],
             36,
             0,
@@ -202,65 +216,79 @@ int main() {
             {-1.0f, -1.0f, 1.0f},
             false
         },
-        // top wall
+        // paddle
         my_gl::GeometryObjectPrimitive{
-            std::span<my_gl::TransformData>{world_transforms.begin() + 2, 2},
+            std::span<my_gl::TransformData>{transforms.begin() + 2, 2},
             &physics[1],
             36,
             0,
             world_shader,
             vertex_arr_world,
             GL_TRIANGLES,
-            my_gl::Material::GOLD,
+            my_gl::Material::RUBY,
+            nullptr,
+            {-1.0f, -1.0f, 1.0f},
+            false
+        },
+        // top wall
+        my_gl::GeometryObjectPrimitive{
+            std::span<my_gl::TransformData>{transforms.begin() + 4, 2},
+            &physics[1],
+            36,
+            0,
+            world_shader,
+            vertex_arr_world,
+            GL_TRIANGLES,
+            my_gl::Material::OBSIDIAN,
             nullptr,
             {1.0f, -1.0f, 1.0f},
             true,
         },
         // bottom wall
         my_gl::GeometryObjectPrimitive{
-            std::span<my_gl::TransformData>{world_transforms.begin() + 4, 2},
+            std::span<my_gl::TransformData>{transforms.begin() + 6, 2},
             &physics[1],
             36,
             0,
             world_shader,
             vertex_arr_world,
             GL_TRIANGLES,
-            my_gl::Material::GOLD,
+            my_gl::Material::OBSIDIAN,
             nullptr,
             {1.0f, -1.0f, 1.0f},
             true,
         },
         // left wall
         my_gl::GeometryObjectPrimitive{
-            std::span<my_gl::TransformData>{world_transforms.begin() + 6, 2},
+            std::span<my_gl::TransformData>{transforms.begin() + 8, 2},
             &physics[1],
             36,
             0,
             world_shader,
             vertex_arr_world,
             GL_TRIANGLES,
-            my_gl::Material::GOLD,
+            my_gl::Material::OBSIDIAN,
             nullptr,
             {-1.0f, 1.0f, 1.0f},
             true,
         },
         // right wall
         my_gl::GeometryObjectPrimitive{
-            std::span<my_gl::TransformData>{world_transforms.begin() + 8, 2},
+            std::span<my_gl::TransformData>{transforms.begin() + 10, 2},
             &physics[1],
             36,
             0,
             world_shader,
             vertex_arr_world,
             GL_TRIANGLES,
-            my_gl::Material::GOLD,
+            my_gl::Material::OBSIDIAN,
             nullptr,
             {-1.0f, 1.0f, 1.0f},
             true,
         },
         // light
         // my_gl::GeometryObjectPrimitive{
-        //     std::span<my_gl::TransformData>{world_transforms.begin() + 6, 1},
+        //     std::span<my_gl::TransformData>{transforms.begin() + 6, 1},
         //     nullptr,
         //     36,
         //     0,
@@ -301,11 +329,18 @@ int main() {
     );
     light_shader.set_uniform_value("u_color", 1.0f, 1.0f, 1.0f);
 
+    // pass game state to GLFW
+    auto game_state = GameState {
+        .transforms{ std::span{transforms} },
+        .physics{ std::span{physics} }
+    };
+    my_gl::init_user_state(window.ptr, &game_state);
+
     bool is_rendering_started{false};
     my_gl::Duration_sec frame_duration{};
     glfwSwapInterval(1);
 
-    while (!glfwWindowShouldClose(window.ptr_raw())) {
+    while (!glfwWindowShouldClose(window.ptr)) {
         auto frame_start{ std::chrono::steady_clock::now() };
         if (!is_rendering_started) {
             renderer._rendering_time_start = frame_start;
@@ -334,7 +369,7 @@ int main() {
         float time_0to1 = my_gl::math::Global::map_duration_to01(renderer.get_curr_rendering_duration());
         renderer.render(frame_duration, time_0to1);
 
-        glfwSwapBuffers(window.ptr_raw());
+        glfwSwapBuffers(window.ptr);
         glfwPollEvents();
 
         frame_duration = std::chrono::steady_clock::now() - frame_start;
