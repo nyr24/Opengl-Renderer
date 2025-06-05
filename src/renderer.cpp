@@ -252,8 +252,9 @@ void my_gl::Renderer::render(my_gl::Duration_sec frame_time, float time_0to1) {
 
     for (uint32_t i = 0; i < _primitives.size() - 1; ++i) {
         for (uint32_t j = i + 1; j < _primitives.size(); ++j) {
-            if (_primitives[i].check_collision(_primitives[j])) {
-                _primitives[i].handle_collision(_primitives[j]);
+            CollisionResult coll_res = _primitives[i].check_collision(_primitives[j]);
+            if (coll_res.status) {
+                _primitives[i].handle_collision(_primitives[j], coll_res);
             }
         }
     }

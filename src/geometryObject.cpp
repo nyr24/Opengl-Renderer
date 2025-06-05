@@ -1,11 +1,13 @@
-#include <cstdio>
-#include <span>
 #include "geometryObject.hpp"
 #include "animation.hpp"
 #include "matrix.hpp"
 #include "meshes.hpp"
 #include "renderer.hpp"
 #include "sharedTypes.hpp"
+#include "vec.hpp"
+#include <cstdio>
+#include <span>
+#include <utility>
 #ifdef DEBUG
 #include <iostream>
 #endif
@@ -29,21 +31,20 @@ my_gl::GeometryObjectPrimitive::GeometryObjectPrimitive(
     const VertexArray&                  vao,
     GLenum                              draw_type,
     Material::Type                      material_type,
-    const Texture* const                texture,
-    my_gl::math::Vec3<float>&&          change_collision_vec,
-    bool                                is_static
+    CollisionType                       collision_type,
+    const Texture* const                texture
 )
     : _transform_data{ transform_data }
-    , _change_collision_vec{ std::move(change_collision_vec) }
     , _physics{ physics }
     , _texture{ texture }
     , _program{ program }
     , _vao{ vao }
     , _vertices_count{ vertices_count }
     , _buffer_byte_offset{ buffer_byte_offset }
+    , _model_mat{ my_gl::math::Matrix44<float>::identity_new() }
     , _draw_type{ draw_type }
     , _material_type{ material_type }
-    , _is_static{ is_static }
+    , _collision_type{ collision_type }
 {}
 
 void my_gl::GeometryObjectPrimitive::calc_model_mat_frame(Duration_sec frame_time) {
@@ -51,7 +52,7 @@ void my_gl::GeometryObjectPrimitive::calc_model_mat_frame(Duration_sec frame_tim
 
     if (_transform_data.size()) {
         for (my_gl::TransformData& transforms_by_type : _transform_data) {
-            if (transforms_by_type.type == math::TransformationType::TRANSLATION && _physics && !_is_static) {
+            if (transforms_by_type.type == math::TransformationType::TRANSLATION && _collision_type != CollisionType::STATIC && _physics) {
                 for (const auto& transform : transforms_by_type.transforms) {
                     result_mat *= transform;
                 }
@@ -137,9 +138,9 @@ void my_gl::GeometryObjectPrimitive::render(
     un_bind_state();
 }
 
-bool my_gl::GeometryObjectPrimitive::check_collision(GeometryObjectPrimitive& second) {
+my_gl::CollisionResult my_gl::GeometryObjectPrimitive::check_collision(GeometryObjectPrimitive& second) {
     if (this == &second) {
-        return false;
+        return {};
     }
 
     meshes::Boundaries first_transformed_boundaries{ this->_vao._mesh.transform_boundaries(_model_mat) };
@@ -159,30 +160,62 @@ bool my_gl::GeometryObjectPrimitive::check_collision(GeometryObjectPrimitive& se
     //     ? second_transformed_boundaries.ltn[1] : second_transformed_boundaries.rtn[1];
     // float second_near = second_transformed_boundaries.ltn[2] < second_transformed_boundaries.rtn[2]
     //     ? second_transformed_boundaries.ltn[2] : second_transformed_boundaries.rtn[2];
+ 
+    CollisionResult coll_res;
 
-    // determine which object is left, top, near
-    meshes::Boundaries& left_object = first_transformed_boundaries.ltn[0] < second_transformed_boundaries.ltn[0] ? first_transformed_boundaries : second_transformed_boundaries;
-    meshes::Boundaries& right_object = first_transformed_boundaries.ltn[0] > second_transformed_boundaries.ltn[0] ? first_transformed_boundaries : second_transformed_boundaries;
-    meshes::Boundaries& top_object = first_transformed_boundaries.ltn[1] > second_transformed_boundaries.ltn[1] ? first_transformed_boundaries : second_transformed_boundaries;
-    meshes::Boundaries& bottom_object = first_transformed_boundaries.ltn[1] < second_transformed_boundaries.ltn[1] ? first_transformed_boundaries : second_transformed_boundaries;
-    meshes::Boundaries& near_object = first_transformed_boundaries.ltn[2] < second_transformed_boundaries.ltn[2] ? first_transformed_boundaries : second_transformed_boundaries;
-    meshes::Boundaries& far_object = first_transformed_boundaries.ltn[2] > second_transformed_boundaries.ltn[2] ? first_transformed_boundaries : second_transformed_boundaries;
+    coll_res.is_left = first_transformed_boundaries.ltn[0] < second_transformed_boundaries.ltn[0];
+    coll_res.is_bottom = first_transformed_boundaries.lbn[1] < second_transformed_boundaries.lbn[1];
+    coll_res.is_near = first_transformed_boundaries.ltn[2] < second_transformed_boundaries.ltn[2];
 
-    return left_object.rtn[0] >= right_object.ltn[0] && bottom_object.rtn[1] >= top_object.rbn[1] && near_object.ltf[2] >= far_object.ltn[2];
+    if (coll_res.is_left) {
+        coll_res.offset_x = second_transformed_boundaries.ltn[0] - first_transformed_boundaries.rtn[0];
+    } else {
+        coll_res.offset_x = first_transformed_boundaries.ltn[0] - second_transformed_boundaries.rtn[0];
+    }
+
+    if (coll_res.is_bottom) {
+        coll_res.offset_y = second_transformed_boundaries.lbn[1] - first_transformed_boundaries.ltn[1];
+    } else {
+        coll_res.offset_y = first_transformed_boundaries.lbn[1] - second_transformed_boundaries.ltn[1];
+    }
+
+    if (coll_res.is_near) {
+        coll_res.offset_z = second_transformed_boundaries.ltn[2] - first_transformed_boundaries.ltf[2];
+    } else {
+        coll_res.offset_z = first_transformed_boundaries.ltn[2] - second_transformed_boundaries.ltf[2];
+    }
+
+    coll_res.status = coll_res.offset_x <= 0 && coll_res.offset_y <= 0 && coll_res.offset_z <= 0;
+
+    return coll_res;
 }
 
-void my_gl::GeometryObjectPrimitive::handle_collision(my_gl::GeometryObjectPrimitive& second) {
-    if (!_physics || !second._physics) {
+void my_gl::GeometryObjectPrimitive::handle_collision(my_gl::GeometryObjectPrimitive& second, CollisionResult& coll_res) {
+    if (this->_collision_type == CollisionType::GHOST || second._collision_type == CollisionType::GHOST) {
         return;
     }
 
-    if (!this->_is_static) {
-        this->_physics->_velocity *= second._change_collision_vec * second._physics->_mass / this->_physics->_mass;
-        this->_physics->_acceleration *= -1.0f;
+    my_gl::math::Vec3<float> change_collision_vec(1.0f);
+
+    if (this->_collision_type != CollisionType::STATIC) {
+        if (coll_res.offset_x < -0.1f) {
+            change_collision_vec[1] = -1.0f;
+        }
+        if (coll_res.offset_y < -0.1f) {
+            change_collision_vec[0] = -1.0f;
+        }
+        this->_physics->_velocity *= change_collision_vec * second._physics->_mass / this->_physics->_mass;
+        // this->_physics->_acceleration *= -1.0f;
     }
-    if (!second._is_static) {
-        second._physics->_velocity *= this->_change_collision_vec * this->_physics->_mass / second._physics->_mass;
-        second._physics->_acceleration *= -1.0f;
+    if (second._collision_type != CollisionType::STATIC) {
+        if (coll_res.offset_x < -0.1f) {
+            change_collision_vec[1] = -1.0f;
+        }
+        if (coll_res.offset_y < -0.1f) {
+            change_collision_vec[0] = -1.0f;
+        }
+        second._physics->_velocity *= change_collision_vec * this->_physics->_mass / second._physics->_mass;;
+        // second._physics->_acceleration *= -1.0f;
     }
 }
 

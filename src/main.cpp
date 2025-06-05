@@ -1,6 +1,7 @@
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #include <chrono>
+#include "geometryObject.hpp"
 #include "math.hpp"
 #include "matrix.hpp"
 #include "sharedTypes.hpp"
@@ -103,38 +104,6 @@ int main() {
             {}
         },
 
-        // top wall
-        my_gl::TransformData{
-            my_gl::math::TransformationType::TRANSLATION,
-            {
-                my_gl::math::Matrix44<float>::translation({ 0.0f, WALL_Y_OFFSET, 0.0f })
-            },
-            {}
-        },
-        my_gl::TransformData{
-            my_gl::math::TransformationType::SCALING,
-            {
-                my_gl::math::Matrix44<float>::scaling({ WALL_WIDTH, WALL_HEIGHT, 1.0f }),
-            },
-            {}
-        },
-
-        // bottom wall
-        my_gl::TransformData{
-            my_gl::math::TransformationType::TRANSLATION,
-            {
-                my_gl::math::Matrix44<float>::translation({ 0.0f, -WALL_Y_OFFSET, 0.0f })
-            },
-            {}
-        },
-        my_gl::TransformData{
-            my_gl::math::TransformationType::SCALING,
-            {
-                my_gl::math::Matrix44<float>::scaling({ WALL_WIDTH, WALL_HEIGHT, 1.0f }),
-            },
-            {}
-        },
-
         // left wall
         my_gl::TransformData{
             my_gl::math::TransformationType::TRANSLATION,
@@ -163,6 +132,38 @@ int main() {
             my_gl::math::TransformationType::SCALING,
             {
                 my_gl::math::Matrix44<float>::scaling({ WALL_HEIGHT, WALL_WIDTH, 1.0f }),
+            },
+            {}
+        },
+
+        // top wall
+        my_gl::TransformData{
+            my_gl::math::TransformationType::TRANSLATION,
+            {
+                my_gl::math::Matrix44<float>::translation({ 0.0f, WALL_Y_OFFSET, 0.0f })
+            },
+            {}
+        },
+        my_gl::TransformData{
+            my_gl::math::TransformationType::SCALING,
+            {
+                my_gl::math::Matrix44<float>::scaling({ WALL_WIDTH, WALL_HEIGHT, 1.0f }),
+            },
+            {}
+        },
+
+        // bottom wall
+        my_gl::TransformData{
+            my_gl::math::TransformationType::TRANSLATION,
+            {
+                my_gl::math::Matrix44<float>::translation({ 0.0f, -WALL_Y_OFFSET, 0.0f })
+            },
+            {}
+        },
+        my_gl::TransformData{
+            my_gl::math::TransformationType::SCALING,
+            {
+                my_gl::math::Matrix44<float>::scaling({ WALL_WIDTH, WALL_HEIGHT, 1.0f }),
             },
             {}
         },
@@ -201,7 +202,7 @@ int main() {
     };
 
     // primitives
-    std::array primitives = {
+    std::array<my_gl::GeometryObjectPrimitive, PrimitiveIndex::COUNT> primitives = {
         // ball
         my_gl::GeometryObjectPrimitive{
             std::span<my_gl::TransformData>{transforms.begin(), 2},
@@ -212,9 +213,8 @@ int main() {
             vertex_arr_world,
             GL_TRIANGLES,
             my_gl::Material::EMERALD,
+            my_gl::CollisionType::DEFAULT,
             nullptr,
-            {-1.0f, -1.0f, 1.0f},
-            false
         },
         // paddle
         my_gl::GeometryObjectPrimitive{
@@ -226,11 +226,10 @@ int main() {
             vertex_arr_world,
             GL_TRIANGLES,
             my_gl::Material::RUBY,
+            my_gl::CollisionType::STATIC,
             nullptr,
-            {-1.0f, -1.0f, 1.0f},
-            false
         },
-        // top wall
+        // left wall
         my_gl::GeometryObjectPrimitive{
             std::span<my_gl::TransformData>{transforms.begin() + 4, 2},
             &physics[1],
@@ -240,11 +239,10 @@ int main() {
             vertex_arr_world,
             GL_TRIANGLES,
             my_gl::Material::OBSIDIAN,
+            my_gl::CollisionType::STATIC,
             nullptr,
-            {1.0f, -1.0f, 1.0f},
-            true,
         },
-        // bottom wall
+        // right wall
         my_gl::GeometryObjectPrimitive{
             std::span<my_gl::TransformData>{transforms.begin() + 6, 2},
             &physics[1],
@@ -254,11 +252,10 @@ int main() {
             vertex_arr_world,
             GL_TRIANGLES,
             my_gl::Material::OBSIDIAN,
+            my_gl::CollisionType::STATIC,
             nullptr,
-            {1.0f, -1.0f, 1.0f},
-            true,
         },
-        // left wall
+        // top wall
         my_gl::GeometryObjectPrimitive{
             std::span<my_gl::TransformData>{transforms.begin() + 8, 2},
             &physics[1],
@@ -268,11 +265,10 @@ int main() {
             vertex_arr_world,
             GL_TRIANGLES,
             my_gl::Material::OBSIDIAN,
+            my_gl::CollisionType::STATIC,
             nullptr,
-            {-1.0f, 1.0f, 1.0f},
-            true,
         },
-        // right wall
+        // bottom wall
         my_gl::GeometryObjectPrimitive{
             std::span<my_gl::TransformData>{transforms.begin() + 10, 2},
             &physics[1],
@@ -282,9 +278,8 @@ int main() {
             vertex_arr_world,
             GL_TRIANGLES,
             my_gl::Material::OBSIDIAN,
+            my_gl::CollisionType::STATIC,
             nullptr,
-            {-1.0f, 1.0f, 1.0f},
-            true,
         },
         // light
         // my_gl::GeometryObjectPrimitive{
@@ -332,7 +327,8 @@ int main() {
     // pass game state to GLFW
     auto game_state = GameState {
         .transforms{ std::span{transforms} },
-        .physics{ std::span{physics} }
+        .physics{ std::span{physics} },
+        .primitives{ std::span{primitives} }
     };
     my_gl::init_user_state(window.ptr, &game_state);
 
