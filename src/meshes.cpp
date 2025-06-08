@@ -1,5 +1,3 @@
-#pragma once
-
 #include "meshes.hpp"
 #include "matrix.hpp"
 #include <array>

@@ -1,6 +1,7 @@
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #include <chrono>
+#include <vector>
 #include "geometryObject.hpp"
 #include "math.hpp"
 #include "matrix.hpp"
@@ -71,113 +72,10 @@ int main() {
     };
 
     // transformations
-    std::array transforms = {
-        // ball
-        my_gl::TransformData{
-            my_gl::math::TransformationType::TRANSLATION,
-            {
-                my_gl::math::Matrix44<float>::translation({ 0.0f, 0.0f, 0.0f }),
-            },
-            {}
-        },
-        my_gl::TransformData{
-            my_gl::math::TransformationType::SCALING,
-            {
-                my_gl::math::Matrix44<float>::scaling({ 1.3f, 0.6f, 1.0f }),
-            },
-            {}
-        },
-
-        // paddle
-        my_gl::TransformData{
-            my_gl::math::TransformationType::TRANSLATION,
-            {
-                my_gl::math::Matrix44<float>::translation({ 0.0f, -WALL_Y_OFFSET + 1.3f, 0.0f }),
-            },
-            {}
-        },
-        my_gl::TransformData{
-            my_gl::math::TransformationType::SCALING,
-            {
-                my_gl::math::Matrix44<float>::scaling({ 1.0f, 0.3f, 1.0f }),
-            },
-            {}
-        },
-
-        // left wall
-        my_gl::TransformData{
-            my_gl::math::TransformationType::TRANSLATION,
-            {
-                my_gl::math::Matrix44<float>::translation({ -WALL_X_OFFSET, 0.0f, 0.0f })
-            },
-            {}
-        },
-        my_gl::TransformData{
-            my_gl::math::TransformationType::SCALING,
-            {
-                my_gl::math::Matrix44<float>::scaling({ WALL_HEIGHT, WALL_WIDTH, 1.0f }),
-            },
-            {}
-        },
-
-        // right wall
-        my_gl::TransformData{
-            my_gl::math::TransformationType::TRANSLATION,
-            {
-                my_gl::math::Matrix44<float>::translation({ WALL_X_OFFSET, 0.0f, 0.0f })
-            },
-            {}
-        },
-        my_gl::TransformData{
-            my_gl::math::TransformationType::SCALING,
-            {
-                my_gl::math::Matrix44<float>::scaling({ WALL_HEIGHT, WALL_WIDTH, 1.0f }),
-            },
-            {}
-        },
-
-        // top wall
-        my_gl::TransformData{
-            my_gl::math::TransformationType::TRANSLATION,
-            {
-                my_gl::math::Matrix44<float>::translation({ 0.0f, WALL_Y_OFFSET, 0.0f })
-            },
-            {}
-        },
-        my_gl::TransformData{
-            my_gl::math::TransformationType::SCALING,
-            {
-                my_gl::math::Matrix44<float>::scaling({ WALL_WIDTH, WALL_HEIGHT, 1.0f }),
-            },
-            {}
-        },
-
-        // bottom wall
-        my_gl::TransformData{
-            my_gl::math::TransformationType::TRANSLATION,
-            {
-                my_gl::math::Matrix44<float>::translation({ 0.0f, -WALL_Y_OFFSET, 0.0f })
-            },
-            {}
-        },
-        my_gl::TransformData{
-            my_gl::math::TransformationType::SCALING,
-            {
-                my_gl::math::Matrix44<float>::scaling({ WALL_WIDTH, WALL_HEIGHT, 1.0f }),
-            },
-            {}
-        },
-
-        // light
-        my_gl::TransformData{
-            my_gl::math::TransformationType::TRANSLATION,
-            {
-                my_gl::math::Matrix44<float>::translation(my_gl::globals::light.position),
-                my_gl::math::Matrix44<float>::scaling({0.4f, 0.2f, 0.2f}),
-            },
-            {}
-        }
-    };
+    std::vector<my_gl::TransformData> transforms;
+    transforms.reserve(120);
+    populate_primitive_transforms(transforms);
+    populate_tile_transforms(transforms);
 
     // physics
     std::array physics = {
@@ -187,13 +85,7 @@ int main() {
             {},
             1.0f
         },
-        // paddle
-        my_gl::Physics<float>{
-            {},
-            {},
-            1.0f
-        },
-        // walls
+        // static objects
         my_gl::Physics<float>{
             {},
             {},
@@ -202,104 +94,14 @@ int main() {
     };
 
     // primitives
-    std::array<my_gl::GeometryObjectPrimitive, PrimitiveIndex::COUNT> primitives = {
-        // ball
-        my_gl::GeometryObjectPrimitive{
-            std::span<my_gl::TransformData>{transforms.begin(), 2},
-            &physics[0],
-            36,
-            0,
-            world_shader,
-            vertex_arr_world,
-            GL_TRIANGLES,
-            my_gl::Material::EMERALD,
-            my_gl::CollisionType::DEFAULT,
-            nullptr,
-        },
-        // paddle
-        my_gl::GeometryObjectPrimitive{
-            std::span<my_gl::TransformData>{transforms.begin() + 2, 2},
-            &physics[1],
-            36,
-            0,
-            world_shader,
-            vertex_arr_world,
-            GL_TRIANGLES,
-            my_gl::Material::RUBY,
-            my_gl::CollisionType::STATIC,
-            nullptr,
-        },
-        // left wall
-        my_gl::GeometryObjectPrimitive{
-            std::span<my_gl::TransformData>{transforms.begin() + 4, 2},
-            &physics[1],
-            36,
-            0,
-            world_shader,
-            vertex_arr_world,
-            GL_TRIANGLES,
-            my_gl::Material::OBSIDIAN,
-            my_gl::CollisionType::STATIC,
-            nullptr,
-        },
-        // right wall
-        my_gl::GeometryObjectPrimitive{
-            std::span<my_gl::TransformData>{transforms.begin() + 6, 2},
-            &physics[1],
-            36,
-            0,
-            world_shader,
-            vertex_arr_world,
-            GL_TRIANGLES,
-            my_gl::Material::OBSIDIAN,
-            my_gl::CollisionType::STATIC,
-            nullptr,
-        },
-        // top wall
-        my_gl::GeometryObjectPrimitive{
-            std::span<my_gl::TransformData>{transforms.begin() + 8, 2},
-            &physics[1],
-            36,
-            0,
-            world_shader,
-            vertex_arr_world,
-            GL_TRIANGLES,
-            my_gl::Material::OBSIDIAN,
-            my_gl::CollisionType::STATIC,
-            nullptr,
-        },
-        // bottom wall
-        my_gl::GeometryObjectPrimitive{
-            std::span<my_gl::TransformData>{transforms.begin() + 10, 2},
-            &physics[1],
-            36,
-            0,
-            world_shader,
-            vertex_arr_world,
-            GL_TRIANGLES,
-            my_gl::Material::OBSIDIAN,
-            my_gl::CollisionType::STATIC,
-            nullptr,
-        },
-        // light
-        // my_gl::GeometryObjectPrimitive{
-        //     std::span<my_gl::TransformData>{transforms.begin() + 6, 1},
-        //     nullptr,
-        //     36,
-        //     0,
-        //     light_shader,
-        //     vertex_arr_light,
-        //     GL_TRIANGLES,
-        //     my_gl::Material::NO_MATERIAL,
-        //     nullptr
-        // }
-    };
+    std::vector<my_gl::GeometryObjectPrimitive> primitives;
+    primitives.reserve(PrimitiveIndex::COUNT + TILE_COUNT);
+    populate_primitives(primitives, transforms, std::span{physics}, world_shader, vertex_arr_world);
+    populate_tile_primitives(primitives, transforms, std::span{physics}, world_shader, vertex_arr_world);
 
     // camera
     auto view_mat{ my_gl::globals::camera.get_view_mat() };
-    auto proj_mat{ my_gl::math::Matrix44<float>::perspective_fov(
-        my_gl::globals::camera.fov, my_gl::globals::camera.aspect, 0.1f, 50.0f
-    )};
+    auto proj_mat = my_gl::math::Matrix44<float>::perspective_fov(my_gl::globals::camera.fov, my_gl::globals::camera.aspect, 0.1f, 50.0f);
 
     my_gl::Renderer renderer{
         // std::span<my_gl::GeometryObjectComplex>{primitives}, //my_gl::create_cube_creature(world_shader, vertex_arr_world) },
@@ -348,9 +150,7 @@ int main() {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         renderer._view_mat = my_gl::globals::camera.get_view_mat();
-        renderer._proj_mat = my_gl::math::Matrix44<float>::perspective_fov(
-            my_gl::globals::camera.fov, my_gl::globals::camera.aspect, 0.1f, 50.0f
-        );
+        renderer._proj_mat = my_gl::math::Matrix44<float>::perspective_fov(my_gl::globals::camera.fov, my_gl::globals::camera.aspect, 0.1f, 50.0f);
 
         world_shader.set_uniform_value("u_light.position",
             my_gl::globals::light.position

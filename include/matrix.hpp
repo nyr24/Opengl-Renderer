@@ -390,9 +390,9 @@ namespace my_gl {
 
                 res.at(0, 0) = zNear / right;
                 res.at(1, 1) = zNear / top;
-                res.at(2, 2) = (-(zFar + zNear)) / (zFar - zNear);
+                res.at(2, 2) = -zNear / (zFar - zNear);
                 res.at(2, 3) = (-2.0f * zFar * zNear) / (zFar - zNear);
-                res.at(3, 2) = -1.0f; 
+                res.at(3, 2) = -1.0f;
 
                 return res;
             }
@@ -400,13 +400,27 @@ namespace my_gl {
             static Matrix44<T> perspective(T right, T left, T top, T bottom, T zNear, T zFar) {
                 Matrix44<T> res;
 
-                res.at(0, 0) = (2.0f * zNear) / (right - left);
-                res.at(0, 2) = (right + left) / (right - left);
-                res.at(1, 1) = (2.0f * zNear) / (top - bottom);
-                res.at(1, 2) = (top + bottom) / (top - bottom);
-                res.at(2, 2) = (-(zFar + zNear)) / (zFar - zNear);
+                res.at(0, 0) = 2.0f * zNear / (right - left);
+                res.at(0, 3) = (right + left) / (right - left);
+                res.at(1, 1) = 2.0f * zNear / (top - bottom);
+                res.at(1, 3) = (top + bottom) / (top - bottom);
+                res.at(2, 2) = -zNear / (zFar - zNear);
                 res.at(2, 3) = (-2.0f * zFar * zNear) / (zFar - zNear);
                 res.at(3, 2) = -1.0f;
+
+                return res;
+            }
+
+            static Matrix44<T> ortho(T right, T left, T top, T bottom, T zNear, T zFar) {
+                Matrix44<T> res;
+
+                res.at(0, 0) = 2.0f / (right - left);
+                res.at(0, 3) = -(right + left) / (right - left);
+                res.at(1, 1) = 2.0f / (top - bottom);
+                res.at(1, 3) = -(top + bottom) / (top - bottom);
+                res.at(2, 2) = -2.0f / (zFar - zNear);
+                res.at(2, 3) = -zNear / (zFar - zNear);
+                res.at(3, 3) = 1.0f;
 
                 return res;
             }

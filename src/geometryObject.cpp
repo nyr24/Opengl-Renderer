@@ -185,7 +185,7 @@ my_gl::CollisionResult my_gl::GeometryObjectPrimitive::check_collision(GeometryO
         coll_res.offset_z = first_transformed_boundaries.ltn[2] - second_transformed_boundaries.ltf[2];
     }
 
-    coll_res.status = coll_res.offset_x <= 0 && coll_res.offset_y <= 0 && coll_res.offset_z <= 0;
+    coll_res.status = coll_res.offset_x <= 0.0f && coll_res.offset_y <= 0.0f && coll_res.offset_z <= 0.0f;
 
     return coll_res;
 }
