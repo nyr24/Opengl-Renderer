@@ -675,7 +675,8 @@ namespace my_gl {
             ROTATION,
             ROTATION3d,
             SCALING,
-            SHEAR
+            SHEAR,
+            SCALAR
         };
 
         template<std::floating_point T>

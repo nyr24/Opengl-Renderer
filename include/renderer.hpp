@@ -107,7 +107,7 @@ namespace my_gl {
         );
 
         void render(Duration_sec frame_time, float time_0to1);
-        void update_time(Duration_sec frame_time);
+        void update_rendering_time(Duration_sec frame_time);
         Duration_sec get_curr_rendering_duration() const;
 
         std::span<my_gl::GeometryObjectComplex>     _complex_objs;

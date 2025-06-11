@@ -2,6 +2,7 @@
 #include <GLFW/glfw3.h>
 #include <chrono>
 #include <vector>
+#include "advanced_transforms.hpp"
 #include "geometryObject.hpp"
 #include "math.hpp"
 #include "matrix.hpp"
@@ -41,6 +42,7 @@ int main() {
             { .name = "u_light.ambient" },
             { .name = "u_light.diffuse" },
             { .name = "u_light.specular" },
+            { .name = "u_opacity" },
         }
     };
 
@@ -80,24 +82,25 @@ int main() {
     // physics
     std::array physics = {
         // ball
-        my_gl::Physics<float>{
+        my_gl::FrameTransform<float>{
             {1.8f, 1.2f, 0.0f},
             {},
-            1.0f
         },
         // static objects
-        my_gl::Physics<float>{
-            {},
-            {},
-            1.0f
-        },
+        my_gl::FrameTransform<float>{},
     };
+
+    // custom state (only for tiles for now)
+    std::vector<GameObjState> custom_obj_state;
+    custom_obj_state.reserve(PrimitiveIndex::COUNT + TILE_COUNT);
+    populate_custom_state_primitives(custom_obj_state);
+    populate_custom_state_tiles(custom_obj_state);
 
     // primitives
     std::vector<my_gl::GeometryObjectPrimitive> primitives;
     primitives.reserve(PrimitiveIndex::COUNT + TILE_COUNT);
-    populate_primitives(primitives, transforms, std::span{physics}, world_shader, vertex_arr_world);
-    populate_tile_primitives(primitives, transforms, std::span{physics}, world_shader, vertex_arr_world);
+    populate_primitives(primitives, transforms, custom_obj_state, std::span{physics}, world_shader, vertex_arr_world);
+    populate_tile_primitives(primitives, transforms, custom_obj_state, std::span{physics}, world_shader, vertex_arr_world);
 
     // camera
     auto view_mat{ my_gl::globals::camera.get_view_mat() };
@@ -117,6 +120,7 @@ int main() {
     world_shader.set_uniform_value("u_light.ambient", my_gl::globals::light.ambient);
     world_shader.set_uniform_value("u_light.diffuse", my_gl::globals::light.diffuse);
     world_shader.set_uniform_value("u_light.specular", my_gl::globals::light.specular);
+    world_shader.set_uniform_value("u_opacity", 1.0f);
 
     world_shader.set_uniform_value("u_view_pos",
         // view coords
@@ -145,7 +149,7 @@ int main() {
             is_rendering_started = true;
         }
 
-        glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+        glClearColor(0.0f, 0.1f, 0.3f, 0.8f);
         glClearDepth(1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -169,7 +173,7 @@ int main() {
         glfwPollEvents();
 
         frame_duration = std::chrono::steady_clock::now() - frame_start;
-        renderer.update_time(frame_duration);
+        renderer.update_rendering_time(frame_duration);
         my_gl::globals::delta_time = frame_duration.count();
     }
 

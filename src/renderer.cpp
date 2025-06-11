@@ -255,21 +255,14 @@ void my_gl::Renderer::render(my_gl::Duration_sec frame_time, float time_0to1) {
             CollisionResult coll_res = _primitives[i].check_collision(_primitives[j]);
             if (coll_res.status) {
                 _primitives[i].handle_collision(_primitives[j], coll_res);
+                continue;
             }
         }
     }
 }
 
-void my_gl::Renderer::update_time(Duration_sec frame_duration) {
+void my_gl::Renderer::update_rendering_time(Duration_sec frame_duration) {
     _rendering_time_curr += frame_duration;
-
-    for (auto& complex_obj : _complex_objs) {
-        complex_obj.update_anims_time(frame_duration);
-    }
-
-    for (auto& primitive : _primitives) {
-        primitive.update_anims_time(frame_duration);
-    }
 }
 
 my_gl::Duration_sec my_gl::Renderer::get_curr_rendering_duration() const {

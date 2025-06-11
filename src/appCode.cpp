@@ -1,4 +1,5 @@
 #include "appCode.hpp"
+#include "advanced_transforms.hpp"
 #include "geometryObject.hpp"
 #include "matrix.hpp"
 #include <GLFW/glfw3.h>
@@ -30,7 +31,7 @@ void process_keyboard_input(GameState* game_state, int32_t key_pressed) {
             if (!ball_coll_res.is_left && ball_coll_res.offset_y < 0) {
                 move_offset = std::min(move_offset, ball_coll_res.offset_x);
             }
-            game_state->transforms[2].transforms[0].translate_acc({ -(move_offset - 0.01f), 0.0f, 0.0f });
+            game_state->transforms[2].static_transform.translate_acc({ -(move_offset - 0.01f), 0.0f, 0.0f });
         } break;
         case GLFW_KEY_RIGHT: {
             my_gl::CollisionResult right_wall_coll_res = game_state->primitives[PrimitiveIndex::PADDLE].check_collision(game_state->primitives[PrimitiveIndex::RIGHT_WALL]);
@@ -46,7 +47,7 @@ void process_keyboard_input(GameState* game_state, int32_t key_pressed) {
             if (ball_coll_res.is_left && ball_coll_res.offset_y < 0) {
                 move_offset = std::min(move_offset, ball_coll_res.offset_x);
             }
-            game_state->transforms[2].transforms[0].translate_acc({ (move_offset - 0.01f), 0.0f, 0.0f });
+            game_state->transforms[2].static_transform.translate_acc({ (move_offset - 0.01f), 0.0f, 0.0f });
         } break;
         case GLFW_KEY_UP: {
             my_gl::CollisionResult top_wall_coll_res = game_state->primitives[PrimitiveIndex::PADDLE].check_collision(game_state->primitives[PrimitiveIndex::TOP_WALL]);
@@ -62,7 +63,7 @@ void process_keyboard_input(GameState* game_state, int32_t key_pressed) {
             if (ball_coll_res.is_bottom && ball_coll_res.offset_x < 0) {
                 move_offset = std::min(move_offset, ball_coll_res.offset_y);
             }
-            game_state->transforms[2].transforms[0].translate_acc({ 0.0f, (move_offset - 0.01f), 0.0f });
+            game_state->transforms[2].static_transform.translate_acc({ 0.0f, (move_offset - 0.01f), 0.0f });
         } break;
         case GLFW_KEY_DOWN: {
             my_gl::CollisionResult bottom_wall_coll_res = game_state->primitives[PrimitiveIndex::PADDLE].check_collision(game_state->primitives[PrimitiveIndex::BOTTOM_WALL]);
@@ -78,13 +79,13 @@ void process_keyboard_input(GameState* game_state, int32_t key_pressed) {
             if (!ball_coll_res.is_bottom && ball_coll_res.offset_x < 0) {
                 move_offset = std::min(move_offset, ball_coll_res.offset_y);
             }
-            game_state->transforms[2].transforms[0].translate_acc({ 0.0f, -(move_offset - 0.01f), 0.0f });
+            game_state->transforms[2].static_transform.translate_acc({ 0.0f, -(move_offset - 0.01f), 0.0f });
         } break;
     }
 }
 
 void populate_primitive_transforms(std::vector<my_gl::TransformData>& out_transforms) {
-    assert((out_transforms.capacity() - out_transforms.size()) >= (PrimitiveIndex::COUNT * TRANSFORMS_PER_PRIMITIVE) && "Bad reserve count");
+    assert((out_transforms.capacity() - out_transforms.size()) >= PRIMITIVE_TRANSFORM_COUNT && "Bad reserve count");
 
     // ball
     out_transforms.push_back(my_gl::TransformData{
@@ -92,6 +93,7 @@ void populate_primitive_transforms(std::vector<my_gl::TransformData>& out_transf
         {
             my_gl::math::Matrix44<float>::translation({ 0.0f, BALL_INIT_OFFSET_Y, 0.0f }),
         },
+        {},
         {}
     });
 
@@ -100,6 +102,7 @@ void populate_primitive_transforms(std::vector<my_gl::TransformData>& out_transf
         {
             my_gl::math::Matrix44<float>::scaling({ 1.3f, 0.6f, 1.0f }),
         },
+        {},
         {}
     });
 
@@ -109,6 +112,7 @@ void populate_primitive_transforms(std::vector<my_gl::TransformData>& out_transf
         {
             my_gl::math::Matrix44<float>::translation({ 0.0f, -VERT_WALL_OFFSET / 2, 0.0f }),
         },
+        {},
         {}
     });
 
@@ -117,6 +121,7 @@ void populate_primitive_transforms(std::vector<my_gl::TransformData>& out_transf
         {
             my_gl::math::Matrix44<float>::scaling({ 1.0f, 0.3f, 1.0f }),
         },
+        {},
         {}
     });
 
@@ -126,6 +131,7 @@ void populate_primitive_transforms(std::vector<my_gl::TransformData>& out_transf
         {
             my_gl::math::Matrix44<float>::translation({ -VERT_WALL_OFFSET, 0.0f, 0.0f })
         },
+        {},
         {}
     });
 
@@ -134,6 +140,7 @@ void populate_primitive_transforms(std::vector<my_gl::TransformData>& out_transf
         {
             my_gl::math::Matrix44<float>::scaling({ VERT_WALL_WIDTH, VERT_WALL_HEIGHT, 1.0f }),
         },
+        {},
         {}
     });
 
@@ -143,6 +150,7 @@ void populate_primitive_transforms(std::vector<my_gl::TransformData>& out_transf
         {
             my_gl::math::Matrix44<float>::translation({ VERT_WALL_OFFSET, 0.0f, 0.0f })
         },
+        {},
         {}
     });
 
@@ -151,6 +159,7 @@ void populate_primitive_transforms(std::vector<my_gl::TransformData>& out_transf
         {
             my_gl::math::Matrix44<float>::scaling({ VERT_WALL_WIDTH, VERT_WALL_HEIGHT, 1.0f }),
         },
+        {},
         {}
     });
 
@@ -160,6 +169,7 @@ void populate_primitive_transforms(std::vector<my_gl::TransformData>& out_transf
         {
             my_gl::math::Matrix44<float>::translation({ 0.0f, HOR_WALL_OFFSET, 0.0f })
         },
+        {},
         {}
     });
 
@@ -168,6 +178,7 @@ void populate_primitive_transforms(std::vector<my_gl::TransformData>& out_transf
         {
             my_gl::math::Matrix44<float>::scaling({ HOR_WALL_WIDTH, HOR_WALL_HEIGHT, 1.0f }),
         },
+        {},
         {}
     });
 
@@ -177,6 +188,7 @@ void populate_primitive_transforms(std::vector<my_gl::TransformData>& out_transf
         {
             my_gl::math::Matrix44<float>::translation({ 0.0f, -HOR_WALL_OFFSET, 0.0f })
         },
+        {},
         {}
     });
 
@@ -185,6 +197,7 @@ void populate_primitive_transforms(std::vector<my_gl::TransformData>& out_transf
         {
             my_gl::math::Matrix44<float>::scaling({ HOR_WALL_WIDTH, HOR_WALL_HEIGHT, 1.0f }),
         },
+        {},
         {}
     });
 
@@ -222,22 +235,59 @@ void populate_tile_transforms(std::vector<my_gl::TransformData>& out_transforms)
             out_transforms.push_back(my_gl::TransformData{
                 my_gl::math::TransformationType::TRANSLATION,
                 { my_gl::math::Matrix44<float>::translation({TILES_INIT_LEFT_OFFSET + j * TILE_OFFSET_X, TILES_INIT_TOP_OFFSET - i * TILE_OFFSET_Y, 0.0f}) },
+                {},
                 {}
             });
 
             out_transforms.push_back(my_gl::TransformData{
                 my_gl::math::TransformationType::SCALING,
                 { my_gl::math::Matrix44<float>::scaling({TILE_WIDTH, TILE_HEIGHT, 1.0f}) },
+                {},
                 {}
             });
         }
     }
 }
 
+void populate_custom_state_primitives(std::vector<GameObjState>& out_custom_state) {
+    assert((out_custom_state.capacity() - out_custom_state.size() >= PrimitiveIndex::COUNT) && "Bad reserve count");
+    for (uint16_t i{0}; i < PrimitiveIndex::COUNT; ++i) {
+        GameObjType obj_type{ GameObjType::WALL };
+
+        switch (i) {
+            case PrimitiveIndex::BALL: obj_type = GameObjType::BALL; break;
+            case PrimitiveIndex::PADDLE: obj_type = GameObjType::PADDLE; break;
+            default: break;
+        }
+
+        out_custom_state.push_back(
+            {
+                my_gl::TimeTransform<float>::scalar_val(1.5f, 0.0f, 1.0f, 0.0f),
+                obj_type,
+                true
+            }
+        );
+    }
+}
+
+void populate_custom_state_tiles(std::vector<GameObjState>& out_custom_state) {
+    assert((out_custom_state.capacity() - out_custom_state.size() >= TILE_COUNT) && "Bad reserve count");
+    for (uint16_t i{PrimitiveIndex::COUNT}; i < (PrimitiveIndex::COUNT + TILE_COUNT); ++i) {
+        out_custom_state.push_back(
+            {
+                my_gl::TimeTransform<float>::scalar_val(1.5f, 0.0f, 1.0f, 0.0f),
+                GameObjType::TILE,
+                true
+            }
+        );
+    }
+}
+
 void populate_primitives(
     std::vector<my_gl::GeometryObjectPrimitive>& out_primitives,
     std::vector<my_gl::TransformData>& transforms,
-    std::span<my_gl::Physics<float>> physics,
+    std::vector<GameObjState>& custom_obj_state,
+    std::span<my_gl::FrameTransform<float>> physics,
     const my_gl::Program& shader,
     const my_gl::VertexArray& vert_arr
 )
@@ -247,124 +297,133 @@ void populate_primitives(
     // ball
     out_primitives.push_back(my_gl::GeometryObjectPrimitive{
         std::span<my_gl::TransformData>{transforms.data(), TRANSFORMS_PER_PRIMITIVE},
+        static_cast<void*>(&custom_obj_state[PrimitiveIndex::BALL]),
         &physics[0],
-        36,
-        0,
+        nullptr,
         shader,
         vert_arr,
+        36,
+        0,
         GL_TRIANGLES,
         my_gl::Material::EMERALD,
         my_gl::CollisionType::DEFAULT,
-        nullptr,
     });
 
     // paddle
     out_primitives.push_back(my_gl::GeometryObjectPrimitive{
         std::span<my_gl::TransformData>{transforms.data() + 2, TRANSFORMS_PER_PRIMITIVE},
+        static_cast<void*>(&custom_obj_state[PrimitiveIndex::PADDLE]),
         &physics[1],
-        36,
-        0,
+        nullptr,
         shader,
         vert_arr,
+        36,
+        0,
         GL_TRIANGLES,
         my_gl::Material::RUBY,
         my_gl::CollisionType::STATIC,
-        nullptr,
     });
 
     // left wall
     out_primitives.push_back(my_gl::GeometryObjectPrimitive{
         std::span<my_gl::TransformData>{transforms.data() + 4, TRANSFORMS_PER_PRIMITIVE},
+        static_cast<void*>(&custom_obj_state[PrimitiveIndex::LEFT_WALL]),
         &physics[1],
-        36,
-        0,
+        nullptr,
         shader,
         vert_arr,
+        36,
+        0,
         GL_TRIANGLES,
         my_gl::Material::OBSIDIAN,
         my_gl::CollisionType::STATIC,
-        nullptr,
     });
 
     // right wall
     out_primitives.push_back(my_gl::GeometryObjectPrimitive{
         std::span<my_gl::TransformData>{transforms.data() + 6, TRANSFORMS_PER_PRIMITIVE},
+        static_cast<void*>(&custom_obj_state[PrimitiveIndex::RIGHT_WALL]),
         &physics[1],
-        36,
-        0,
+        nullptr,
         shader,
         vert_arr,
+        36,
+        0,
         GL_TRIANGLES,
         my_gl::Material::OBSIDIAN,
         my_gl::CollisionType::STATIC,
-        nullptr,
     });
 
     // top wall
     out_primitives.push_back(my_gl::GeometryObjectPrimitive{
         std::span<my_gl::TransformData>{transforms.data() + 8, TRANSFORMS_PER_PRIMITIVE},
+        static_cast<void*>(&custom_obj_state[PrimitiveIndex::TOP_WALL]),
         &physics[1],
-        36,
-        0,
+        nullptr,
         shader,
         vert_arr,
+        36,
+        0,
         GL_TRIANGLES,
         my_gl::Material::OBSIDIAN,
         my_gl::CollisionType::STATIC,
-        nullptr,
     });
 
     // bottom wall
     out_primitives.push_back(my_gl::GeometryObjectPrimitive{
         std::span<my_gl::TransformData>{transforms.data() + 10, TRANSFORMS_PER_PRIMITIVE},
+        static_cast<void*>(&custom_obj_state[PrimitiveIndex::BOTTOM_WALL]),
         &physics[1],
-        36,
-        0,
+        nullptr,
         shader,
         vert_arr,
+        36,
+        0,
         GL_TRIANGLES,
         my_gl::Material::OBSIDIAN,
         my_gl::CollisionType::STATIC,
-        nullptr,
     });
 
     // light
     // my_gl::GeometryObjectPrimitive{
     //     std::span<my_gl::TransformData>{transforms.data() + 12, 3},
     //     nullptr,
-    //     36,
-    //     0,
+    //     nullptr,
+    //     nullptr,
     //     light_shader,
     //     vertex_arr_light,
+    //     36,
+    //     0,
     //     GL_TRIANGLES,
     //     my_gl::Material::NO_MATERIAL,
     //     my_gl::CollisionType::GHOST,
-    //     nullptr
     // }
 }
 
 void populate_tile_primitives(
     std::vector<my_gl::GeometryObjectPrimitive>& out_primitives,
     std::vector<my_gl::TransformData>& transforms,
-    std::span<my_gl::Physics<float>> physics,
+    std::vector<GameObjState>& custom_obj_state,
+    std::span<my_gl::FrameTransform<float>> physics,
     const my_gl::Program& shader,
     const my_gl::VertexArray& vert_arr
 )
 {
     assert((out_primitives.capacity() - out_primitives.size() >= TILE_COUNT) && "Bad reserve count");
 
-    for (u_int16_t i{0}; i < TILE_COUNT; ++i) {
+    for (u_int16_t i{PrimitiveIndex::COUNT}; i < PrimitiveIndex::COUNT + TILE_COUNT; ++i) {
         out_primitives.push_back(my_gl::GeometryObjectPrimitive{
             std::span<my_gl::TransformData>{transforms.data() + PRIMITIVE_TRANSFORM_COUNT + i * TRANSFORMS_PER_TILE, TRANSFORMS_PER_TILE},
+            static_cast<void*>(&custom_obj_state[i]),
             &physics[1],
-            36,
-            0,
+            nullptr,
             shader,
             vert_arr,
+            36,
+            0,
             GL_TRIANGLES,
             my_gl::Material::GOLD,
             my_gl::CollisionType::STATIC,
-            nullptr,
         });
     }
 

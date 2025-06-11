@@ -22,6 +22,7 @@ struct Material {
 uniform vec3 u_view_pos;
 uniform Material u_material;
 uniform Light u_light;
+uniform float u_opacity;
 // uniform float u_lerp;
 
 void main() {
@@ -41,5 +42,5 @@ void main() {
     vec3 spectular_vec = u_light.specular * (u_material.specular * specular_coef);
 
     vec3 light_color_result = ambient_vec + diffuse_vec + spectular_vec;
-    output_color = vec4(light_color_result, 1.0);
+    output_color = vec4(light_color_result, u_opacity);
 }

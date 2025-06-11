@@ -1,15 +1,27 @@
 #pragma once
 #include "geometryObject.hpp"
-#include "physics.hpp"
-#include "renderer.hpp"
+#include "advanced_transforms.hpp"
 #include <vector>
 #include <cstdint>
 #include <span>
 
 struct GameState {
     std::span<my_gl::TransformData>             transforms;
-    std::span<my_gl::Physics<float>>            physics;
+    std::span<my_gl::FrameTransform<float>>     physics;
     std::span<my_gl::GeometryObjectPrimitive>   primitives;
+};
+
+enum struct GameObjType : uint8_t {
+    BALL,
+    PADDLE,
+    WALL,
+    TILE,
+};
+
+struct GameObjState {
+    my_gl::TimeTransform<float> opacity;
+    GameObjType                 type;
+    bool                        alive;
 };
 
 constexpr float HOR_WALL_OFFSET = 4.5f;
@@ -29,7 +41,7 @@ constexpr uint8_t TRANSFORMS_PER_TILE = 2;
 constexpr uint8_t TILE_TRANSFORM_COUNT = TILE_COUNT * TRANSFORMS_PER_TILE;
 constexpr float TILE_WIDTH = 1.5f;
 constexpr float TILE_HEIGHT = 0.6f;
-constexpr float TILE_OFFSET_X = TILE_WIDTH + 0.4f;
+constexpr float TILE_OFFSET_X = TILE_WIDTH * 1.5f;
 constexpr float TILE_OFFSET_Y = TILE_HEIGHT + 0.2f;
 constexpr float TILE_ROW_WIDTH = TILE_COLS * TILE_WIDTH + TILE_COLS * (TILE_OFFSET_X - TILE_WIDTH);
 constexpr float TILES_INIT_LEFT_OFFSET = -TILE_ROW_WIDTH / 2.0f + 1.0f;
@@ -52,17 +64,21 @@ constexpr uint8_t PRIMITIVE_TRANSFORM_COUNT = PrimitiveIndex::COUNT * TRANSFORMS
 void process_keyboard_input(GameState* game_state, int32_t key_pressed);
 void populate_primitive_transforms(std::vector<my_gl::TransformData>& out_transforms);
 void populate_tile_transforms(std::vector<my_gl::TransformData>& out_transforms);
+void populate_custom_state_primitives(std::vector<GameObjState>& out_custom_state);
+void populate_custom_state_tiles(std::vector<GameObjState>& out_custom_state);
 void populate_primitives(
     std::vector<my_gl::GeometryObjectPrimitive>& out_primitives,
     std::vector<my_gl::TransformData>& transforms,
-    std::span<my_gl::Physics<float>> physics,
+    std::vector<GameObjState>& custom_obj_state,
+    std::span<my_gl::FrameTransform<float>> physics,
     const my_gl::Program& shader,
     const my_gl::VertexArray& vert_arr
 );
 void populate_tile_primitives(
     std::vector<my_gl::GeometryObjectPrimitive>& out_primitives,
     std::vector<my_gl::TransformData>& transforms,
-    std::span<my_gl::Physics<float>> physics,
+    std::vector<GameObjState>& custom_obj_state,
+    std::span<my_gl::FrameTransform<float>> physics,
     const my_gl::Program& shader,
   const my_gl::VertexArray& vert_arr
 );

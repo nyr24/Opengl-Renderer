@@ -1,9 +1,10 @@
 #include "geometryObject.hpp"
-#include "animation.hpp"
+#include "advanced_transforms.hpp"
 #include "matrix.hpp"
 #include "meshes.hpp"
 #include "renderer.hpp"
 #include "sharedTypes.hpp"
+#include "appCode.hpp"
 #include "vec.hpp"
 #include <cstdio>
 #include <span>
@@ -13,29 +14,33 @@
 #endif
 
 my_gl::TransformData::TransformData(
-    my_gl::math::TransformationType                 arg_type,
-    std::vector<math::Matrix44<float>>&&            arg_transforms,
-    std::vector<my_gl::Animation<float>>&&          arg_anims
+    math::TransformationType                arg_type,
+    math::Matrix44<float>&&                 arg_static_transform,
+    Option<my_gl::TimeTransform<float>>&&   arg_time_transform,
+    Option<my_gl::FrameTransform<float>>&&  arg_frame_transform
 )
     : type{ arg_type }
-    , transforms{ std::move(arg_transforms) }
-    , anims{ std::move(arg_anims) }
+    , static_transform{ std::move(arg_static_transform) }
+    , time_transform{ std::move(arg_time_transform) }
+    , frame_transform{ std::move(arg_frame_transform) }
 {}
 
 my_gl::GeometryObjectPrimitive::GeometryObjectPrimitive(
-    std::span<my_gl::TransformData>     transform_data,
-    Physics<float>* const               physics,
-    std::size_t                         vertices_count,
-    std::size_t                         buffer_byte_offset,
-    const Program&                      program,
-    const VertexArray&                  vao,
-    GLenum                              draw_type,
-    Material::Type                      material_type,
-    CollisionType                       collision_type,
-    const Texture* const                texture
+    std::span<TransformData>        transform_data,
+    void* const                     custom_obj_state,
+    FrameTransform<float>* const    movement,
+    const Texture* const            texture,
+    const Program&                  program,
+    const VertexArray&              vao,
+    std::size_t                     vertices_count,
+    std::size_t                     buffer_byte_offset,
+    GLenum                          draw_type,
+    Material::Type                  material_type,
+    CollisionType                   collision_type
 )
     : _transform_data{ transform_data }
-    , _physics{ physics }
+    , _custom_obj_state{ custom_obj_state }
+    , _movement{ movement }
     , _texture{ texture }
     , _program{ program }
     , _vao{ vao }
@@ -47,25 +52,27 @@ my_gl::GeometryObjectPrimitive::GeometryObjectPrimitive(
     , _collision_type{ collision_type }
 {}
 
-void my_gl::GeometryObjectPrimitive::calc_model_mat_frame(Duration_sec frame_time) {
+void my_gl::GeometryObjectPrimitive::calc_model_mat_frame(Duration_sec delta_time) {
     auto result_mat{ my_gl::math::Matrix44<float>::identity_new() };
 
     if (_transform_data.size()) {
         for (my_gl::TransformData& transforms_by_type : _transform_data) {
-            if (transforms_by_type.type == math::TransformationType::TRANSLATION && _collision_type != CollisionType::STATIC && _physics) {
-                for (const auto& transform : transforms_by_type.transforms) {
-                    result_mat *= transform;
+            if (transforms_by_type.type == math::TransformationType::TRANSLATION && _collision_type != CollisionType::STATIC && _movement) {
+                result_mat *= transforms_by_type.static_transform;
+                result_mat *= _movement->update(delta_time.count());
+                if (auto* time_transform = transforms_by_type.time_transform.get_if()) {
+                    result_mat *= *(time_transform->update(delta_time).get_mat());
                 }
-                result_mat *= _physics->update(frame_time.count());
-                for (my_gl::Animation<float>& animation : transforms_by_type.anims) {
-                    result_mat *= animation.update();
+                if (auto* frame_transform = transforms_by_type.frame_transform.get_if()) {
+                    result_mat *= frame_transform->update(delta_time.count());
                 }
             } else {
-                for (const auto& transform : transforms_by_type.transforms) {
-                    result_mat *= transform;
+                result_mat *= transforms_by_type.static_transform;
+                if (auto* time_transform = transforms_by_type.time_transform.get_if()) {
+                    result_mat *= *(time_transform->update(delta_time).get_mat());
                 }
-                for (my_gl::Animation<float>& animation : transforms_by_type.anims) {
-                    result_mat *= animation.update();
+                if (auto* frame_transform = transforms_by_type.frame_transform.get_if()) {
+                    result_mat *= frame_transform->update(delta_time.count());
                 }
             }
         }
@@ -74,13 +81,13 @@ void my_gl::GeometryObjectPrimitive::calc_model_mat_frame(Duration_sec frame_tim
     _model_mat = std::move(result_mat);
 }
 
-void my_gl::GeometryObjectPrimitive::update_anims_time(Duration_sec frame_time) {
-    for (auto& transform_by_type : _transform_data) {
-        for (my_gl::Animation<float>& anim : transform_by_type.anims) {
-            anim.update_time(frame_time);
-        }
-    }
-}
+// void my_gl::GeometryObjectPrimitive::update_anims_time(Duration_sec delta_time) {
+//     for (auto& transform_by_type : _transform_data) {
+//         if (auto* time_t = transform_by_type.time_transform.get_if()) {
+//             time_t->update_time(delta_time);
+//         }
+//     }
+// }
 
 void my_gl::GeometryObjectPrimitive::bind_state() const {
     if (_texture) {
@@ -110,13 +117,13 @@ void my_gl::GeometryObjectPrimitive::draw() const {
 void my_gl::GeometryObjectPrimitive::render(
     const my_gl::math::Matrix44<float>& view_mat,
     const my_gl::math::Matrix44<float>& view_proj_mat,
-    Duration_sec frame_time,
+    Duration_sec delta_time,
     float time_0to1
 )
 {
     bind_state();
 
-    this->calc_model_mat_frame(frame_time);
+    this->calc_model_mat_frame(delta_time);
     my_gl::math::Matrix44<float> model_view_mat{ view_mat * _model_mat };
     my_gl::math::Matrix44<float> normal_mat{ model_view_mat.invert().transpose() };
     my_gl::math::Matrix44<float> mvp_mat{ view_proj_mat * _model_mat };
@@ -132,6 +139,14 @@ void my_gl::GeometryObjectPrimitive::render(
         _program.set_uniform_value("u_material.diffuse", material.diffuse);
         _program.set_uniform_value("u_material.specular", material.specular);
         _program.set_uniform_value("u_material.shininess", material.shininess);
+    }
+
+    if (_custom_obj_state) {
+        // auto* custom_obj_state = static_cast<GameObjState*>(_custom_obj_state);
+        // if (custom_obj_state->type == GameObjType::TILE && !custom_obj_state->alive) {
+        //     _program.set_uniform_value("u_opacity", *(custom_obj_state->opacity.update().get_scalar()));
+        //     custom_obj_state->opacity.update_time(delta_time);
+        // }
     }
 
     draw();
@@ -191,31 +206,56 @@ my_gl::CollisionResult my_gl::GeometryObjectPrimitive::check_collision(GeometryO
 }
 
 void my_gl::GeometryObjectPrimitive::handle_collision(my_gl::GeometryObjectPrimitive& second, CollisionResult& coll_res) {
+    assert(coll_res.status && "Collision should happend, before calling this function");
     if (this->_collision_type == CollisionType::GHOST || second._collision_type == CollisionType::GHOST) {
         return;
     }
 
+    // NOTE: temp code, remove later
+    GameObjState* obj_state1 = static_cast<GameObjState*>(this->_custom_obj_state);
+    GameObjState* obj_state2 = static_cast<GameObjState*>(second._custom_obj_state);
+    printf("Collision between %i : %i\n", obj_state1->type, obj_state2->type);
+
+    // if (this->_custom_obj_state) {
+    //     GameObjState* obj_state = static_cast<GameObjState*>(this->_custom_obj_state);
+    //     if (obj_state->type == GameObjType::TILE && obj_state->alive) {
+    //         this->_collision_type = CollisionType::GHOST;
+    //         obj_state->alive = false;
+    //         obj_state->opacity._is_paused = false;
+    //         printf("obj is dead: type = %i\n", obj_state->type);
+    //     }
+    // }
+    // if (second._custom_obj_state) {
+    //     GameObjState* obj_state = static_cast<GameObjState*>(second._custom_obj_state);
+    //     if (obj_state->type == GameObjType::TILE && obj_state->alive) {
+    //         this->_collision_type = CollisionType::GHOST;
+    //         obj_state->alive = false;
+    //         obj_state->opacity._is_paused = false;
+    //         printf("obj is dead: type = %i\n", obj_state->type);
+    //     }
+    // }
+
     my_gl::math::Vec3<float> change_collision_vec(1.0f);
 
     if (this->_collision_type != CollisionType::STATIC) {
-        if (coll_res.offset_x < -0.1f) {
+        if (coll_res.offset_x < -0.05f) {
             change_collision_vec[1] = -1.0f;
         }
-        if (coll_res.offset_y < -0.1f) {
+        if (coll_res.offset_y < -0.05f) {
             change_collision_vec[0] = -1.0f;
         }
-        this->_physics->_velocity *= change_collision_vec * second._physics->_mass / this->_physics->_mass;
-        // this->_physics->_acceleration *= -1.0f;
+        this->_movement->_velocity *= change_collision_vec * second._mass / this->_mass;
+        // this->_movement->_acceleration *= -1.0f;
     }
     if (second._collision_type != CollisionType::STATIC) {
-        if (coll_res.offset_x < -0.1f) {
+        if (coll_res.offset_x < -0.05f) {
             change_collision_vec[1] = -1.0f;
         }
-        if (coll_res.offset_y < -0.1f) {
+        if (coll_res.offset_y < -0.05f) {
             change_collision_vec[0] = -1.0f;
         }
-        second._physics->_velocity *= change_collision_vec * this->_physics->_mass / second._physics->_mass;;
-        // second._physics->_acceleration *= -1.0f;
+        second._movement->_velocity *= change_collision_vec * this->_mass / second._mass;
+        // second._movement->_acceleration *= -1.0f;
     }
 }
 
@@ -235,19 +275,12 @@ my_gl::GeometryObjectComplex::GeometryObjectComplex(
 void my_gl::GeometryObjectComplex::render(
     const my_gl::math::Matrix44<float>& view_mat,
     const my_gl::math::Matrix44<float>& view_proj_mat,
-    Duration_sec frame_time,
+    Duration_sec delta_time,
     float time_0to1
 )
 {
     for (auto& primitive : _primitives) {
-        primitive.render(view_mat, view_proj_mat, frame_time, time_0to1);
-    }
-}
-
-void my_gl::GeometryObjectComplex::update_anims_time(my_gl::Duration_sec frame_time)
-{
-    for (auto& primitive : _primitives) {
-        primitive.update_anims_time(frame_time);
+        primitive.render(view_mat, view_proj_mat, delta_time, time_0to1);
     }
 }
 
@@ -265,9 +298,6 @@ my_gl::Material::Material(
 {}
 
 const std::array<my_gl::Material, my_gl::Material::COUNT> my_gl::material_table = {
-    // NOTE: test material
-    // my_gl::Material({ 1.0f, 0.5f, 0.31f }, { 1.0f, 0.5f, 0.31f }, { 0.5f, 0.5f, 0.5f }, 32.0f),
-
     my_gl::Material({ 0.0215, 0.1745, 0.0215 }, { 0.07568, 0.61424, 0.07568 }, { 0.633, 0.727811, 0.633 }, 0.6f),
     my_gl::Material({ 0.05375, 0.05, 0.06625 }, { 0.18275, 0.17, 0.22525 }, { 0.332741, 0.328634, 0.346435 }, 0.3f),
     my_gl::Material({ 0.1745, 0.01175, 0.01175 }, { 0.61424, 0.04136, 0.04136 }, { 0.727811, 0.626959, 0.626959 }, 0.6f),
