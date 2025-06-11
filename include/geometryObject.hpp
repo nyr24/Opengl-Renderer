@@ -7,7 +7,6 @@
 #include "vec.hpp"
 #include "utils.hpp"
 #include <GL/glew.h>
-#include <concepts>
 #include <cstddef>
 #include <vector>
 #include <array>
@@ -20,7 +19,7 @@ class VertexArray;
 // transformData
 struct TransformData {
     TransformData(
-        math::TransformationType            arg_type,
+        math::TransformationType                arg_type,
         math::Matrix44<float>&&                 arg_static_transform,
         Option<my_gl::TimeTransform<float>>&&   arg_time_transform,
         Option<my_gl::FrameTransform<float>>&&  arg_frame_transform
@@ -33,7 +32,7 @@ struct TransformData {
     math::Matrix44<float>                   static_transform;
     Option<my_gl::TimeTransform<float>>     time_transform;
     Option<my_gl::FrameTransform<float>>    frame_transform;
-    math::TransformationType            type;
+    math::TransformationType                type;
 };
 
 // material
@@ -100,6 +99,7 @@ public:
         std::span<TransformData>        transform_data,
         void* const                     custom_obj_state,
         FrameTransform<float>* const    movement,
+        float                           mass,
         const Texture* const            texture,
         const Program&                  program,
         const VertexArray&              vao,

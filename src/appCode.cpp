@@ -11,10 +11,7 @@
 #endif
 
 void process_keyboard_input(GameState* game_state, int32_t key_pressed) {
-    if (!game_state) {
-        std::cerr << "No game state found\n";
-        return;
-    }
+    assert(game_state && "No game state found\n");
 
     switch (key_pressed) {
         case GLFW_KEY_LEFT: {
@@ -299,6 +296,7 @@ void populate_primitives(
         std::span<my_gl::TransformData>{transforms.data(), TRANSFORMS_PER_PRIMITIVE},
         static_cast<void*>(&custom_obj_state[PrimitiveIndex::BALL]),
         &physics[0],
+        1.0f,
         nullptr,
         shader,
         vert_arr,
@@ -314,6 +312,7 @@ void populate_primitives(
         std::span<my_gl::TransformData>{transforms.data() + 2, TRANSFORMS_PER_PRIMITIVE},
         static_cast<void*>(&custom_obj_state[PrimitiveIndex::PADDLE]),
         &physics[1],
+        1.0f,
         nullptr,
         shader,
         vert_arr,
@@ -329,6 +328,7 @@ void populate_primitives(
         std::span<my_gl::TransformData>{transforms.data() + 4, TRANSFORMS_PER_PRIMITIVE},
         static_cast<void*>(&custom_obj_state[PrimitiveIndex::LEFT_WALL]),
         &physics[1],
+        1.0f,
         nullptr,
         shader,
         vert_arr,
@@ -344,6 +344,7 @@ void populate_primitives(
         std::span<my_gl::TransformData>{transforms.data() + 6, TRANSFORMS_PER_PRIMITIVE},
         static_cast<void*>(&custom_obj_state[PrimitiveIndex::RIGHT_WALL]),
         &physics[1],
+        1.0f,
         nullptr,
         shader,
         vert_arr,
@@ -359,6 +360,7 @@ void populate_primitives(
         std::span<my_gl::TransformData>{transforms.data() + 8, TRANSFORMS_PER_PRIMITIVE},
         static_cast<void*>(&custom_obj_state[PrimitiveIndex::TOP_WALL]),
         &physics[1],
+        1.0f,
         nullptr,
         shader,
         vert_arr,
@@ -374,6 +376,7 @@ void populate_primitives(
         std::span<my_gl::TransformData>{transforms.data() + 10, TRANSFORMS_PER_PRIMITIVE},
         static_cast<void*>(&custom_obj_state[PrimitiveIndex::BOTTOM_WALL]),
         &physics[1],
+        1.0f,
         nullptr,
         shader,
         vert_arr,
@@ -389,6 +392,7 @@ void populate_primitives(
     //     std::span<my_gl::TransformData>{transforms.data() + 12, 3},
     //     nullptr,
     //     nullptr,
+    //      1.0f,
     //     nullptr,
     //     light_shader,
     //     vertex_arr_light,
@@ -416,6 +420,7 @@ void populate_tile_primitives(
             std::span<my_gl::TransformData>{transforms.data() + PRIMITIVE_TRANSFORM_COUNT + i * TRANSFORMS_PER_TILE, TRANSFORMS_PER_TILE},
             static_cast<void*>(&custom_obj_state[i]),
             &physics[1],
+            1.0f,
             nullptr,
             shader,
             vert_arr,

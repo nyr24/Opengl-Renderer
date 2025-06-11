@@ -1,9 +1,11 @@
-#include <iostream>
 #include "renderer.hpp"
 #include "utils.hpp"
 #include "geometryObject.hpp"
 #include "matrix.hpp"
 #include "sharedTypes.hpp"
+#ifdef DEBUG
+#include <iostream>
+#endif
 
 my_gl::Program::Program(
     const char*                         vertex_shader_path,
@@ -64,14 +66,18 @@ const my_gl::Uniform* const my_gl::Program::get_uniform(std::string_view unif_na
 
 void my_gl::Program::set_attrib(my_gl::Attribute& attr) {
     if (_program_id == 0) {
+        #ifdef DEBUG
         std::cerr << "program is not initialized, attribute: " << attr.name << " can't be set\n";
+        #endif
         return;
     }
 
     GLint attr_loc{ glGetAttribLocation(_program_id, attr.name) };
 
     if (attr_loc == -1) {
+        #ifdef DEBUG
         std::cerr << "attribute name: " << attr.name << " wasn't found for program: " << _program_id << "\nnothing was set\n";
+        #endif
         return;
     }
 
@@ -82,22 +88,26 @@ void my_gl::Program::set_attrib(my_gl::Attribute& attr) {
 
 void my_gl::Program::set_uniform_location(my_gl::Uniform& unif) {
     if (_program_id == 0) {
+        #ifdef DEBUG
         std::cerr << "program is not initialized, uniform: " << unif.name << " can't be set\n";
+        #endif
         return;
     }
 
     GLint unif_loc{ glGetUniformLocation(_program_id, unif.name) };
 
     if (unif_loc == -1) {
+        #ifdef DEBUG
         std::cerr << "uniform name: " << unif.name << " wasn't found for program: " << _program_id << "\nnothing was set\n";
+        #endif
         return;
     }
 
     unif.location = unif_loc;
 
-#ifdef DEBUG
+    #ifdef DEBUG
     std::cout << "uniform " << unif.name << " location is assigned to " << unif_loc << '\n';
-#endif // DEBUG
+    #endif
 
     _unifs[unif.name] = std::move(unif);
 }

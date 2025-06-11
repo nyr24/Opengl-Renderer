@@ -29,6 +29,7 @@ my_gl::GeometryObjectPrimitive::GeometryObjectPrimitive(
     std::span<TransformData>        transform_data,
     void* const                     custom_obj_state,
     FrameTransform<float>* const    movement,
+    float                           mass,
     const Texture* const            texture,
     const Program&                  program,
     const VertexArray&              vao,
@@ -48,6 +49,7 @@ my_gl::GeometryObjectPrimitive::GeometryObjectPrimitive(
     , _buffer_byte_offset{ buffer_byte_offset }
     , _model_mat{ my_gl::math::Matrix44<float>::identity_new() }
     , _draw_type{ draw_type }
+    , _mass{ mass }
     , _material_type{ material_type }
     , _collision_type{ collision_type }
 {}
@@ -207,33 +209,27 @@ my_gl::CollisionResult my_gl::GeometryObjectPrimitive::check_collision(GeometryO
 
 void my_gl::GeometryObjectPrimitive::handle_collision(my_gl::GeometryObjectPrimitive& second, CollisionResult& coll_res) {
     assert(coll_res.status && "Collision should happend, before calling this function");
-    if (this->_collision_type == CollisionType::GHOST || second._collision_type == CollisionType::GHOST) {
+
+    if (this->_collision_type == CollisionType::STATIC && second._collision_type == CollisionType::STATIC
+        || this->_collision_type == CollisionType::GHOST || second._collision_type == CollisionType::GHOST
+    ) {
         return;
     }
 
-    // NOTE: temp code, remove later
-    GameObjState* obj_state1 = static_cast<GameObjState*>(this->_custom_obj_state);
-    GameObjState* obj_state2 = static_cast<GameObjState*>(second._custom_obj_state);
-    printf("Collision between %i : %i\n", obj_state1->type, obj_state2->type);
-
-    // if (this->_custom_obj_state) {
-    //     GameObjState* obj_state = static_cast<GameObjState*>(this->_custom_obj_state);
-    //     if (obj_state->type == GameObjType::TILE && obj_state->alive) {
-    //         this->_collision_type = CollisionType::GHOST;
-    //         obj_state->alive = false;
-    //         obj_state->opacity._is_paused = false;
-    //         printf("obj is dead: type = %i\n", obj_state->type);
-    //     }
-    // }
-    // if (second._custom_obj_state) {
-    //     GameObjState* obj_state = static_cast<GameObjState*>(second._custom_obj_state);
-    //     if (obj_state->type == GameObjType::TILE && obj_state->alive) {
-    //         this->_collision_type = CollisionType::GHOST;
-    //         obj_state->alive = false;
-    //         obj_state->opacity._is_paused = false;
-    //         printf("obj is dead: type = %i\n", obj_state->type);
-    //     }
-    // }
+    if (this->_custom_obj_state && second._custom_obj_state) {
+        GameObjState* first_state = static_cast<GameObjState*>(this->_custom_obj_state);
+        GameObjState* second_state = static_cast<GameObjState*>(second._custom_obj_state);
+        if (first_state->type == GameObjType::BALL && second_state->type == GameObjType::TILE && second_state->alive) {
+            second._collision_type = CollisionType::GHOST;
+            second_state->alive = false;
+            second_state->opacity._is_paused = false;
+        }
+        else if (first_state->type == GameObjType::TILE && second_state->type == GameObjType::BALL && first_state->alive) {
+            this->_collision_type = CollisionType::GHOST;
+            first_state->alive = false;
+            first_state->opacity._is_paused = false;
+        }
+    }
 
     my_gl::math::Vec3<float> change_collision_vec(1.0f);
 
@@ -247,7 +243,7 @@ void my_gl::GeometryObjectPrimitive::handle_collision(my_gl::GeometryObjectPrimi
         this->_movement->_velocity *= change_collision_vec * second._mass / this->_mass;
         // this->_movement->_acceleration *= -1.0f;
     }
-    if (second._collision_type != CollisionType::STATIC) {
+    else if (second._collision_type != CollisionType::STATIC) {
         if (coll_res.offset_x < -0.05f) {
             change_collision_vec[1] = -1.0f;
         }
